@@ -4,6 +4,7 @@ pub type WalletAdapterResult<T> = Result<T, WalletAdapterError>;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum WalletAdapterError {
+    InvalidSignatureBytes,
     SolanaObjectNotFound,
     PhantomObjectNotFound,
     DomErrorIsNotAnObject,
@@ -11,7 +12,7 @@ pub enum WalletAdapterError {
     UnableToGetKey(JsValue),
     Undefined,
     Null,
-    PhantonSolanaConnectNotFunction,
+    ExpectedAFunction(String),
     // Code 4001 = The user rejected the request through Phantom.
     UserRejectedRequest,
     // Code 4900 - Phantom could not connect to the network.
@@ -35,6 +36,8 @@ pub enum WalletAdapterError {
     UnableToFetchPublicKey,
     // Error is not recognized or supported
     UnrecognizedError,
+    UnableToParseErrorMessage,
+    UnableToParseErrorName,
 }
 
 impl WalletAdapterError {
@@ -77,23 +80,35 @@ impl From<JsValue> for WalletAdapterError {
             WalletAdapterError::UnableToGetKey(error_value)
         };
 
-        let message = match js_sys::Reflect::get(&value, &"message".into()) {
+        let message_value = match js_sys::Reflect::get(&value, &"message".into()) {
             Ok(value) => value,
             Err(value) => return check_error(value),
         };
+
+        let message = message_value.as_string();
+
+        if let Some(inner_message) = message.as_ref() {
+            if inner_message.contains("User rejected the request") {
+                return WalletAdapterError::UserRejectedRequest;
+            }
+        } else {
+            return WalletAdapterError::UnableToParseErrorMessage;
+        }
 
         let name = match js_sys::Reflect::get(&value, &"name".into()) {
             Ok(value) => value,
             Err(value) => return check_error(value),
         };
 
-        let message = message
-            .as_string()
-            .unwrap_or("Unable to convert error `message` into Rust `String`".into());
-        let name = name
-            .as_string()
-            .unwrap_or("Unable to convert error `name` into Rust `String`".into());
+        let name = if let Some(name) = name.as_string() {
+            name
+        } else {
+            return WalletAdapterError::UnableToParseErrorName;
+        };
 
-        WalletAdapterError::TypeError { name, message }
+        WalletAdapterError::TypeError {
+            name,
+            message: message.unwrap(),
+        }
     }
 }
