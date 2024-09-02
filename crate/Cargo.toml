@@ -1,0 +1,16 @@
+[package]
+name = "solana-wallet-adapter"
+authors.workspace = true
+version.workspace = true
+license.workspace = true
+edition.workspace = true
+description.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
+
+[dependencies]
+log.workspace = true
+web-sys = { version = "0.3.70", features = ["Window", "Document"] }
+js-sys = "0.3.70"
+wasm-bindgen-futures.workspace = true
