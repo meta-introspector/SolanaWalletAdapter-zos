@@ -1,5 +1,5 @@
 [package]
-name = "solana-wallet-adapter"
+name = "wallet-adapter"
 authors.workspace = true
 version.workspace = true
 license.workspace = true
@@ -14,3 +14,4 @@ log.workspace = true
 web-sys = { version = "0.3.70", features = ["Window", "Document"] }
 js-sys = "0.3.70"
 wasm-bindgen-futures.workspace = true
+thiserror = "1.0.63"
