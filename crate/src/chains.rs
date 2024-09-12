@@ -25,16 +25,16 @@ pub enum SolanaChains {
     LocalNet,
 }
 
-impl TryFrom<&str> for SolanaChains {
-    type Error = WalletAdapterError;
+impl<'a> TryFrom<&'a str> for SolanaChains {
+    type Error = WalletAdapterError<'a>;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let parsed = match value {
             "solana:mainnet" => Self::MainNet,
             "solana:devnet" => Self::DevNet,
             "solana:testnet" => Self::TestNet,
             "solana:localnet" => Self::LocalNet,
-            _ => return Err(WalletAdapterError::UnsupportedCluster(value.into())),
+            _ => return Err(WalletAdapterError::UnsupportedCluster(value)),
         };
 
         Ok(parsed)

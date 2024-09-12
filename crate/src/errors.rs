@@ -3,13 +3,18 @@ use wasm_bindgen_futures::wasm_bindgen::JsValue;
 
 /// Wraps a Rust [Result] type with the [WalletAdapterError]
 /// as the `Err()` type in `core::result::Result`
-pub type WalletAdapterResult<T> = Result<T, WalletAdapterError>;
+pub type WalletAdapterResult<'a, T> = Result<T, WalletAdapterError<'a>>;
 
 #[derive(Debug, PartialEq, Clone, Error)]
-pub enum WalletAdapterError {
+pub enum WalletAdapterError<'a> {
     /// The cluster is not supported
     #[error("The cluster is not supported")]
-    UnsupportedCluster(String),
+    UnsupportedCluster(&'a str),
+    /// The commitment passed is not supported. Check [crate::Commitment] for supported commitments.
+    #[error(
+        "The commitment passed is not supported. Check `Commitment` for supported commitments."
+    )]
+    UnsupportedCommitment(&'a str),
     /// The Error could not be parsed as an object
     #[error("The Error could not be parsed as an object")]
     DomErrorIsNotAnObject,
@@ -24,7 +29,7 @@ pub enum WalletAdapterError {
     Null,
     /// A JsFunction is required
     #[error(" A JsFunction is required")]
-    ExpectedAFunction(String),
+    ExpectedAFunction(&'a str),
     /// This error is not supported. Open a bug report if you think the error needs to be supported
     #[error("This error is not supported. Open a bug report if you think the error needs to be supported")]
     UnrecognizedError,
