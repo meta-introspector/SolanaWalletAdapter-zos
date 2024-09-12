@@ -36,12 +36,16 @@ impl WindowOps {
     }
 
     /// Convert as [JsValue](https://docs.rs/wasm-bindgen/latest/wasm_bindgen/struct.JsValue.html) of
-    /// into an [Option] where `undefined` or `null` is converted to an `Option::None`
-    pub fn as_option(value: &JsValue) -> Option<&JsValue> {
-        if value.is_null() || value.is_undefined() {
-            return Option::None;
+    /// into an [WalletAdapterResult] where `undefined` or `null` is converted to an [WalletAdapterError]
+    pub fn as_option(value: &JsValue) -> WalletAdapterResult<&JsValue> {
+        if value.is_null() {
+            return Err(WalletAdapterError::Null);
         }
 
-        Some(value)
+        if value.is_undefined() {
+            return Err(WalletAdapterError::Undefined);
+        }
+
+        Ok(value)
     }
 }
