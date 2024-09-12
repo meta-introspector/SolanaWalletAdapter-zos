@@ -16,7 +16,7 @@ pub const LOCALNET_ENDPOINT: &'static str = "http://localhost:8899";
 
 /// Solana Clusters
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash)]
-pub enum SolanaChains {
+pub enum Cluster {
     /// Solana Mainnet cluster,  https://api.mainnet-beta.solana.com
     MainNet,
     /// Solana Devnet cluster, e.g. https://api.devnet.solana.com
@@ -27,13 +27,13 @@ pub enum SolanaChains {
     LocalNet,
 }
 
-impl SolanaChains {
+impl Cluster {
     pub fn endpoint(&self) -> &str {
         match self {
-            SolanaChains::MainNet => MAINNET_ENDPOINT,
-            SolanaChains::DevNet => DEVNET_ENDPOINT,
-            SolanaChains::TestNet => TESTNET_ENDPOINT,
-            SolanaChains::LocalNet => LOCALNET_ENDPOINT,
+            Cluster::MainNet => MAINNET_ENDPOINT,
+            Cluster::DevNet => DEVNET_ENDPOINT,
+            Cluster::TestNet => TESTNET_ENDPOINT,
+            Cluster::LocalNet => LOCALNET_ENDPOINT,
         }
     }
 
@@ -46,7 +46,7 @@ impl SolanaChains {
     }
 }
 
-impl<'a> TryFrom<&'a str> for SolanaChains {
+impl<'a> TryFrom<&'a str> for Cluster {
     type Error = WalletAdapterError<'a>;
 
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
@@ -85,42 +85,39 @@ mod chain_tests {
 
     #[test]
     fn valid_chain() {
-        assert_eq!(SolanaChains::MainNet, "solana:mainnet".try_into().unwrap());
-        assert_eq!(SolanaChains::DevNet, "solana:devnet".try_into().unwrap());
-        assert_eq!(SolanaChains::TestNet, "solana:testnet".try_into().unwrap());
-        assert_eq!(
-            SolanaChains::LocalNet,
-            "solana:localnet".try_into().unwrap()
-        );
+        assert_eq!(Cluster::MainNet, "solana:mainnet".try_into().unwrap());
+        assert_eq!(Cluster::DevNet, "solana:devnet".try_into().unwrap());
+        assert_eq!(Cluster::TestNet, "solana:testnet".try_into().unwrap());
+        assert_eq!(Cluster::LocalNet, "solana:localnet".try_into().unwrap());
         assert!({
-            let chain: Result<SolanaChains, _> = "solana:localnet2".try_into();
+            let chain: Result<Cluster, _> = "solana:localnet2".try_into();
 
             chain.is_err()
         });
 
         assert_eq!(
-            SolanaChains::MainNet,
+            Cluster::MainNet,
             "https://api.mainnet-beta.solana.com".try_into().unwrap()
         );
         assert_eq!(
-            SolanaChains::DevNet,
+            Cluster::DevNet,
             "https://api.devnet.solana.com".try_into().unwrap()
         );
         assert_eq!(
-            SolanaChains::TestNet,
+            Cluster::TestNet,
             "https://api.testnet.solana.com".try_into().unwrap()
         );
         assert_eq!(
-            SolanaChains::LocalNet,
+            Cluster::LocalNet,
             "http://localhost:8899".try_into().unwrap()
         );
         assert!({
-            let chain: Result<SolanaChains, _> = "https://localhost:8899".try_into();
+            let chain: Result<Cluster, _> = "https://localhost:8899".try_into();
 
             chain.is_err()
         });
         assert!({
-            let chain: Result<SolanaChains, _> = "https://cluster.foo".try_into();
+            let chain: Result<Cluster, _> = "https://cluster.foo".try_into();
 
             chain.is_err()
         });
@@ -129,17 +126,14 @@ mod chain_tests {
     #[test]
     fn validate_endpoint() {
         assert_eq!(
-            SolanaChains::MainNet.endpoint(),
+            Cluster::MainNet.endpoint(),
             "https://api.mainnet-beta.solana.com"
         );
+        assert_eq!(Cluster::DevNet.endpoint(), "https://api.devnet.solana.com");
         assert_eq!(
-            SolanaChains::DevNet.endpoint(),
-            "https://api.devnet.solana.com"
-        );
-        assert_eq!(
-            SolanaChains::TestNet.endpoint(),
+            Cluster::TestNet.endpoint(),
             "https://api.testnet.solana.com"
         );
-        assert_eq!(SolanaChains::LocalNet.endpoint(), "http://localhost:8899");
+        assert_eq!(Cluster::LocalNet.endpoint(), "http://localhost:8899");
     }
 }
