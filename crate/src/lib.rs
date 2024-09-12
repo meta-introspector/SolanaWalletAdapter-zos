@@ -13,8 +13,5 @@ pub use window_ops::*;
 mod errors;
 pub use errors::*;
 
-mod wallet;
-pub use wallet::*;
-
 mod commitment;
 pub use commitment::*;
