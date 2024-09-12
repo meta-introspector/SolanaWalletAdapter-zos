@@ -2,7 +2,7 @@
 A lightweight Rust Solana Wallet that can be used in Rust based frontends and WebAssembly.
 
 #### Features
-- [x] Connecting to a wallet
+- [x] Detect available wallets
 - [x] Signing a message
 - [?] Creating a Versioned Transaction
 - [?] Sign In With Solana

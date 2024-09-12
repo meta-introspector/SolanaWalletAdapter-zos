@@ -1,6 +1,11 @@
 use wasm_bindgen_futures::wasm_bindgen::JsValue;
 use web_sys::{js_sys::Object, Document, Window};
 
+use crate::{WalletAdapterError, WalletAdapterResult};
+
+/// Operations on a browser window.
+/// `Window` and `Document` object must be present otherwise
+/// an error is thrown.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct WindowOps {
     window: Window,
@@ -8,31 +13,39 @@ pub struct WindowOps {
 }
 
 impl WindowOps {
-    pub fn new() -> Self {
+    /// Get the `Window` and `Document` object in the current browser window
+    pub fn new() -> WalletAdapterResult<'static, Self> {
         let window = if let Some(window) = web_sys::window() {
             window
         } else {
-            panic!("The window for the browser was not detected");
+            return Err(WalletAdapterError::MissingAccessToBrowserWindow);
         };
 
         let document = if let Some(document) = window.document() {
             document
         } else {
-            panic!("The `window.document` was not detected");
+            return Err(WalletAdapterError::MissingAccessToBrowserDocument);
         };
 
-        Self { window, document }
+        Ok(Self { window, document })
     }
 
+    /// Get an entry in the `Window` object
     pub fn get_entry(&self, property: &str) -> Option<Object> {
         self.window.get(property)
     }
 
-    pub fn as_option(value: &JsValue) -> Option<&JsValue> {
-        if value.is_null() || value.is_undefined() {
-            return Option::None;
+    /// Convert as [JsValue](https://docs.rs/wasm-bindgen/latest/wasm_bindgen/struct.JsValue.html) of
+    /// into an [WalletAdapterResult] where `undefined` or `null` is converted to an [WalletAdapterError]
+    pub fn as_option(value: &JsValue) -> WalletAdapterResult<&JsValue> {
+        if value.is_null() {
+            return Err(WalletAdapterError::Null);
         }
 
-        Some(value)
+        if value.is_undefined() {
+            return Err(WalletAdapterError::Undefined);
+        }
+
+        Ok(value)
     }
 }

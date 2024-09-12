@@ -1,8 +1,6 @@
-mod provider_methods;
-pub use provider_methods::*;
-
-mod utils;
-pub use utils::*;
+#![forbid(unsafe_code)]
+#![forbid(missing_docs)]
+#![doc = include_str!("../../README.md")]
 
 mod chains;
 pub use chains::*;
@@ -13,5 +11,5 @@ pub use window_ops::*;
 mod errors;
 pub use errors::*;
 
-mod wallet;
-pub use wallet::*;
+mod commitment;
+pub use commitment::*;
