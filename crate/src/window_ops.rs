@@ -1,6 +1,8 @@
 use wasm_bindgen_futures::wasm_bindgen::JsValue;
 use web_sys::{js_sys::Object, Document, Window};
 
+use crate::{WalletAdapterError, WalletAdapterResult};
+
 /// Operations on a browser window.
 /// `Window` and `Document` object must be present otherwise
 /// an error is thrown.
@@ -12,20 +14,20 @@ pub struct WindowOps {
 
 impl WindowOps {
     /// Get the `Window` and `Document` object in the current browser window
-    pub fn new() -> Self {
+    pub fn new() -> WalletAdapterResult<'static, Self> {
         let window = if let Some(window) = web_sys::window() {
             window
         } else {
-            panic!("The window for the browser was not detected");
+            return Err(WalletAdapterError::MissingAccessToBrowserWindow);
         };
 
         let document = if let Some(document) = window.document() {
             document
         } else {
-            panic!("The `window.document` was not detected");
+            return Err(WalletAdapterError::MissingAccessToBrowserDocument);
         };
 
-        Self { window, document }
+        Ok(Self { window, document })
     }
 
     /// Get an entry in the `Window` object

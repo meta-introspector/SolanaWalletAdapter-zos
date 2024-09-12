@@ -8,6 +8,12 @@ pub type WalletAdapterResult<'a, T> = Result<T, WalletAdapterError<'a>>;
 /// All the errors in this crate are converted to this type
 #[derive(Debug, PartialEq, Clone, Error)]
 pub enum WalletAdapterError<'a> {
+    /// The window for the browser was not detected
+    #[error("The window for the browser was not detected")]
+    MissingAccessToBrowserWindow,
+    /// The `window.document` was not detected
+    #[error("The `window.document` was not detected")]
+    MissingAccessToBrowserDocument,
     /// The cluster is not supported
     #[error("The cluster is not supported")]
     UnsupportedCluster(&'a str),
