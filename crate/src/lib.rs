@@ -2,12 +2,6 @@
 #![forbid(missing_docs)]
 #![doc = include_str!("../../README.md")]
 
-mod provider_methods;
-pub use provider_methods::*;
-
-mod utils;
-pub use utils::*;
-
 mod chains;
 pub use chains::*;
 
