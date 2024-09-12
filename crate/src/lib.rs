@@ -15,3 +15,6 @@ pub use errors::*;
 
 mod wallet;
 pub use wallet::*;
+
+mod commitment;
+pub use commitment::*;
