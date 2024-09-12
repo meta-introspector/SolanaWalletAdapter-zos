@@ -1,3 +1,7 @@
+#![forbid(unsafe_code)]
+#![forbid(missing_docs)]
+#![doc = include_str!("../../README.md")]
+
 mod provider_methods;
 pub use provider_methods::*;
 

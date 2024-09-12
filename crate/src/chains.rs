@@ -9,9 +9,13 @@ pub const TESTNET_IDENTIFIER: &'static str = "solana:testnet";
 /// Solana Localnet cluster, e.g. http://localhost:8899
 pub const LOCALNET_IDENTIFIER: &'static str = "solana:localnet";
 
+/// Solana Mainnet cluster
 pub const MAINNET_ENDPOINT: &'static str = "https://api.mainnet-beta.solana.com";
+/// Solana Devnet cluster
 pub const DEVNET_ENDPOINT: &'static str = "https://api.devnet.solana.com";
+/// Solana Testnet cluster
 pub const TESTNET_ENDPOINT: &'static str = "https://api.testnet.solana.com";
+/// Solana Localnet cluster
 pub const LOCALNET_ENDPOINT: &'static str = "http://localhost:8899";
 
 /// Solana Clusters
@@ -28,6 +32,7 @@ pub enum Cluster {
 }
 
 impl Cluster {
+    /// A Solana endpoint URI
     pub fn endpoint(&self) -> &str {
         match self {
             Cluster::MainNet => MAINNET_ENDPOINT,
@@ -37,6 +42,10 @@ impl Cluster {
         }
     }
 
+    /// Convenience method to convert a Solana endpoint URI
+    /// to a [Cluster] type. `try_into()` also does the same thing.
+    /// The  difference between `try_into()` and this method is that
+    /// this method checks if the `uri` provided contains `https://` and `http://`.
     pub fn from_uri(uri: &str) -> WalletAdapterResult<Self> {
         if !uri.contains("https://") || !uri.contains("http://") {
             return Err(WalletAdapterError::UnsupportedCluster("uri"));

@@ -1,5 +1,14 @@
 use crate::WalletAdapterError;
 
+/// The commitment level of a Solana transaction.
+///
+/// Note that deprecated commitments are converted into supported commitments.
+///
+/// `recent` is parsed as `processed`
+///
+/// `single` and `singleGossip` are parsed as `confirmed`
+///
+/// `root` and `max` are parsed as `finalized`,
 #[derive(Debug, PartialEq, Eq)]
 pub enum Commitment {
     /// A transaction has been validated and recorded in the blockchain by a single node

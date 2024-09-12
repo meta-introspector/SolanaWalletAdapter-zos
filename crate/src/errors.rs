@@ -5,6 +5,7 @@ use wasm_bindgen_futures::wasm_bindgen::JsValue;
 /// as the `Err()` type in `core::result::Result`
 pub type WalletAdapterResult<'a, T> = Result<T, WalletAdapterError<'a>>;
 
+/// All the errors in this crate are converted to this type
 #[derive(Debug, PartialEq, Clone, Error)]
 pub enum WalletAdapterError<'a> {
     /// The cluster is not supported
