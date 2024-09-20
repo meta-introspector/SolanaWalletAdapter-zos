@@ -14,3 +14,7 @@ log.workspace = true
 console_error_panic_hook.workspace = true
 console_log.workspace = true
 wasm-bindgen.workspace = true
+serde-wasm-bindgen.workspace = true
+serde = { workspace = true, features = ["derive"] }
+web-sys.workspace = true
+gloo-utils = { version = "0.2.0", features = ["serde"] }

@@ -5,15 +5,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TITLE</title>
-<link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/main.css">
+
+
+
 </head>
 
 <body>
     <section id="app"></section>
+    <h2 id="number">123450</h2>
+
     <script type="module">
         import init from "./pkg/wasm.js"
+
         init();
     </script>
+
+
+    <!-- 
+    <script>
+
+        // Event type constants
+        const WINDOW_APP_READY_EVENT_TYPE = 'wallet-standard:app-ready';
+        const WINDOW_REGISTER_WALLET_EVENT_TYPE = 'wallet-standard:register-wallet';
+
+        // Function to simulate the Wallet registration
+        let foo = function (wallet) {
+            // Example implementation of registering a wallet
+            console.log('Wallet registered:', wallet);
+            return () => {
+                console.log('Wallet unregistered:', wallet);
+            };
+        }
+
+        // Example usage
+        const api = {
+            register: foo
+        };
+
+
+        window.addEventListener(WINDOW_REGISTER_WALLET_EVENT_TYPE, (event) => {
+            console.log(event.detail);
+            console.log('Register Wallet Event Listener:', event.detail(api));
+        });
+
+
+    </script> -->
+
 </body>
 
 </html>

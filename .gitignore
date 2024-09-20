@@ -25,3 +25,4 @@ Cargo.lock
 /target
 /resources/pkg
 /examples/simple/resources/pkg
+.vscode

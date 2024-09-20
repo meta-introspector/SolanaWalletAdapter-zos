@@ -2,13 +2,12 @@
 A lightweight Rust Solana Wallet that can be used in Rust based frontends and WebAssembly.
 
 #### Features
-- [x] Detect available wallets
-- [x] Signing a message
-- [?] Creating a Versioned Transaction
-- [?] Sign In With Solana
-- [?] Handling errors
-- [ ] Send a transaction
-- [ ] Parse a response
+-[x] Regsiter `wallet-standard:register-wallet` custom event (only Backapp is able to invoke this at the moment)
+-[x] Wallet parsing - all fields of a wallet are parsed excluding `features`. Work to detect all features is main priority at the moment
+-[ ] SignIn
+-[ ] Sign Message
+-[ ] Sign Transaction
+-[ ] Custom Layouts 
 
 Those marked with `?` have partial support at the moment
 

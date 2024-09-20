@@ -1,5 +1,6 @@
+use js_sys::wasm_bindgen::prelude::Closure;
 use wasm_bindgen_futures::wasm_bindgen::JsValue;
-use web_sys::{js_sys::Object, Document, Window};
+use web_sys::{js_sys::Object, Document, Event, Window};
 
 use crate::{WalletAdapterError, WalletAdapterResult};
 
@@ -47,5 +48,23 @@ impl WindowOps {
         }
 
         Ok(value)
+    }
+
+    pub fn window(&self) -> &Window {
+        &self.window
+    }
+
+    pub fn document(&self) -> &Document {
+        &self.document
+    }
+
+    pub fn event_closure<F>(&self, function: F) -> Closure<dyn FnMut(Event)>
+    where
+        F: Fn(),
+    {
+        Closure::wrap(Box::new(move |event: Event| {
+            //return Err(WalletAdapterError::DomErrorIsNotAnObject);
+            JsValue::null();
+        }) as Box<dyn FnMut(Event)>)
     }
 }

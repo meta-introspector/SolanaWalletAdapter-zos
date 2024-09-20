@@ -22,5 +22,4 @@ watch = { ignore_pattern = "resources/*" }
 
 [tasks.serve]
 command = "miniserve"
-install_crate = "miniserve"
 args = ["-p", "5500", "./resources", "--index", "index.html"]
