@@ -1,144 +1,88 @@
-use js_sys::{Function, Object, Promise, Reflect, Uint8Array};
-use log::{error, info};
-use wasm_bindgen_futures::{
-    wasm_bindgen::{JsCast, JsValue},
-    JsFuture,
-};
+use crate::{Cluster, WalletIcon, WALLET_STANDARD_VERSION};
 
-use crate::{WalletAdapterError, WalletAdapterResult, WindowOps};
+/// Interface of a **Wallet**, also referred to as a **Standard Wallet**.
+///
+/// A Standard Wallet implements and adheres to the Wallet Standard.
+pub trait Wallet {
+    /// [WALLET_STANDARD_VERSION] of the Wallet Standard implemented by the Wallet.
+    /// It is be read-only, static, and canonically defined by the Wallet Standard.
+    fn version() -> &'static str {
+        WALLET_STANDARD_VERSION
+    }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct PhantomWallet {
-    is_connected: bool,
-    is_phantom: bool,
-    // window.phantom.solana.connect()
-    connect: Function,
-    disconnect: Function,
-    sign_message: Function,
+    /// Name of the Wallet. This may be displayed by the app.
+    ///
+    /// Must be read-only, static, descriptive, unique,
+    /// and canonically defined by the wallet extension or application.
+    fn name() -> &'static str;
+
+    ///  Icon of the Wallet displayed by the app.
+    ///
+    /// Must be read-only, static, and canonically defined by the wallet extension or application.
+    fn icon() -> WalletIcon;
+
+    ///
+    /// Chains supported by the Wallet.
+    ///
+    /// A **chain** is an string idnetifier which identifies a blockchain in a canonical,
+    /// human-readable format.
+    /// [CAIP-2](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-2.md)
+    /// chain IDs are compatible with this, but are not required to be used.
+    ///
+    /// Each blockchain should define its own **chains** by extension of the Wallet Standard,
+    /// using its own namespace.
+    /// The `standard` and `experimental` namespaces are reserved by the Wallet Standard.
+    ///
+    /// The event features should be used to notify the app if the value changes.
+    fn chains() -> [Cluster];
+
+    /// Features supported by the Wallet.
+    ///
+    /// A **feature name** is an identifier which identifies a **feature** in a canonical,
+    /// human-readable format.
+    ///
+    /// Each blockchain should define its own features by extension of the Wallet Standard.
+    ///
+    /// The `standard` and `experimental` namespaces are reserved by the Wallet Standard.
+    ///
+    /// A **feature** may have any type. It may be a single method or value, or a collection of them.
+    ///
+    /// A **conventional feature** implements the [Feature] trait.
+    /// Example
+    ///
+    /// ```rust
+    /// pub struct Foo {
+    ///     ciphers: String,
+    ///     encrypt: fn(&[u8]) -> &'static dyn Future<Output = String>,
+    /// }
+    ///
+    /// impl Feature for Foo {
+    ///     fn name() -> &'static str {
+    ///         "Foo"
+    ///     }
+    ///
+    ///     fn version() -> &'static str {
+    ///         "1.0.0"
+    ///     }
+    /// }
+    ///
+    /// The `Features` event should be used to notify the app if the value changes.
+    ///
+    fn features<T>() -> [&'static dyn Feature<T>];
+
+    /// Accounts the app is authorized to use of type [WalletAccount]
+    ///
+    /// This can be set by the Wallet so the app can use authorized accounts on the initial page load.
+    ///
+    /// The `ConnectFeature` | `standard:connect` feature should be used to obtain
+    /// authorization to the accounts.
+    ///
+    /// The Feature.events() should be used to notify the app if the value changes.
+    fn accounts() -> Vec<WalletAccount>;
 }
 
-impl PhantomWallet {
-    pub fn get_phantom(window_ops: &WindowOps) -> WalletAdapterResult<Self> {
-        let entry = window_ops.get_entry("phantom");
-        let get_solana = Reflect::get(&entry.unwrap(), &"solana".into())?;
-        let is_phantom = Reflect::get(&get_solana, &"isPhantom".into())?
-            .as_bool()
-            .is_some();
+pub trait Feature<T> {
+    fn name(&self) -> &'static str;
 
-        let connect = Reflect::get(&get_solana, &"connect".into())?;
-
-        if !connect.is_function() {
-            error!("Expected call to window.phantom.solana.connect to be a function");
-            return Err(WalletAdapterError::ExpectedAFunction("connect".into()));
-        }
-
-        let disconnect = Reflect::get(&get_solana, &"disconnect".into())?;
-
-        if !disconnect.is_function() {
-            error!("Expected call to window.phantom.solana.disconnect to be a function");
-            return Err(WalletAdapterError::ExpectedAFunction("disconnect".into()));
-        }
-
-        let sign_message = Reflect::get(&get_solana, &"signMessage".into())?;
-
-        if !sign_message.is_function() {
-            error!("Expected call to window.phantom.solana.signMessage to be a function");
-            return Err(WalletAdapterError::ExpectedAFunction("signMessage".into()));
-        }
-
-        let is_connected = Reflect::get(&get_solana, &"isConnected".into())?
-            .as_bool()
-            .is_some();
-
-        // TODO: Redirect to phantom website if phantom is not detected
-        // window.open('https://phantom.app/', '_blank');
-
-        Ok(PhantomWallet {
-            is_connected,
-            is_phantom,
-            connect: connect.into(),
-            disconnect: disconnect.into(),
-            sign_message: sign_message.into(),
-        })
-    }
-
-    pub async fn connect(&mut self) -> WalletAdapterResult<String> {
-        let to_promise = Promise::resolve(&self.connect.call0(&JsValue::null())?);
-
-        match JsFuture::from(to_promise).await {
-            Ok(outcome) => {
-                self.is_connected = Reflect::get(&outcome, &"isConnected".into())?
-                    .as_bool()
-                    .is_some();
-
-                let public_key = Reflect::get(&outcome, &"publicKey".into())?;
-
-                let public_key_as_object = Object::from(public_key);
-
-                Ok(public_key_as_object.to_string().into())
-            }
-            Err(error) => {
-                let code = Reflect::get(&error, &"code".into())?;
-
-                let parsed_error = WalletAdapterError::parse_error_code(&code);
-
-                match parsed_error {
-                    WalletAdapterError::UnrecognizedError => return Err(error.into()),
-                    _ => return Err(parsed_error),
-                }
-            }
-        }
-    }
-
-    pub async fn disconnect(&self) -> WalletAdapterResult<()> {
-        let to_promise = Promise::resolve(&self.disconnect.call0(&JsValue::null())?);
-
-        match JsFuture::from(to_promise).await {
-            Ok(outcome) => {
-                info!("DISCONNECT: {:?}", &outcome);
-            }
-            Err(error) => {
-                error!("DISCONNECT: {:?}", &error);
-            }
-        }
-
-        Ok(())
-    }
-
-    pub async fn sign_message(&self, message: &str) -> WalletAdapterResult<([u8; 64], String)> {
-        let message_js_array = Uint8Array::from(message.as_bytes());
-        let to_promise = Promise::resolve(
-            &self
-                .sign_message
-                .call1(&JsValue::null(), &message_js_array.into())?,
-        );
-        match JsFuture::from(to_promise).await {
-            Ok(response) => {
-                let signature: Uint8Array = Reflect::get(&response, &"signature".into())?.into();
-                let public_key_obj = Reflect::get(&response, &"publicKey".into())?;
-
-                // Call the `toString` method on a javascript object
-                let public_key = Reflect::get(&public_key_obj, &JsValue::from_str("toString"))?
-                    .dyn_into::<js_sys::Function>()?
-                    .call0(&public_key_obj)?
-                    .as_string()
-                    .ok_or_else(|| JsValue::from_str("Expected publicKey to be a string"))?; //TODO check if this can be handled via error enum
-
-                let mut signature_buffer = [0u8; 64];
-
-                if signature.length() != 64 {
-                    return Err(WalletAdapterError::InvalidSignatureBytes);
-                }
-
-                signature.copy_to(&mut signature_buffer);
-
-                Ok((signature_buffer, public_key))
-            }
-            Err(error) => {
-                error!("error: {:?}", &error);
-
-                Err(WalletAdapterError::parse_error_code(&error))
-            }
-        }
-    }
+    fn version(&self) -> &'static str;
 }

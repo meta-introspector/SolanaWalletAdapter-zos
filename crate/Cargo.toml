@@ -11,7 +11,7 @@ readme.workspace = true
 
 [dependencies]
 log.workspace = true
-web-sys = { version = "0.3.70", features = ["Window", "Document"] }
+web-sys.workspace = true
 js-sys = "0.3.70"
 wasm-bindgen-futures.workspace = true
 thiserror = "1.0.63"

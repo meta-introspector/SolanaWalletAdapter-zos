@@ -1,34 +1,99 @@
+use gloo_utils::format::JsValueSerdeExt;
 use log::{info, trace, Level};
-use solana_wallet_adapter::{PhantomWallet, WindowOps};
-use std::panic;
+use serde::{Deserialize, Deserializer, Serialize};
+use std::{cell::RefCell, collections::HashMap, panic, rc::Rc};
+use wallet_adapter::WindowOps;
 use wasm_bindgen::{prelude::*, JsValue};
+use web_sys::{
+    js_sys::{self, global, Function, Object, Reflect},
+    window, CustomEvent, CustomEventInit, Element, Event, EventTarget, Window,
+};
 
-#[wasm_bindgen(start)]
-pub fn main() -> Result<(), JsValue> {
-    panic::set_hook(Box::new(console_error_panic_hook::hook));
+// /// Register Wallet Event
+pub const WINDOW_REGISTER_WALLET_EVENT_TYPE: &str = "wallet-standard:register-wallet";
 
-    match console_log::init_with_level(Level::Trace) {
-        Ok(_) => (),
-        Err(e) => trace!("{:?}", e),
+///App Ready Event
+pub const WINDOW_APP_READY_EVENT_TYPE: &str = "wallet-standard:app-ready";
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
+pub struct Wallet {
+    accounts: Vec<String>,
+    chains: Vec<String>,
+    // features: HashMap<String, String>,
+    icon: Option<String>,
+    name: Option<String>,
+    version: String,
+}
+
+fn features(value: &JsValue) {
+    /*
+        solana:signAndSendTransaction
+    solana:signIn
+    solana:signMessage
+    solana:signTransaction
+    standard:connect
+    standard:disconnect
+    standard:events
+    */
+
+    let features = Reflect::get(value, &"features".into()).unwrap();
+
+    let featurs_as_object = features.as_ref().dyn_ref::<Object>().unwrap();
+
+    for key in Object::keys(&featurs_as_object) {
+        info!("ITER: {:?}", &key);
     }
 
-    let window_ops = WindowOps::new();
-    let mut phantom_wallet = PhantomWallet::get_phantom(&window_ops).unwrap();
-    info!("WALLET KEY:{:?}", &phantom_wallet);
+    let signin = Reflect::get(&features, &"solana:signIn".into()).unwrap();
+    let signin_version = Reflect::get(&signin, &"version".into()).unwrap();
+    let signin_fn = Reflect::get(&signin, &"signIn".into()).unwrap();
 
-    wasm_bindgen_futures::spawn_local(async move {
-        let foo = phantom_wallet.connect().await;
-        info!("PUBLIC KEY:{:?}", &foo);
+    info!(
+        "SIGNIN: version-{:?}, func-{:?}",
+        &signin_version, signin_fn
+    );
+}
 
-        phantom_wallet.disconnect().await.unwrap();
+use wasm_bindgen::closure::Closure;
+use wasm_bindgen::JsCast;
 
-        let sign_outcome = phantom_wallet
-            .sign_message(&"custom message 405")
-            .await
-            .unwrap();
+#[wasm_bindgen(start)]
+pub fn main() {
+    console_error_panic_hook::set_once();
+    console_log::init_with_level(Level::Trace).unwrap();
 
-        info!("SIGNED OUTCOME: {:?}", &sign_outcome);
-    });
+    let window = window().unwrap();
 
-    Ok(())
+    let listener_closure = Closure::wrap(Box::new(move |custom_event: CustomEvent| {
+        let detail = custom_event.detail().dyn_into::<Function>().unwrap();
+
+        // The `register` function that logs and returns a closure like in your JS code
+        let register = Closure::wrap(Box::new(move |value: JsValue| {
+            let wallet = serde_wasm_bindgen::from_value::<Wallet>(value.clone()).unwrap();
+
+            info!("VALUES:> {:?}", wallet);
+
+            features(&value);
+        }) as Box<dyn Fn(_)>);
+
+        // Create an object and set the `register` property
+        let register_object = Object::new();
+        Reflect::set(
+            &register_object,
+            &JsValue::from("register"),
+            &register.into_js_value(), // Use the Rust closure as the register function
+        )
+        .unwrap();
+
+        // Call the JavaScript function passed as `detail`, passing the `register_object`
+        detail.call1(&JsValue::null(), &register_object).unwrap();
+    }) as Box<dyn Fn(_)>);
+
+    let listener_fn = listener_closure.as_ref().dyn_ref::<Function>().unwrap();
+
+    window
+        .add_event_listener_with_callback("wallet-standard:register-wallet", listener_fn)
+        .unwrap();
+
+    listener_closure.forget();
 }
