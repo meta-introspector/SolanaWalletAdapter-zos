@@ -17,4 +17,3 @@ wasm-bindgen.workspace = true
 serde-wasm-bindgen.workspace = true
 serde = { workspace = true, features = ["derive"] }
 web-sys.workspace = true
-gloo-utils = { version = "0.2.0", features = ["serde"] }
