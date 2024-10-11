@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 bs58.workspace = true
 wasm-bindgen-futures.workspace = true
-wallet-adapter = { path = "../../crate" }
+# wallet-adapter = { path = "../../crate" }
 log.workspace = true
 console_error_panic_hook.workspace = true
 console_log.workspace = true

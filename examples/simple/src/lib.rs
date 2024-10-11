@@ -7,12 +7,14 @@ use std::{
     rc::Rc,
     sync::{LazyLock, Mutex},
 };
-use wallet_adapter::WindowOps;
 use wasm_bindgen::{prelude::*, JsValue};
 use web_sys::{
     js_sys::{self, global, Function, Object, Reflect},
     CustomEvent, CustomEventInit, Document, Element, Event, EventTarget, Storage, Window,
 };
+
+mod wallet;
+pub use wallet::*;
 
 const WINDOW: LazyLock<Window> = LazyLock::new(|| web_sys::window().unwrap());
 const DOCUMENT: LazyLock<Document> = LazyLock::new(|| WINDOW.document().unwrap());
@@ -27,17 +29,7 @@ pub const WINDOW_REGISTER_WALLET_EVENT_TYPE: &str = "wallet-standard:register-wa
 ///App Ready Event
 pub const WINDOW_APP_READY_EVENT_TYPE: &str = "wallet-standard:app-ready";
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct Wallet {
-    accounts: Vec<String>,
-    chains: Vec<String>,
-    // features: HashMap<String, String>,
-    icon: Option<String>,
-    name: String,
-    version: String,
-}
-
-fn features(_value: &JsValue) {
+fn features(value: &JsValue) {
     /*
         solana:signAndSendTransaction
     solana:signIn
@@ -48,22 +40,22 @@ fn features(_value: &JsValue) {
     standard:events
     */
 
-    // let features = Reflect::get(value, &"features".into()).unwrap();
+    let features = Reflect::get(value, &"features".into()).unwrap();
 
-    // let featurs_as_object = features.as_ref().dyn_ref::<Object>().unwrap();
+    let featurs_as_object = features.as_ref().dyn_ref::<Object>().unwrap();
 
-    // for key in Object::keys(&featurs_as_object) {
-    //     info!("ITER: {:?}", &key);
-    // }
+    for key in Object::keys(&featurs_as_object) {
+        info!("ITER: {:?}", &key);
+    }
 
-    // let signin = Reflect::get(&features, &"solana:signIn".into()).unwrap();
-    // let signin_version = Reflect::get(&signin, &"version".into()).unwrap();
-    // let signin_fn = Reflect::get(&signin, &"signIn".into()).unwrap();
+    let signin = Reflect::get(&features, &"solana:signIn".into()).unwrap();
+    let signin_version = Reflect::get(&signin, &"version".into()).unwrap();
+    let signin_fn = Reflect::get(&signin, &"signIn".into()).unwrap();
 
-    // info!(
-    //     "SIGNIN: version-{:?}, func-{:?}",
-    //     &signin_version, signin_fn
-    // );
+    info!(
+        "SIGNIN: version-{:?}, func-{:?}",
+        &signin_version, signin_fn
+    );
 }
 
 use wasm_bindgen::closure::Closure;
@@ -112,14 +104,20 @@ fn register_wallet_event() {
     listener_closure.forget();
 }
 
-fn register_object() -> Object {
+fn register_object<'a>() -> Object {
     // The `register` function that logs and returns a closure like in your JS code
     let register = Closure::wrap(Box::new(move |value: JsValue| {
-        let wallet = serde_wasm_bindgen::from_value::<Wallet>(value.clone()).unwrap();
+        // let wallet = serde_wasm_bindgen::from_value::<Wallet>(value.clone()).unwrap();
 
-        DATA_STORE.set_item(&wallet.name, &wallet.version).unwrap();
+        // // features(&value);
 
-        features(&value);
+        // DATA_STORE
+        //     .set_item(wallet.name(), wallet.version())
+        //     .unwrap();
+
+        // features(&value);
+
+        Wallet::from_jsvalue(value)
     }) as Box<dyn Fn(_)>);
 
     // Create an object and set the `register` property
