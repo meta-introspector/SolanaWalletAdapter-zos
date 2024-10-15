@@ -1,88 +1,88 @@
-use crate::{Cluster, WalletIcon, WALLET_STANDARD_VERSION};
+use log::info;
+use wasm_bindgen::JsValue;
+use web_sys::js_sys::Reflect;
 
-/// Interface of a **Wallet**, also referred to as a **Standard Wallet**.
-///
-/// A Standard Wallet implements and adheres to the Wallet Standard.
-pub trait Wallet {
-    /// [WALLET_STANDARD_VERSION] of the Wallet Standard implemented by the Wallet.
-    /// It is be read-only, static, and canonically defined by the Wallet Standard.
-    fn version() -> &'static str {
-        WALLET_STANDARD_VERSION
+use crate::{WalletError, WalletResult};
+
+pub const WALLET_VERSION: &str = "1.0.0";
+
+pub const WINDOW_APP_READY_EVENT_TYPE: &str = "wallet-standard:app-ready";
+
+pub const WINDOW_REGISTER_WALLET_EVENT_TYPE: &str = "wallet-standard:register-wallet";
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Wallet {
+    accounts: Vec<String>,
+    chains: Vec<String>,
+    // features: Feature,
+    icon: Option<String>,
+    name: String,
+    version: String,
+}
+
+impl Wallet {
+    pub fn from_jsvalue(value: JsValue) {
+        let reflection = Reflection::new(value);
+        let name = reflection.string("name");
+
+        info!("{:?}", &name);
     }
 
-    /// Name of the Wallet. This may be displayed by the app.
-    ///
-    /// Must be read-only, static, descriptive, unique,
-    /// and canonically defined by the wallet extension or application.
-    fn name() -> &'static str;
+    pub fn accounts(&self) -> &[String] {
+        &self.accounts
+    }
 
-    ///  Icon of the Wallet displayed by the app.
-    ///
-    /// Must be read-only, static, and canonically defined by the wallet extension or application.
-    fn icon() -> WalletIcon;
+    pub fn chains(&self) -> &[String] {
+        &self.chains
+    }
 
-    ///
-    /// Chains supported by the Wallet.
-    ///
-    /// A **chain** is an string idnetifier which identifies a blockchain in a canonical,
-    /// human-readable format.
-    /// [CAIP-2](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-2.md)
-    /// chain IDs are compatible with this, but are not required to be used.
-    ///
-    /// Each blockchain should define its own **chains** by extension of the Wallet Standard,
-    /// using its own namespace.
-    /// The `standard` and `experimental` namespaces are reserved by the Wallet Standard.
-    ///
-    /// The event features should be used to notify the app if the value changes.
-    fn chains() -> [Cluster];
+    pub fn icon(&self) -> Option<&String> {
+        self.icon.as_ref()
+    }
 
-    /// Features supported by the Wallet.
-    ///
-    /// A **feature name** is an identifier which identifies a **feature** in a canonical,
-    /// human-readable format.
-    ///
-    /// Each blockchain should define its own features by extension of the Wallet Standard.
-    ///
-    /// The `standard` and `experimental` namespaces are reserved by the Wallet Standard.
-    ///
-    /// A **feature** may have any type. It may be a single method or value, or a collection of them.
-    ///
-    /// A **conventional feature** implements the [Feature] trait.
-    /// Example
-    ///
-    /// ```rust
-    /// pub struct Foo {
-    ///     ciphers: String,
-    ///     encrypt: fn(&[u8]) -> &'static dyn Future<Output = String>,
-    /// }
-    ///
-    /// impl Feature for Foo {
-    ///     fn name() -> &'static str {
-    ///         "Foo"
-    ///     }
-    ///
-    ///     fn version() -> &'static str {
-    ///         "1.0.0"
-    ///     }
-    /// }
-    ///
-    /// The `Features` event should be used to notify the app if the value changes.
-    ///
-    fn features<T>() -> [&'static dyn Feature<T>];
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 
-    /// Accounts the app is authorized to use of type [WalletAccount]
-    ///
-    /// This can be set by the Wallet so the app can use authorized accounts on the initial page load.
-    ///
-    /// The `ConnectFeature` | `standard:connect` feature should be used to obtain
-    /// authorization to the accounts.
-    ///
-    /// The Feature.events() should be used to notify the app if the value changes.
-    fn accounts() -> Vec<WalletAccount>;
+    pub fn version(&self) -> &str {
+        &self.version
+    }
 }
 
-pub trait Feature<T> {
-    fn name(&self) -> &'static str;
+#[derive(Debug)]
+pub struct Reflection(JsValue);
 
-    fn version(&self) -> &'static str;
+impl Reflection {
+    pub fn new(value: JsValue) -> Self {
+        Self(value)
+    }
+
+    pub fn string(&self, key: &str) -> WalletResult<(String, String)> {
+        let name = Reflect::get(&self.0, &key.into())?;
+
+        Reflection::check_is_undefined(&name)?;
+
+        let parsed = name.as_string().ok_or(WalletError::JsValueNotString)?;
+
+        Ok((key.to_string(), parsed))
+    }
+
+    pub fn check_is_undefined(value: &JsValue) -> WalletResult<()> {
+        if value.is_undefined() || value.is_null() {
+            return Err(WalletError::ValueNotFound);
+        } else {
+            Ok(())
+        }
+    }
 }
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Default)]
+pub struct VersionedValue {
+    version: String,
+}
+
+/// A data URI containing a base64-encoded SVG, WebP, PNG, or GIF image.
+pub struct WalletIcon(
+    /// Format `data:image/${'svg+xml' | 'webp' | 'png' | 'gif'};base64,${string}`
+    &'static str,
+);

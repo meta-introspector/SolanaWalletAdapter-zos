@@ -13,5 +13,5 @@ readme.workspace = true
 log.workspace = true
 web-sys.workspace = true
 js-sys = "0.3.70"
-wasm-bindgen-futures.workspace = true
+wasm-bindgen.workspace = true
 thiserror = "1.0.63"

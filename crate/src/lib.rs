@@ -14,14 +14,8 @@ pub use errors::*;
 mod commitment;
 pub use commitment::*;
 
-// mod sign_in;
-// pub use sign_in::*;
-
-// mod wallet;
-// pub use wallet::*;
-
-// mod wallet_account;
-// pub use wallet_account::*;
+mod wallet;
+pub use wallet::*;
 
 mod utils;
 pub use utils::*;

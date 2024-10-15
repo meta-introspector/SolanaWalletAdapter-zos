@@ -1,5 +1,3 @@
-use crate::{WalletAdapterError, WalletAdapterResult};
-
 /// Solana Mainnet cluster,  https://api.mainnet-beta.solana.com
 pub const MAINNET_IDENTIFIER: &'static str = "solana:mainnet";
 /// Solana Devnet cluster, e.g. https://api.devnet.solana.com
@@ -19,7 +17,7 @@ pub const TESTNET_ENDPOINT: &'static str = "https://api.testnet.solana.com";
 pub const LOCALNET_ENDPOINT: &'static str = "http://localhost:8899";
 
 /// Solana Clusters
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub enum Cluster {
     /// Solana Mainnet cluster,  https://api.mainnet-beta.solana.com
     MainNet,
@@ -29,6 +27,7 @@ pub enum Cluster {
     TestNet,
     /// Solana Localnet cluster, e.g. http://localhost:8899
     LocalNet,
+    Custom(String),
 }
 
 impl Cluster {
@@ -39,27 +38,14 @@ impl Cluster {
             Cluster::DevNet => DEVNET_ENDPOINT,
             Cluster::TestNet => TESTNET_ENDPOINT,
             Cluster::LocalNet => LOCALNET_ENDPOINT,
+            Cluster::Custom(uri) => uri.as_str(),
         }
-    }
-
-    /// Convenience method to convert a Solana endpoint URI
-    /// to a [Cluster] type. `try_into()` also does the same thing.
-    /// The  difference between `try_into()` and this method is that
-    /// this method checks if the `uri` provided contains `https://` and `http://`.
-    pub fn from_uri(uri: &str) -> WalletAdapterResult<Self> {
-        if !uri.contains("https://") || !uri.contains("http://") {
-            return Err(WalletAdapterError::UnsupportedCluster("uri"));
-        }
-
-        uri.try_into()
     }
 }
 
-impl<'a> TryFrom<&'a str> for Cluster {
-    type Error = WalletAdapterError<'a>;
-
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        let parsed = match value {
+impl From<&str> for Cluster {
+    fn from(value: &str) -> Self {
+        match value {
             MAINNET_IDENTIFIER => Self::MainNet,
             DEVNET_IDENTIFIER => Self::DevNet,
             TESTNET_IDENTIFIER => Self::TestNet,
@@ -68,10 +54,8 @@ impl<'a> TryFrom<&'a str> for Cluster {
             DEVNET_ENDPOINT => Self::DevNet,
             TESTNET_ENDPOINT => Self::TestNet,
             LOCALNET_ENDPOINT => Self::LocalNet,
-            _ => return Err(WalletAdapterError::UnsupportedCluster(value)),
-        };
-
-        Ok(parsed)
+            _ => Self::Custom(value.to_string()),
+        }
     }
 }
 

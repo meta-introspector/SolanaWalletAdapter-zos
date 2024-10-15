@@ -1,4 +1,4 @@
-use crate::WalletAdapterError;
+use crate::WalletError;
 
 /// The commitment level of a Solana transaction.
 ///
@@ -20,15 +20,15 @@ pub enum Commitment {
     Finalized,
 }
 
-impl<'a> TryFrom<&'a str> for Commitment {
-    type Error = WalletAdapterError<'a>;
+impl TryFrom<&str> for Commitment {
+    type Error = WalletError;
 
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         let converted = match value {
             "processed" | "recent" => Self::Processed,
             "confirmed" | "single" | "singleGossip" => Self::Confirmed,
             "finalized" | "root" | "max" => Self::Finalized,
-            _ => return Err(WalletAdapterError::UnsupportedCommitment(value)),
+            _ => return Err(WalletError::UnsupportedCommitment(value.to_string())),
         };
 
         Ok(converted)
