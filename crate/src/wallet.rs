@@ -19,8 +19,13 @@ impl Wallet {
 
         let (name_key, wallet_name) = reflection.string("name")?;
         assert_eq!(name_key.as_str(), "name");
+
+        let (wallet_key, wallet_version) = reflection.string("version")?;
+        assert_eq!(wallet_key.as_str(), "version");
+
         let mut wallet = Self::default();
         wallet.name = wallet_name;
+        wallet.version = wallet_version;
 
         Ok(wallet)
     }
