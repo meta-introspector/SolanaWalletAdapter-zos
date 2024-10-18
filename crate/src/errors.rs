@@ -11,7 +11,7 @@ pub enum WalletError {
     /// the error message `message`
     /// and the `stack` message which offers a trace of which functions were called.
     /// Learn about this error type from [Error - Mozilla Developer Network](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)
-    #[error("An JavaScript Error corresponding to a `wasm_bindgen::JsValue`. It contains the error type represented by `name`, the error message `message` and the `stack` message which offers a trace of which functions were called.")]
+    #[error("JsError{{ name: {name}, message: {message}, stack: {stack} }}")]
     JsError {
         name: String,
         message: String,
@@ -36,11 +36,17 @@ pub enum WalletError {
     #[error("Unable to access browser document")]
     MissingAccessToBrowserDocument,
     /// Only `processed`, `confirmed` and `finalized` commitments are supported by Solana clusters
-    #[error("Only `processed`, `confirmed` and `finalized` commitments are supported by Solana clusters")]
+    #[error("Unsupported Commmitment level `{0}`. Only `processed`, `confirmed` and `finalized` commitments are supported by Solana clusters")]
     UnsupportedCommitment(String),
     /// Unable to cast a wasm_bindgen closure to Function
     #[error("Unable to cast a wasm_bindgen closure to Function")]
     CastClosureToFunction,
+    /// The wallet version is invalid, expected SemVer version
+    #[error("The wallet version `{0}` is invalid, expected SemVer version")]
+    InvalidWalletVersion(String),
+    /// Unexpected SemVer number to parse to a `u8`
+    #[error("Unexpected SemVer number `{0}` to parse to a `u8`")]
+    InvalidSemVerNumber(String),
 }
 
 impl WalletError {
