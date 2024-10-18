@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use wasm_bindgen::JsValue;
 use web_sys::js_sys::Reflect;
 
@@ -8,7 +10,7 @@ pub struct Wallet {
     accounts: Vec<String>,
     chains: Vec<String>,
     // features: Feature,
-    icon: Option<String>,
+    icon: Option<WalletIcon>,
     name: String,
     version: String,
 }
@@ -23,9 +25,23 @@ impl Wallet {
         let (wallet_key, wallet_version) = reflection.string("version")?;
         assert_eq!(wallet_key.as_str(), "version");
 
+        let (icon_key, icon) = match reflection.string("icon") {
+            Ok((icon_key, icon)) => (icon_key, Option::Some(WalletIcon(Cow::Owned(icon)))),
+            Err(error) => {
+                if error == WalletError::JsValueNotString {
+                    (String::from("icon"), Option::None)
+                } else {
+                    return Err(error);
+                }
+            }
+        };
+
+        assert_eq!(icon_key.as_str(), "icon");
+
         let mut wallet = Self::default();
         wallet.name = wallet_name;
         wallet.version = wallet_version;
+        wallet.icon = icon;
 
         Ok(wallet)
     }
@@ -38,7 +54,7 @@ impl Wallet {
         &self.chains
     }
 
-    pub fn icon(&self) -> Option<&String> {
+    pub fn icon(&self) -> Option<&WalletIcon> {
         self.icon.as_ref()
     }
 
@@ -84,7 +100,8 @@ pub struct VersionedValue {
 }
 
 /// A data URI containing a base64-encoded SVG, WebP, PNG, or GIF image.
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct WalletIcon(
     /// Format `data:image/${'svg+xml' | 'webp' | 'png' | 'gif'};base64,${string}`
-    &'static str,
+    pub Cow<'static, str>,
 );
