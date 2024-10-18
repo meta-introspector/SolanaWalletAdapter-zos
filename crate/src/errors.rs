@@ -38,6 +38,9 @@ pub enum WalletError {
     /// Only `processed`, `confirmed` and `finalized` commitments are supported by Solana clusters
     #[error("Only `processed`, `confirmed` and `finalized` commitments are supported by Solana clusters")]
     UnsupportedCommitment(String),
+    /// Unable to cast a wasm_bindgen closure to Function
+    #[error("Unable to cast a wasm_bindgen closure to Function")]
+    CastClosureToFunction,
 }
 
 impl WalletError {

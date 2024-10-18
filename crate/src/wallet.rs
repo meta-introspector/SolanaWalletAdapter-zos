@@ -1,16 +1,9 @@
-use log::info;
 use wasm_bindgen::JsValue;
 use web_sys::js_sys::Reflect;
 
 use crate::{WalletError, WalletResult};
 
-pub const WALLET_VERSION: &str = "1.0.0";
-
-pub const WINDOW_APP_READY_EVENT_TYPE: &str = "wallet-standard:app-ready";
-
-pub const WINDOW_REGISTER_WALLET_EVENT_TYPE: &str = "wallet-standard:register-wallet";
-
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Wallet {
     accounts: Vec<String>,
     chains: Vec<String>,
@@ -21,11 +14,15 @@ pub struct Wallet {
 }
 
 impl Wallet {
-    pub fn from_jsvalue(value: JsValue) {
+    pub fn from_jsvalue(value: JsValue) -> WalletResult<Self> {
         let reflection = Reflection::new(value);
-        let name = reflection.string("name");
 
-        info!("{:?}", &name);
+        let (name_key, wallet_name) = reflection.string("name")?;
+        assert_eq!(name_key.as_str(), "name");
+        let mut wallet = Self::default();
+        wallet.name = wallet_name;
+
+        Ok(wallet)
     }
 
     pub fn accounts(&self) -> &[String] {

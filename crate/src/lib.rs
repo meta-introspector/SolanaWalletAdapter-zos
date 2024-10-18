@@ -5,8 +5,8 @@
 mod chains;
 pub use chains::*;
 
-mod window_ops;
-pub use window_ops::*;
+mod adapter;
+pub use adapter::*;
 
 mod errors;
 pub use errors::*;
@@ -22,3 +22,6 @@ pub use utils::*;
 
 mod register;
 pub use register::*;
+
+mod constants;
+pub use constants::*;
