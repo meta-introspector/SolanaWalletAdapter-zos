@@ -12,6 +12,9 @@ readme.workspace = true
 [dependencies]
 log.workspace = true
 web-sys.workspace = true
-js-sys = "0.3.70"
-wasm-bindgen-futures.workspace = true
+js-sys.workspace = true
+wasm-bindgen.workspace = true
 thiserror = "1.0.63"
+async-channel.workspace = true
+jzon.workspace = true
+wasm-bindgen-futures.workspace = true

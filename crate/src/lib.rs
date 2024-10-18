@@ -5,8 +5,8 @@
 mod chains;
 pub use chains::*;
 
-mod window_ops;
-pub use window_ops::*;
+mod adapter;
+pub use adapter::*;
 
 mod errors;
 pub use errors::*;
@@ -14,17 +14,14 @@ pub use errors::*;
 mod commitment;
 pub use commitment::*;
 
-// mod sign_in;
-// pub use sign_in::*;
-
-// mod wallet;
-// pub use wallet::*;
-
-// mod wallet_account;
-// pub use wallet_account::*;
+mod wallet;
+pub use wallet::*;
 
 mod utils;
 pub use utils::*;
 
 mod register;
 pub use register::*;
+
+mod constants;
+pub use constants::*;

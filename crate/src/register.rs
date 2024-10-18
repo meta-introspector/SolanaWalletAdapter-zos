@@ -1,95 +1,117 @@
-// use core::fmt;
-// use log::{info, trace, Level};
-// use std::{cell::RefCell, collections::HashMap, panic, rc::Rc};
-// use wasm_bindgen::{prelude::*, JsValue};
-// use web_sys::{
-//     js_sys::{self, global, wasm_bindgen, Function, Object, Reflect},
-//     window, CustomEvent, CustomEventInit, Element, Event, Window,
-// };
+use std::future::Future;
 
-// use crate::WindowOps;
+use js_sys::{Function, Object, Reflect};
+use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
+use web_sys::{CustomEvent, CustomEventInit};
 
-// pub const WALLET_VERSION: &str = "1.0.0";
+use crate::{
+    MessageSender, MessageType, Utils, Wallet, WalletAdapter, WalletError, WalletResult,
+    WINDOW_APP_READY_EVENT_TYPE,
+};
 
-pub const WINDOW_APP_READY_EVENT_TYPE: &str = "wallet-standard:app-ready";
+impl WalletAdapter {
+    pub fn dispatch_app_event(&self, sender: MessageSender) {
+        let app_ready_init = CustomEventInit::new();
+        app_ready_init.set_bubbles(false);
+        app_ready_init.set_cancelable(false);
+        app_ready_init.set_composed(false);
+        app_ready_init.set_detail(&Self::register_object(sender));
 
-pub const WINDOW_REGISTER_WALLET_EVENT_TYPE: &str = "wallet-standard:register-wallet";
+        let app_ready_ev =
+            CustomEvent::new_with_event_init_dict(WINDOW_APP_READY_EVENT_TYPE, &app_ready_init)
+                .unwrap();
 
-// pub fn app_ready_event(window_ops: &WindowOps) {
-//     let register_wallet_closure = Closure::wrap(Box::new(move |event: Event| {
-//         let custom_event = event.dyn_ref::<CustomEvent>().unwrap();
-//         let detail = custom_event.detail();
-//         let detail_obj = detail.dyn_ref::<js_sys::Object>().unwrap();
-//         let wallet_value = js_sys::Reflect::get(&detail_obj, &JsValue::from_str("wallet"))
-//             .expect("Unable to fetch wallet");
+        self.window().dispatch_event(&app_ready_ev).unwrap();
+    }
 
-//         info!("REGISTER> WALLET OBJECT: {:?}", wallet_value);
-//     }) as Box<dyn FnMut(Event)>);
+    pub async fn dispatch_error_event(error: WalletError, sender: MessageSender) {
+        if let Err(sender_error) = sender.send(MessageType::Failure(error)).await {
+            panic!("Error `{sender_error:?}`. Unable to send message via channel. Maybe the `Receiver` was dropped closing the channel.")
+        }
+    }
 
-//     let global = global();
-//     let register_wallet_function = register_wallet_closure.as_ref().unchecked_ref::<Function>();
-//     js_sys::Reflect::set(
-//         &window_ops.document().body().unwrap(),
-//         &WINDOW_REGISTER_WALLET_EVENT_TYPE.into(),
-//         &register_wallet_function.into(),
-//     )
-//     .expect("Failed to set `wallet register function` on global object");
+    pub fn register_wallet_event(&self, sender: MessageSender) -> WalletResult<()> {
+        let listener_closure = Closure::wrap(Box::new(move |custom_event: CustomEvent| {
+            let sender1 = sender.clone();
+            let sender2 = sender.clone();
+            let sender3 = sender.clone();
 
-//     //  window_ops.document().add_event_listener_with_callback(&WINDOW_REGISTER_WALLET_EVENT_TYPE, listener)
-// }
+            let detail = match custom_event
+                .detail()
+                .dyn_into::<Function>()
+                .map_err(|error| {
+                    let outcome: WalletError = error.into();
+                    outcome
+                }) {
+                Ok(value) => value,
+                Err(error) => {
+                    Self::run_executor(Self::dispatch_error_event(error, sender1));
 
-// //WindowAppReadyEventAPI
-// fn register(wallet: Wallet) {}
+                    return;
+                }
+            };
 
-// // WindowRegisterWalletEventCallback
-// fn window_register_wallet_event_callback() {
-//     //api:
-//     register(Wallet::default())
-// }
+            // Call the JavaScript function passed as `detail`, passing the `register_object`
+            if let Err(error) = Utils::jsvalue_to_error(
+                detail.call1(&JsValue::null(), &Self::register_object(sender2)),
+            ) {
+                Self::run_executor(Self::dispatch_error_event(error, sender3));
+            }
+        }) as Box<dyn Fn(_)>);
 
-// //WindowAppReadyEvent
-// fn window_app_ready_event() {
-//     unstopabble_custom_event(
-//         WINDOW_APP_READY_EVENT_TYPE.into(),
-//         register(Wallet::default()),
-//     )
-// }
+        let listener_fn = listener_closure
+            .as_ref()
+            .dyn_ref::<Function>()
+            .ok_or(WalletError::CastClosureToFunction)?;
 
-// //WindowRegisterWalletEvent
-// fn window_register_wallet_event() {
-//     unstopabble_custom_event(
-//         WINDOW_REGISTER_WALLET_EVENT_TYPE.into(),
-//         window_register_wallet_event_callback(),
-//     );
-// }
+        self.window().add_event_listener_with_callback(
+            crate::WINDOW_REGISTER_WALLET_EVENT_TYPE,
+            listener_fn,
+        )?;
 
-// fn unstopabble_custom_event<T: fmt::Debug>(r#type: String, detail: T) {
-//     //type
-//     // detail
-// }
+        listener_closure.forget();
 
-// #[derive(Debug)]
-// pub struct Record {
-//     pub identifier: String,
-//     pub value: String, //TODO: Be generic
-// }
+        Ok(())
+    }
 
-// #[derive(Debug, Default)]
-// pub struct Wallet {
-//     pub version: String,
-//     pub name: String,
-//     pub icon: String,
-//     pub chains: String,
-//     pub features: HashMap<String, Record>,
-//     pub accounts: Vec<WalletAccount>,
-// }
+    fn run_executor(future_value: impl Future<Output = ()> + 'static) {
+        wasm_bindgen_futures::spawn_local(async move { future_value.await });
+    }
 
-// #[derive(Debug)]
-// pub struct WalletAccount {
-//     pub address: String,
-//     pub public_key: String,
-//     pub chains: Vec<String>,
-//     pub features: Vec<String>,
-//     pub label: Option<String>,
-//     pub icon: Option<String>,
-// }
+    pub fn register_object(sender: MessageSender) -> Object {
+        let sender3 = sender.clone();
+
+        // The `register` function that logs and returns a closure like in your JS code
+        let register = Closure::wrap(Box::new(move |value: JsValue| {
+            let sender1 = sender.clone();
+            let sender2 = sender.clone();
+
+            match Wallet::from_jsvalue(value) {
+                Ok(wallet) => {
+                    wasm_bindgen_futures::spawn_local(async move {
+                        if let Err(sender_error) = sender1.send(MessageType::Success(wallet)).await
+                        {
+                            panic!("Unable to send Wallet details `{sender_error:?}` to the channel receiver. Maybe the receiver has been dropped.")
+                        }
+                    });
+                }
+                Err(error) => wasm_bindgen_futures::spawn_local(async move {
+                    Self::dispatch_error_event(error, sender2).await
+                }),
+            }
+        }) as Box<dyn Fn(_)>);
+
+        // Create an object and set the `register` property
+        let register_object = Object::new();
+
+        if let Err(error) = Reflect::set(
+            &register_object,
+            &JsValue::from("register"),
+            &register.into_js_value(),
+        ) {
+            Self::run_executor(Self::dispatch_error_event(error.into(), sender3))
+        }
+
+        register_object
+    }
+}

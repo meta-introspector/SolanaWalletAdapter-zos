@@ -14,6 +14,5 @@ log.workspace = true
 console_error_panic_hook.workspace = true
 console_log.workspace = true
 wasm-bindgen.workspace = true
-serde-wasm-bindgen.workspace = true
-serde = { workspace = true, features = ["derive"] }
 web-sys.workspace = true
+async-channel.workspace = true
