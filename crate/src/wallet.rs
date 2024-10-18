@@ -95,11 +95,23 @@ impl Reflection {
 }
 
 /// A data URI containing a base64-encoded SVG, WebP, PNG, or GIF image.
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct WalletIcon(
     /// Format `data:image/${'svg+xml' | 'webp' | 'png' | 'gif'};base64,${string}`
     pub Cow<'static, str>,
 );
+
+impl core::fmt::Debug for WalletIcon {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let value = if let Some((first, _)) = self.0.split_once(",") {
+            first
+        } else {
+            &self.0
+        };
+
+        write!(f, "{value}",)
+    }
+}
 
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SemverVersion {
