@@ -2,8 +2,17 @@
 A lightweight Rust Solana Wallet that can be used in Rust based frontends and WebAssembly.
 
 #### Features
-- [x] Regsiter `wallet-standard:register-wallet` custom event
-- [x] Wallet parsing - all fields of a wallet are parsed excluding `features`. Work to detect all features is main priority at the moment
+- [x] Register `wallet-standard:register-wallet` custom event
+- [x] App Ready `wallet-standard:app-ready` custom event
+- [x] Wallet Info
+    - [x] Wallet Account parsing
+    - [x] Wallet Icon
+    - [x] Chains
+    - [x] Clusters
+    - [x] Version (Semver Versionin)
+    - [ ] Features
+        - [x] Connect Wallet `standard:connect`
+        - [x] Disconnect Wallet `standard:disconnect`
 - [ ] SignIn
 - [ ] Sign Message
 - [ ] Sign Transaction
