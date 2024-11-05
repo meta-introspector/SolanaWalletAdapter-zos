@@ -1,4 +1,4 @@
-use js_sys::{Array, Object, Reflect};
+use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::{JsCast, JsValue};
 
 use crate::{WalletError, WalletResult};
@@ -72,12 +72,16 @@ impl Reflection {
         Ok(byte32array)
     }
 
+    pub fn get_string(value: &JsValue) -> WalletResult<String> {
+        value.as_string().ok_or(WalletError::JsValueNotString)
+    }
+
     pub fn vec_string(&self, key: &str) -> WalletResult<Vec<String>> {
         let to_js_array = self.get_js_array(key)?;
 
         to_js_array
             .iter()
-            .map(|value| value.as_string().ok_or(WalletError::JsValueNotString))
+            .map(|value| Self::get_string(&value))
             .collect::<WalletResult<Vec<String>>>()
     }
 
@@ -134,6 +138,21 @@ impl Reflection {
         } else {
             Ok(())
         }
+    }
+
+    pub fn get_function(&self, key: &str) -> WalletResult<Function> {
+        let js_value = Reflect::get(&self.0, &key.into())?;
+
+        js_value
+            .dyn_into()
+            .or(Err(WalletError::JsValueNotFunction(key.to_string())))
+    }
+
+    pub fn keys(&self) -> WalletResult<Vec<String>> {
+        Object::keys(&self.0.clone().into())
+            .iter()
+            .map(|value| value.as_string().ok_or(WalletError::JsValueNotString))
+            .collect::<WalletResult<Vec<String>>>()
     }
 
     pub fn get_inner(&self) -> &JsValue {
