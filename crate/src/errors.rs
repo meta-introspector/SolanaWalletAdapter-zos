@@ -92,7 +92,13 @@ pub enum WalletError {
     MissingDisconnectFunction,
     /// Unable to disconnect wallet.
     #[error("Wallet Disconnect error - `{0}`")]
-    WalletDisonnectError(String),
+    WalletDisconnectError(String),
+    /// Encountered and error while calling `standard:events` function
+    #[error("Encountered `standard:events` error `{0}`")]
+    StandardEventsError(String),
+    /// Called The Function for `standard:events` yet the wallet does not provide it
+    #[error("Called The Function for `standard:events` yet the wallet does not provide it")]
+    MissingStandardEventsFunction,
 }
 
 impl WalletError {

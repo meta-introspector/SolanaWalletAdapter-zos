@@ -4,4 +4,5 @@ pub const WINDOW_APP_READY_EVENT_TYPE: &str = "wallet-standard:app-ready";
 
 pub const WINDOW_REGISTER_WALLET_EVENT_TYPE: &str = "wallet-standard:register-wallet";
 
-pub const STANDARD_CONNECT: &str = "standard:connect";
+pub const STANDARD_CONNECT_IDENTIFIER: &str = "standard:connect";
+pub const STANDARD_EVENTS_IDENTIFIER: &str = "standard:events";

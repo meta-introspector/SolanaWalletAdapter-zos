@@ -2,10 +2,11 @@ use wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys::Reflect;
 
 use crate::{
-    Reflection, SemverVersion, WalletAccount, WalletError, WalletResult, STANDARD_CONNECT,
+    Reflection, SemverVersion, WalletAccount, WalletError, WalletResult,
+    STANDARD_CONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
 };
 
-use super::{Connect, Disconnect};
+use super::{Connect, Disconnect, StandardEvents};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FeatureInfo {
@@ -26,7 +27,7 @@ pub struct Features {
     /// standard:disconnect
     disconnect: Disconnect,
     /// standard:events
-    events: Option<FeatureInfo>,
+    events: Option<StandardEvents>,
     /// solana:signAndSendTransaction
     sign_and_send_tx: Option<FeatureInfoWithTx>,
     /// solana:signTransaction
@@ -91,12 +92,14 @@ impl Features {
                         Ok(tx_info)
                     };
 
-                if feature == STANDARD_CONNECT {
+                if feature == STANDARD_CONNECT_IDENTIFIER {
                     features.connect = Connect::new(inner_object, version)?;
                 } else if feature == "standard:disconnect" {
                     features.disconnect = Disconnect::new(inner_object, version)?;
-                } else if feature == "standard:events" {
-                    features.events.replace(FeatureInfo { version });
+                } else if feature == STANDARD_EVENTS_IDENTIFIER {
+                    features
+                        .events
+                        .replace(StandardEvents::new(inner_object, version)?);
                 } else if feature == "solana:signAndSendTransaction" {
                     features
                         .sign_and_send_tx
@@ -127,11 +130,15 @@ impl Features {
     }
 
     pub async fn disconnect(&self) -> WalletResult<()> {
-        self.disconnect.call_diconnect().await
+        self.disconnect.call_disconnect().await
     }
 
-    pub fn events(&self) -> Option<&FeatureInfo> {
-        self.events.as_ref()
+    pub async fn events(&self) -> WalletResult<()> {
+        self.events
+            .as_ref()
+            .ok_or(WalletError::MissingStandardEventsFunction)?
+            .call_standard_event()
+            .await
     }
 
     pub fn sign_and_send_transaction(&self) -> Option<&FeatureInfoWithTx> {
