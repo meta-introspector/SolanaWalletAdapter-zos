@@ -23,6 +23,9 @@ pub enum WalletError {
     /// Attempted to convert a JsValue to a String where a String was expected
     #[error(" Attempted to convert a JsValue to a String where a String was expected")]
     JsValueNotString,
+    /// JsValue is not an object
+    #[error("JsValue is not an object")]
+    JsValueNotObject,
     /// Attempted to convert a JsError to a String
     #[error("Attempted to convert a JsError to a String")]
     JsErrorNotString,
@@ -99,6 +102,48 @@ pub enum WalletError {
     /// Called The Function for `standard:events` yet the wallet does not provide it
     #[error("Called The Function for `standard:events` yet the wallet does not provide it")]
     MissingStandardEventsFunction,
+    /// The wallet did not register a signIn function for `solana:signIn` namespece
+    #[error("The wallet did not register a signIn function for `solana:signIn` namespece")]
+    MissingSignInFunction,
+    /// Unable to cast a `JsValue` to a `js_sys::Function`
+    #[error("Unable to cast a `JsValue` to a `js_sys::Function`")]
+    CastJsValueAsFunction,
+    /// This token expires earlier than it was issued. Make sure to set the expiry time to be a later date then the issued time
+    #[error("This token expires earlier than it was issued. Make sure to set the expiry time to be a later date then the issued time")]
+    ExpiryTimeEarlierThanIssuedTime,
+    /// This token becomes valid earlier than it was issued. Make sure to set the not_befire time to be equal to or a later date then the issued time
+    #[error("This token becomes valid earlier than it was issued. Make sure to set the not_befire time to be equal to or a later date then the issued time")]
+    NotBeforeTimeEarlierThanIssuedTime,
+    /// This token becomes valid after it has already expired. Make sure to set the not_befire time to be equal to or a date before expiry time
+    #[error("This token becomes valid after it has already expired. Make sure to set the not_befire time to be equal to or a date before expiry time")]
+    NotBeforeTimeLaterThanExpirationTime,
+    /// The expiration time is set to expire in the past
+    #[error("The expiration time is set to expire in the past")]
+    ExpirationTimeIsInThePast,
+    /// NotBefore time is set in the past
+    #[error("NotBefore time is set in the past")]
+    NotBeforeTimeIsInThePast,
+    /// Invalid Base58 Address
+    #[error("Invalid Base58 Address")]
+    InvalidBase58Address,
+    /// The nonce is required to be at least 8 characters long
+    #[error("The nonce is required to be at least 8 characters long")]
+    NonceMustBeAtLeast8Characters,
+    ///Expected a timestamp in the format specified by ISO8601
+    #[error("Invalid ISO 8601 timestamp `{0}. Only timestamps in the format specified by ISO8601 are supported.")]
+    InvalidISO8601Timestamp(String),
+    /// The message signed by the wallet is not the same as the message sent to the wallet for signing
+    #[error("The message signed by the wallet is not the same as the message sent to the wallet for signing")]
+    MessageReponseMismatch,
+    /// The Ed25519 Signature is invalid for the signed message and public key")]
+    #[error("The Ed25519 Signature is invalid for the signed message and public key")]
+    InvalidSignature,
+    /// The bytes provided for the Ed25519 Signature are invalid
+    #[error("The bytes provided for the Ed25519 Signature are invalid")]
+    InvalidEd25519SignatureBytes,
+    /// The bytes provided for the Ed25519 Public Key are invalid
+    #[error("The bytes provided for the Ed25519 Public Key are invalid")]
+    InvalidEd25519PublicKeyBytes,
 }
 
 impl WalletError {

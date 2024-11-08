@@ -9,3 +9,6 @@ pub use disconnect::*;
 
 mod events;
 pub use events::*;
+
+mod signin;
+pub use signin::*;

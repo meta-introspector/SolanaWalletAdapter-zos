@@ -49,6 +49,16 @@ impl Cluster {
             Cluster::LocalNet => LOCALNET_ENDPOINT,
         }
     }
+
+    /// A Solana cluster identifier
+    pub fn chain(&self) -> &str {
+        match self {
+            Cluster::MainNet => MAINNET_IDENTIFIER,
+            Cluster::DevNet => DEVNET_IDENTIFIER,
+            Cluster::TestNet => TESTNET_IDENTIFIER,
+            Cluster::LocalNet => LOCALNET_IDENTIFIER,
+        }
+    }
 }
 
 impl TryFrom<&str> for Cluster {

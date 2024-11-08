@@ -16,5 +16,5 @@ pub fn main(connect_ev_node: &str) {
 }
 
 async fn runner(sender: Sender<MessageType>) {
-    sender.send(MessageType::Connect("Solflare")).await.unwrap()
+    sender.send(MessageType::Connect("Phantom")).await.unwrap()
 }

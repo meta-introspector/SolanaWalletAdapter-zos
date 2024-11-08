@@ -43,12 +43,60 @@ impl Reflection {
         Reflection::new(inner)
     }
 
+    pub fn new_object() -> Self {
+        Self(Object::new().into())
+    }
+
+    pub fn take(self) -> JsValue {
+        self.0
+    }
+
+    pub fn set_object_str(&mut self, key: &str, value: &str) -> WalletResult<&Self> {
+        self.set_object(&key.into(), &value.into())
+    }
+
+    pub fn set_object_string_optional(
+        &mut self,
+        key: &str,
+        value: Option<&String>,
+    ) -> WalletResult<&Self> {
+        if let Some(inner_value) = value {
+            self.set_object(&key.into(), &inner_value.into())
+        } else {
+            Ok(self)
+        }
+    }
+
+    pub fn set_object(&mut self, key: &JsValue, value: &JsValue) -> WalletResult<&Self> {
+        if !self.0.is_object() {
+            return Err(WalletError::JsValueNotObject);
+        }
+
+        let target = self.0.dyn_ref::<Object>().unwrap();
+
+        Reflect::set(&target, &key, &value)?;
+
+        self.0 = target.into();
+
+        Ok(self)
+    }
+
     pub fn reflect_inner(&self, key: &str) -> WalletResult<JsValue> {
         let inner = Reflect::get(&self.0, &key.into())?;
 
         Reflection::check_is_undefined(&inner)?;
 
         Ok(inner)
+    }
+
+    pub fn mutate_inner(mut self, key: &str) -> WalletResult<Self> {
+        let inner = Reflect::get(&self.0, &key.into())?;
+
+        Reflection::check_is_undefined(&inner)?;
+
+        self.0 = inner;
+
+        Ok(self)
     }
 
     pub fn string(&self, key: &str) -> WalletResult<String> {
@@ -70,6 +118,10 @@ impl Reflection {
             .or(Err(WalletError::Expected32ByteLength))?;
 
         Ok(byte32array)
+    }
+
+    pub fn get_array(&self) -> WalletResult<Array> {
+        Ok(self.0.clone().dyn_into::<js_sys::Array>()?)
     }
 
     pub fn get_string(value: &JsValue) -> WalletResult<String> {
@@ -144,8 +196,20 @@ impl Reflection {
         let js_value = Reflect::get(&self.0, &key.into())?;
 
         js_value
-            .dyn_into()
+            .dyn_into::<Function>()
             .or(Err(WalletError::JsValueNotFunction(key.to_string())))
+    }
+
+    pub fn as_function(&self) -> WalletResult<&Function> {
+        self.0
+            .dyn_ref::<Function>()
+            .ok_or(WalletError::CastJsValueAsFunction)
+    }
+
+    pub fn as_owned_function(self) -> WalletResult<Function> {
+        self.0
+            .dyn_into::<Function>()
+            .or(Err(WalletError::CastJsValueAsFunction))
     }
 
     pub fn keys(&self) -> WalletResult<Vec<String>> {
