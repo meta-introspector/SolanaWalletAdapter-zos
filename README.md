@@ -13,7 +13,7 @@ A lightweight Rust Solana Wallet that can be used in Rust based frontends and We
     - [ ] Features
         - [x] Connect Wallet `standard:connect`
         - [x] Disconnect Wallet `standard:disconnect`
-- [ ] SignIn
+- [x] SignIn (Sign In With Solana SIWS)
 - [ ] Sign Message
 - [ ] Sign Transaction
 - [ ] Custom Layouts 
