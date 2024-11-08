@@ -32,7 +32,7 @@ web-sys = { version = "0.3.72", features = [
     "CustomEventInit",
     "Element",
     "HtmlElement",
-    "Storage",
+    "Location",
 ] }
 
 [profile.release]

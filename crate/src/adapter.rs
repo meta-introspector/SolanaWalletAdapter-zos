@@ -3,7 +3,7 @@ use std::future::Future;
 use async_channel::{Receiver, Sender};
 use web_sys::{js_sys::Object, Document, Window};
 
-use crate::{Wallet, WalletError, WalletResult};
+use crate::{SigninInput, Wallet, WalletError, WalletResult};
 
 pub type MessageSender = Sender<MessageType>;
 
@@ -70,6 +70,7 @@ impl WalletAdapter {
                     MessageType::Connect(name) => {
                         connect(first_sender.clone(), &self.wallets, name).await
                     }
+                    _ => todo!(),
                 }
             }
         };
@@ -111,6 +112,11 @@ pub enum MessageType {
     Success(Wallet),
     Failure(WalletError),
     Connect(&'static str),
+    Disconnect(Wallet),
+    SignIn {
+        wallet: Option<String>,
+        signin_input: SigninInput,
+    },
 }
 
 async fn connect(sender: Sender<MessageType>, wallets: &[Wallet], name: &str) {

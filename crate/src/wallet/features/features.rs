@@ -2,11 +2,11 @@ use wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys::Reflect;
 
 use crate::{
-    Reflection, SemverVersion, WalletAccount, WalletError, WalletResult,
+    Reflection, SemverVersion, SignInOutput, SigninInput, WalletAccount, WalletError, WalletResult,
     STANDARD_CONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
 };
 
-use super::{Connect, Disconnect, StandardEvents};
+use super::{Connect, Disconnect, SignIn, StandardEvents};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FeatureInfo {
@@ -35,7 +35,7 @@ pub struct Features {
     /// solana:signMessage
     sign_message: Option<FeatureInfo>,
     /// solana:signIn
-    sign_in: Option<FeatureInfo>,
+    sign_in: Option<SignIn>,
     /// Non-standard features
     extensions: Vec<String>,
 }
@@ -111,7 +111,9 @@ impl Features {
                 } else if feature == "solana:signMessage" {
                     features.sign_message.replace(FeatureInfo { version });
                 } else if feature == "solana:signIn" {
-                    features.sign_in.replace(FeatureInfo { version });
+                    features
+                        .sign_in
+                        .replace(SignIn::new(inner_object, version)?);
                 } else {
                     return Err(WalletError::UnsupportedStandardFeature(feature));
                 }
@@ -153,8 +155,16 @@ impl Features {
         self.sign_message.as_ref()
     }
 
-    pub fn sign_in(&self) -> Option<&FeatureInfo> {
-        self.sign_in.as_ref()
+    pub async fn sign_in(
+        &self,
+        signin_input: &SigninInput,
+        public_key: [u8; 32],
+    ) -> WalletResult<SignInOutput> {
+        if let Some(fn_exists) = self.sign_in.as_ref() {
+            fn_exists.call_signin(signin_input, public_key).await
+        } else {
+            Err(WalletError::MissingSignInFunction)
+        }
     }
 
     pub fn extensions(&self) -> &[String] {
