@@ -87,6 +87,12 @@ pub enum WalletError {
     /// Expected JsValue of a `js_sys::Function`
     #[error("Expected `{0}` to be a `JsValue` of type `js_sys::Function`")]
     JsValueNotFunction(String),
+    /// The JsValue is not a Uint8Array
+    #[error("The JsValue `{0}` is not a js_sys::Array")]
+    JsValueNotUnint8Array(String),
+    /// The JsValue is not a Uint8Array
+    #[error("The JsValue `{0}` is not a js_sys::Array")]
+    JsValueNotArray(String),
     /// Unable to connect to a wallet. The user may have rejected the request
     #[error("Unable to connect to a wallet. Error `{0}` request")]
     WalletConnectError(String),
@@ -144,6 +150,15 @@ pub enum WalletError {
     /// The bytes provided for the Ed25519 Public Key are invalid
     #[error("The bytes provided for the Ed25519 Public Key are invalid")]
     InvalidEd25519PublicKeyBytes,
+    /// The function call to Sign A Message Is Missing
+    #[error("The function call to Sign A Message Is Missing")]
+    MissingSignMessageFunction,
+    /// The message sent to the wallet to be signed is different from the message the wallet responded with
+    #[error("The message sent to the wallet to be signed is different from the message the wallet responded with")]
+    SignedMessageMismatch,
+    /// The Wallet returned an empty array of  signed messages
+    #[error("The Wallet returned an empty array of  signed messages")]
+    ReceivedAnEmptySignedMessagesArray,
 }
 
 impl WalletError {

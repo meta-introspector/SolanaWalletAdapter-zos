@@ -4,7 +4,7 @@ use js_sys::Array;
 use wasm_bindgen::JsValue;
 use web_sys::Window;
 
-use crate::{Cluster, Reflection, WalletError, WalletResult};
+use crate::{Cluster, Reflection, Utils, WalletError, WalletResult};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SigninInput {
@@ -415,15 +415,10 @@ impl SigninInput {
         message: &[u8],
         signature_bytes: [u8; 64],
     ) -> WalletResult<()> {
-        use ed25519_dalek::{PublicKey, Signature, Verifier};
+        let public_key = Utils::public_key(public_key_bytes)?;
+        let signature = Utils::signature(signature_bytes)?;
 
-        let public_key = PublicKey::from_bytes(&public_key_bytes)
-            .or(Err(WalletError::InvalidEd25519PublicKeyBytes))?;
-        let signature = Signature::from_bytes(&signature_bytes)
-            .or(Err(WalletError::InvalidEd25519SignatureBytes))?;
-        public_key
-            .verify(message, &signature)
-            .or(Err(WalletError::InvalidSignature))
+        Utils::verify_signature(public_key, message, signature)
     }
 
     pub fn set_request_id(&mut self, id: &str) -> &mut Self {

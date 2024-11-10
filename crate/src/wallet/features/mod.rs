@@ -12,3 +12,6 @@ pub use events::*;
 
 mod signin;
 pub use signin::*;
+
+mod sign_message;
+pub use sign_message::*;

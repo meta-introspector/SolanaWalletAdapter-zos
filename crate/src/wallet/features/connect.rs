@@ -39,7 +39,7 @@ impl Connect {
 
                 get_accounts
                     .into_iter()
-                    .map(|raw_account| WalletAccount::parse(&Reflection::new(raw_account)?))
+                    .map(|raw_account| WalletAccount::parse(Reflection::new(raw_account)?))
                     .collect::<WalletResult<Vec<WalletAccount>>>()
             }
             Err(error) => {
