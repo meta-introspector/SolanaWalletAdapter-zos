@@ -24,6 +24,10 @@ impl WalletIcon {
 
         Ok(icon)
     }
+
+    pub fn to_string(&self) -> String {
+        self.0.to_string()
+    }
 }
 
 impl core::fmt::Debug for WalletIcon {

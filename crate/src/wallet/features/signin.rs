@@ -43,7 +43,7 @@ impl SignIn {
 
         let first_index = Reflection::new(output_array.get(0))?;
         let account = first_index.reflect_inner("account")?;
-        let account = WalletAccount::parse(&Reflection::new(account)?)?;
+        let account = WalletAccount::parse(Reflection::new(account)?)?;
 
         let message_value = first_index.reflect_inner("signedMessage")?;
         let message_bytes = message_value.dyn_into::<js_sys::Uint8Array>()?.to_vec();

@@ -1,13 +1,14 @@
+use ed25519_dalek::{PublicKey, Signature, Verifier};
 use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::{JsCast, JsValue};
 
 use crate::{WalletError, WalletResult};
 
 /// A 32 byte array representing a Public Key
-pub type PublicKey = [u8; 32];
+pub type PublicKeyBytes = [u8; 32];
 
 /// A 64 byte array represnting a Signature
-pub type Signature = [u8; 64];
+pub type SignatureBytes = [u8; 64];
 
 /// The Version of the Wallet Standard currently implemented.
 /// This may be used by the app to determine compatibility and feature detect.
@@ -24,6 +25,37 @@ impl Utils {
         } else {
             Ok(())
         }
+    }
+
+    pub fn public_key(public_key_bytes: [u8; 32]) -> WalletResult<PublicKey> {
+        PublicKey::from_bytes(&public_key_bytes).or(Err(WalletError::InvalidEd25519PublicKeyBytes))
+    }
+
+    pub fn signature(signature_bytes: [u8; 64]) -> WalletResult<Signature> {
+        Signature::from_bytes(&signature_bytes).or(Err(WalletError::InvalidEd25519SignatureBytes))
+    }
+
+    pub fn verify_signature(
+        public_key: PublicKey,
+        message: &[u8],
+        signature: Signature,
+    ) -> WalletResult<()> {
+        public_key
+            .verify(message, &signature)
+            .or(Err(WalletError::InvalidSignature))
+    }
+
+    pub fn jsvalue_to_signature(value: JsValue, error_identifier: &str) -> WalletResult<Signature> {
+        let signature_bytes: [u8; 64] = value
+            .dyn_into::<js_sys::Uint8Array>()
+            .or(Err(WalletError::JsValueNotUnint8Array(
+                error_identifier.to_string(),
+            )))?
+            .to_vec()
+            .try_into()
+            .or(Err(WalletError::InvalidEd25519PublicKeyBytes))?;
+
+        Self::signature(signature_bytes)
     }
 }
 
@@ -64,6 +96,18 @@ impl Reflection {
             self.set_object(&key.into(), &inner_value.into())
         } else {
             Ok(self)
+        }
+    }
+
+    pub fn set_object_string_optional_undefined(
+        &mut self,
+        key: &str,
+        value: Option<&String>,
+    ) -> WalletResult<&Self> {
+        if let Some(inner_value) = value {
+            self.set_object(&key.into(), &inner_value.into())
+        } else {
+            self.set_object(&key.into(), &JsValue::undefined())
         }
     }
 

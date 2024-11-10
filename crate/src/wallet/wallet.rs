@@ -79,7 +79,7 @@ impl Wallet {
 
         accounts_array
             .iter()
-            .map(|account| WalletAccount::parse(&Reflection::new(account)?))
+            .map(|account| WalletAccount::parse(Reflection::new(account)?))
             .collect::<WalletResult<Vec<WalletAccount>>>()
     }
 

@@ -125,9 +125,22 @@ async fn connect(sender: Sender<MessageType>, wallets: &[Wallet], name: &str) {
             Ok(connection) => {
                 log::info!("CONNECT OUTCOME: {:?}", connection);
 
-                match solflare.features().disconnect().await {
-                    Ok(_) => log::info!("DISCONNECTED SUCCESSFULLY"),
-                    Err(error) => log::info!("WALLET DISCONNECT ERROR: {:?}", error),
+                // match solflare.features().disconnect().await {
+                //     Ok(_) => log::info!("DISCONNECTED SUCCESSFULLY"),
+                //     Err(error) => log::info!("WALLET DISCONNECT ERROR: {:?}", error),
+                // }
+
+                match solflare
+                    .features()
+                    .sign_message(&connection[0], &"Working".as_bytes())
+                    .await
+                {
+                    Ok(value) => {
+                        log::info!("SIGNED MESSAGE OUTPUT: {:?}", &value);
+                    }
+                    Err(error) => {
+                        log::info!("SIGN MESSAGE ERROR: {:?}", error)
+                    }
                 }
             }
 

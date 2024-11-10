@@ -6,7 +6,7 @@ use crate::{
     STANDARD_CONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
 };
 
-use super::{Connect, Disconnect, SignIn, StandardEvents};
+use super::{Connect, Disconnect, SignIn, SignMessage, SignedMessageOutput, StandardEvents};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FeatureInfo {
@@ -33,7 +33,7 @@ pub struct Features {
     /// solana:signTransaction
     sign_tx: Option<FeatureInfoWithTx>,
     /// solana:signMessage
-    sign_message: Option<FeatureInfo>,
+    sign_message: SignMessage,
     /// solana:signIn
     sign_in: Option<SignIn>,
     /// Non-standard features
@@ -109,7 +109,7 @@ impl Features {
                         .sign_tx
                         .replace(get_tx_version_support(&inner_object, version)?);
                 } else if feature == "solana:signMessage" {
-                    features.sign_message.replace(FeatureInfo { version });
+                    features.sign_message = SignMessage::new(inner_object, version)?;
                 } else if feature == "solana:signIn" {
                     features
                         .sign_in
@@ -151,8 +151,12 @@ impl Features {
         self.sign_tx.as_ref()
     }
 
-    pub fn sign_message(&self) -> Option<&FeatureInfo> {
-        self.sign_message.as_ref()
+    pub async fn sign_message<'a>(
+        &self,
+        account: &WalletAccount,
+        message: &'a [u8],
+    ) -> WalletResult<SignedMessageOutput<'a>> {
+        self.sign_message.call_sign_message(account, message).await
     }
 
     pub async fn sign_in(
