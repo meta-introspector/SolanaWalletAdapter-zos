@@ -7,7 +7,7 @@ use crate::{Reflection, WalletError, WalletIcon, WalletResult};
 /// authorizing the app to use it.
 /// The app can use an account to display and query information from a chain.
 /// The app can also act using an account by passing it to `features` field of the Wallet.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Clone, Default, PartialEq)]
 pub struct WalletAccount {
     /// Address of the account, corresponding with a public key.
     pub address: String,
@@ -26,6 +26,19 @@ pub struct WalletAccount {
     /// The Javascript Value Representation of a wallet,
     /// this mostly used internally in the wallet adapter
     pub js_value: JsValue,
+}
+
+impl core::fmt::Debug for WalletAccount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WalletAccount")
+            .field("address", &self.address)
+            .field("public_key", &self.public_key)
+            .field("chains", &self.chains)
+            .field("features", &self.features)
+            .field("label", &self.label)
+            .field("icon", &self.icon)
+            .finish()
+    }
 }
 
 impl WalletAccount {

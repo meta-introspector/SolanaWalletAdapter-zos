@@ -159,6 +159,9 @@ pub enum WalletError {
     /// The Wallet returned an empty array of  signed messages
     #[error("The Wallet returned an empty array of  signed messages")]
     ReceivedAnEmptySignedMessagesArray,
+    /// The `solana:signTransaction` function is missing in the provided wallet
+    #[error("The `solana:signTransaction` function is missing in the provided wallet")]
+    MissingSignTransactionFunction,
 }
 
 impl WalletError {

@@ -3,7 +3,7 @@ use std::future::Future;
 use async_channel::{Receiver, Sender};
 use web_sys::{js_sys::Object, Document, Window};
 
-use crate::{SigninInput, Wallet, WalletError, WalletResult};
+use crate::{Cluster, SigninInput, Wallet, WalletError, WalletResult};
 
 pub type MessageSender = Sender<MessageType>;
 
@@ -130,16 +130,29 @@ async fn connect(sender: Sender<MessageType>, wallets: &[Wallet], name: &str) {
                 //     Err(error) => log::info!("WALLET DISCONNECT ERROR: {:?}", error),
                 // }
 
+                // match solflare
+                //     .features()
+                //     .sign_message(&connection[0], &"Working".as_bytes())
+                //     .await
+                // {
+                //     Ok(value) => {
+                //         log::info!("SIGNED MESSAGE OUTPUT: {:?}", &value);
+                //     }
+                //     Err(error) => {
+                //         log::info!("SIGN MESSAGE ERROR: {:?}", error)
+                //     }
+                // }
+
                 match solflare
                     .features()
-                    .sign_message(&connection[0], &"Working".as_bytes())
+                    .sign_transaction(&connection[0], &[], Some(Cluster::MainNet))
                     .await
                 {
                     Ok(value) => {
-                        log::info!("SIGNED MESSAGE OUTPUT: {:?}", &value);
+                        log::info!("SIGNED TX OUTPUT: {:?}", &value);
                     }
                     Err(error) => {
-                        log::info!("SIGN MESSAGE ERROR: {:?}", error)
+                        log::info!("SIGN TX ERROR: {:?}", error)
                     }
                 }
             }

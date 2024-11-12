@@ -10,6 +10,7 @@ pub struct Connect {
     version: SemverVersion,
     callback: Function,
 }
+
 impl Connect {
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
         let get_connect_value = Reflection::new(value)?

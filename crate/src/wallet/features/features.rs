@@ -2,11 +2,13 @@ use wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys::Reflect;
 
 use crate::{
-    Reflection, SemverVersion, SignInOutput, SigninInput, WalletAccount, WalletError, WalletResult,
-    STANDARD_CONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
+    Cluster, Reflection, SemverVersion, SignInOutput, SigninInput, WalletAccount, WalletError,
+    WalletResult, STANDARD_CONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
 };
 
-use super::{Connect, Disconnect, SignIn, SignMessage, SignedMessageOutput, StandardEvents};
+use super::{
+    Connect, Disconnect, SignIn, SignMessage, SignTransaction, SignedMessageOutput, StandardEvents,
+};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FeatureInfo {
@@ -31,7 +33,7 @@ pub struct Features {
     /// solana:signAndSendTransaction
     sign_and_send_tx: Option<FeatureInfoWithTx>,
     /// solana:signTransaction
-    sign_tx: Option<FeatureInfoWithTx>,
+    sign_tx: SignTransaction,
     /// solana:signMessage
     sign_message: SignMessage,
     /// solana:signIn
@@ -53,6 +55,7 @@ impl Features {
             if feature.starts_with("standard:") || feature.starts_with("solana:") {
                 let version = SemverVersion::from_jsvalue(&inner_object)?;
 
+                /// FIXME REMOVE THIS
                 let get_tx_version_support =
                     |value: &JsValue, version: SemverVersion| -> WalletResult<FeatureInfoWithTx> {
                         let tx_version_support_jsvalue =
@@ -105,9 +108,7 @@ impl Features {
                         .sign_and_send_tx
                         .replace(get_tx_version_support(&inner_object, version)?);
                 } else if feature == "solana:signTransaction" {
-                    features
-                        .sign_tx
-                        .replace(get_tx_version_support(&inner_object, version)?);
+                    features.sign_tx = SignTransaction::new(inner_object, version)?;
                 } else if feature == "solana:signMessage" {
                     features.sign_message = SignMessage::new(inner_object, version)?;
                 } else if feature == "solana:signIn" {
@@ -147,8 +148,15 @@ impl Features {
         self.sign_and_send_tx.as_ref()
     }
 
-    pub fn sign_transaction(&self) -> Option<&FeatureInfoWithTx> {
-        self.sign_tx.as_ref()
+    pub async fn sign_transaction(
+        &self,
+        wallet_account: &WalletAccount,
+        transaction_bytes: &[u8],
+        cluster: Option<Cluster>,
+    ) -> WalletResult<Vec<Vec<u8>>> {
+        self.sign_tx
+            .call_sign_tx(wallet_account, transaction_bytes, cluster)
+            .await
     }
 
     pub async fn sign_message<'a>(
