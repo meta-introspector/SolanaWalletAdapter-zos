@@ -151,6 +151,25 @@ impl Reflection {
         Ok(parsed)
     }
 
+    pub fn get_bytes_from_vec(&self, key: &str) -> WalletResult<Vec<Vec<u8>>> {
+        let js_array = self.get_array()?;
+
+        js_array
+            .iter()
+            .map(|value| Reflection::new(value)?.get_bytes(key))
+            .collect::<WalletResult<Vec<Vec<u8>>>>()
+    }
+
+    pub fn get_bytes(&self, key: &str) -> WalletResult<Vec<u8>> {
+        let js_value = Reflect::get(&self.0, &key.into())?;
+
+        let to_uint8array = js_value
+            .dyn_into::<js_sys::Uint8Array>()
+            .or(Err(WalletError::JsValueNotUnint8Array(key.to_string())))?;
+
+        Ok(to_uint8array.to_vec())
+    }
+
     pub fn byte32array(&self, key: &str) -> WalletResult<[u8; 32]> {
         let js_value = Reflect::get(&self.0, &key.into())?;
 

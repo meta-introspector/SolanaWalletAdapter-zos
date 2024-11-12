@@ -15,8 +15,6 @@ pub struct SignIn {
 
 impl SignIn {
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
-        log::info!("SIGNING: {:?}", value);
-
         let signin_fn = Reflection::new(value)?
             .mutate_inner("signIn")?
             .as_owned_function()?;
