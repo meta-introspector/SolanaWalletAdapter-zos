@@ -16,7 +16,7 @@ A lightweight Rust Solana Wallet that can be used in Rust based frontends and We
 - [x] SignIn (Sign In With Solana SIWS)
 - [x] Sign Message
 - [x] Sign Transaction
-- [ ] Sign and Send Transaction
+- [x] Sign and Send Transaction
 - [ ] Custom Layouts 
 
 #### Building
