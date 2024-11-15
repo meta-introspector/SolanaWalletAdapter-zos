@@ -33,6 +33,11 @@ web-sys = { version = "0.3.72", features = [
     "Element",
     "HtmlElement",
     "Location",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+    "Headers",
 ] }
 
 [profile.release]

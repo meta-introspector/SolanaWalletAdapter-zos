@@ -1,28 +1,18 @@
-use std::hash::Hash;
-
-use js_sys::Function;
 use wasm_bindgen::{JsCast, JsValue};
 
 use crate::{
-    Reflection, SemverVersion, SignInOutput, SigninInput, WalletAccount, WalletError, WalletResult,
+    Reflection, SemverVersion, SignInOutput, SigninInput, StandardFunction, WalletAccount,
+    WalletError, WalletResult,
 };
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct SignIn {
-    version: SemverVersion,
-    callback: Function,
-}
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct SignIn(StandardFunction);
 
 impl SignIn {
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
-        let signin_fn = Reflection::new(value)?
-            .mutate_inner("signIn")?
-            .as_owned_function()?;
-
-        Ok(Self {
-            version,
-            callback: signin_fn,
-        })
+        Ok(Self(StandardFunction::new(
+            value, version, "signIn", "solana",
+        )?))
     }
 
     pub(crate) async fn call_signin(
@@ -31,6 +21,7 @@ impl SignIn {
         public_key: [u8; 32],
     ) -> WalletResult<SignInOutput> {
         let outcome = self
+            .0
             .callback
             .call1(&JsValue::null(), &signin_input.get_object()?.into())?;
 
@@ -69,23 +60,5 @@ impl SignIn {
             signature: signature_bytes,
             public_key,
         })
-    }
-}
-
-impl PartialOrd for SignIn {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.version.cmp(&other.version))
-    }
-}
-
-impl Ord for SignIn {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.version.cmp(&other.version)
-    }
-}
-
-impl Hash for SignIn {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.version.hash(state);
     }
 }

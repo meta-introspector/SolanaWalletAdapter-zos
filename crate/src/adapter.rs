@@ -1,4 +1,4 @@
-use std::future::Future;
+use core::future::Future;
 
 use async_channel::{Receiver, Sender};
 use web_sys::{js_sys::Object, Document, Window};

@@ -1,36 +1,21 @@
-use std::hash::Hash;
+use wasm_bindgen::JsValue;
 
-use js_sys::Function;
-use wasm_bindgen::{JsCast, JsValue};
+use crate::{
+    Reflection, SemverVersion, StandardFunction, WalletAccount, WalletError, WalletResult,
+};
 
-use crate::{Reflection, SemverVersion, WalletAccount, WalletError, WalletResult};
-
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Connect {
-    version: SemverVersion,
-    callback: Function,
-}
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Connect(StandardFunction);
 
 impl Connect {
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
-        let get_connect_value = Reflection::new(value)?
-            .reflect_inner(&"connect")
-            .or(Err(WalletError::MissingConnectFunction))?;
-        let get_connect_fn =
-            get_connect_value
-                .dyn_into::<Function>()
-                .or(Err(WalletError::JsValueNotFunction(
-                    "Namespace[`standard:connect -> connect`]".to_string(),
-                )))?;
-
-        Ok(Self {
-            version,
-            callback: get_connect_fn,
-        })
+        Ok(Self(StandardFunction::new(
+            value, version, "connect", "standard",
+        )?))
     }
 
     pub(crate) async fn call_connect(&self) -> WalletResult<Vec<WalletAccount>> {
-        let outcome = self.callback.call0(&JsValue::from_bool(false))?;
+        let outcome = self.0.callback.call0(&JsValue::from_bool(false))?;
 
         let outcome = js_sys::Promise::resolve(&outcome);
 
@@ -48,23 +33,5 @@ impl Connect {
                 return Err(WalletError::WalletConnectError(value.to_string()));
             }
         }
-    }
-}
-
-impl PartialOrd for Connect {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.version.cmp(&other.version))
-    }
-}
-
-impl Ord for Connect {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.version.cmp(&other.version)
-    }
-}
-
-impl Hash for Connect {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.version.hash(state);
     }
 }

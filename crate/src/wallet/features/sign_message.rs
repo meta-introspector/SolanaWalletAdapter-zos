@@ -1,32 +1,24 @@
 use ed25519_dalek::{PublicKey, Signature};
-use js_sys::{Function, Uint8Array};
+use js_sys::Uint8Array;
 use wasm_bindgen::{JsCast, JsValue};
 
-use core::{hash::Hash, str};
+use core::str;
 
-use crate::{Reflection, SemverVersion, Utils, WalletAccount, WalletError, WalletResult};
+use crate::{
+    Reflection, SemverVersion, StandardFunction, Utils, WalletAccount, WalletError, WalletResult,
+};
 
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
-pub struct SignMessage {
-    version: SemverVersion,
-    callback: Function,
-}
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SignMessage(StandardFunction);
 
 impl SignMessage {
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
-        let get_value = Reflection::new(value)?
-            .reflect_inner(&"signMessage")
-            .or(Err(WalletError::MissingSignMessageFunction))?;
-        let get_fn = get_value
-            .dyn_into::<Function>()
-            .or(Err(WalletError::JsValueNotFunction(
-                "Namespace[`solana:signMessage -> signMessage`]".to_string(),
-            )))?;
-
-        Ok(Self {
+        Ok(Self(StandardFunction::new(
+            value,
             version,
-            callback: get_fn,
-        })
+            "signMessage",
+            "solana",
+        )?))
     }
 
     pub(crate) async fn call_sign_message<'a>(
@@ -42,6 +34,7 @@ impl SignMessage {
 
         // Call the callback with message and account
         let outcome = self
+            .0
             .callback
             .call1(&JsValue::null(), message_object.get_inner())?;
 
@@ -90,24 +83,6 @@ impl SignMessage {
     }
 }
 
-impl PartialOrd for SignMessage {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.version.cmp(&other.version))
-    }
-}
-
-impl Ord for SignMessage {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.version.cmp(&other.version)
-    }
-}
-
-impl Hash for SignMessage {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.version.hash(state);
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]
 pub struct SignedMessageOutput<'a> {
     message: &'a [u8],
@@ -117,7 +92,8 @@ pub struct SignedMessageOutput<'a> {
 
 impl<'a> SignedMessageOutput<'a> {
     pub fn message(&self) -> &str {
-        //Should never fail since verified message is always UTF-8 Format hence `.unwrap()` is used
+        //Should never fail since verified message is always UTF-8 Format hence `.unwrap()` is used.
+        // This is verified to be the input message where the input message is always UTF-8 encoded
         str::from_utf8(&self.message).unwrap()
     }
 

@@ -62,6 +62,9 @@ pub enum WalletError {
     /// The byte length should be equal to 32 bytes in length
     #[error("The byte length should be equal to 32 bytes in length")]
     Expected32ByteLength,
+    /// The byte length should be equal to 64 bytes in length
+    #[error("The byte length should be equal to 64 bytes in length")]
+    Expected64ByteLength,
     /// Expected the JsValue to be an Object
     #[error("Expected the `{0}` JsValue to be an Object")]
     ExpectedObject(String),
@@ -162,6 +165,9 @@ pub enum WalletError {
     /// The `solana:signTransaction` function is missing in the provided wallet
     #[error("The `solana:signTransaction` function is missing in the provided wallet")]
     MissingSignTransactionFunction,
+    /// The `sendAndSignTransaction` method did not return any signature
+    #[error("The `sendAndSignTransaction` method did not return any signature")]
+    SendAndSignTransactionSignatureEmpty,
 }
 
 impl WalletError {

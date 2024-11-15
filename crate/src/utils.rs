@@ -1,5 +1,5 @@
 use ed25519_dalek::{PublicKey, Signature, Verifier};
-use js_sys::{Array, Function, Object, Reflect};
+use js_sys::{Array, Function, Object, Reflect, Uint8Array};
 use wasm_bindgen::{JsCast, JsValue};
 
 use crate::{WalletError, WalletResult};
@@ -33,6 +33,14 @@ impl Utils {
 
     pub fn signature(signature_bytes: [u8; 64]) -> WalletResult<Signature> {
         Signature::from_bytes(&signature_bytes).or(Err(WalletError::InvalidEd25519SignatureBytes))
+    }
+
+    pub fn to32byte_array(bytes: &[u8]) -> WalletResult<[u8; 32]> {
+        bytes.try_into().or(Err(WalletError::Expected32ByteLength))
+    }
+
+    pub fn to64byte_array(bytes: &[u8]) -> WalletResult<[u8; 64]> {
+        bytes.try_into().or(Err(WalletError::Expected64ByteLength))
     }
 
     pub fn verify_signature(
@@ -160,6 +168,15 @@ impl Reflection {
             .collect::<WalletResult<Vec<Vec<u8>>>>()
     }
 
+    pub fn get_bytes_from_vec_inner(&self) -> WalletResult<Vec<Vec<u8>>> {
+        let js_array = self.get_array()?;
+
+        js_array
+            .iter()
+            .map(|value| Reflection::new(value)?.get_bytes_inner())
+            .collect::<WalletResult<Vec<Vec<u8>>>>()
+    }
+
     pub fn get_bytes(&self, key: &str) -> WalletResult<Vec<u8>> {
         let js_value = Reflect::get(&self.0, &key.into())?;
 
@@ -168,6 +185,15 @@ impl Reflection {
             .or(Err(WalletError::JsValueNotUnint8Array(key.to_string())))?;
 
         Ok(to_uint8array.to_vec())
+    }
+
+    pub fn get_bytes_inner(&self) -> WalletResult<Vec<u8>> {
+        self.0
+            .dyn_ref::<js_sys::Uint8Array>()
+            .ok_or(WalletError::JsValueNotUnint8Array(
+                "INTERNAL ERROR".to_string(),
+            ))
+            .map(|value| value.to_vec())
     }
 
     pub fn byte32array(&self, key: &str) -> WalletResult<[u8; 32]> {
@@ -183,8 +209,24 @@ impl Reflection {
         Ok(byte32array)
     }
 
+    pub fn byte64array(&self) -> WalletResult<[u8; 64]> {
+        self.get_uint8array()?
+            .to_vec()
+            .try_into()
+            .or(Err(WalletError::Expected64ByteLength))
+    }
+
     pub fn get_array(&self) -> WalletResult<Array> {
         Ok(self.0.clone().dyn_into::<js_sys::Array>()?)
+    }
+
+    pub fn get_uint8array(&self) -> WalletResult<Uint8Array> {
+        self.0
+            .clone()
+            .dyn_into::<Uint8Array>()
+            .or(Err(WalletError::JsValueNotUnint8Array(
+                "INTERNAL ERROR".to_string(),
+            )))
     }
 
     pub fn get_string(value: &JsValue) -> WalletResult<String> {
