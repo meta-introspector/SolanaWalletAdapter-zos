@@ -1,35 +1,22 @@
-use std::hash::Hash;
+use wasm_bindgen::JsValue;
 
-use js_sys::Function;
-use wasm_bindgen::{JsCast, JsValue};
+use crate::{SemverVersion, StandardFunction, WalletError, WalletResult};
 
-use crate::{Reflection, SemverVersion, WalletError, WalletResult};
-
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Disconnect {
-    version: SemverVersion,
-    callback: Function,
-}
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Disconnect(StandardFunction);
 
 impl Disconnect {
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
-        let get_disconnect_value = Reflection::new(value)?
-            .reflect_inner(&"disconnect")
-            .or(Err(WalletError::MissingDisconnectFunction))?;
-        let get_disconnect_fn = get_disconnect_value.dyn_into::<Function>().or(Err(
-            WalletError::JsValueNotFunction(
-                "Namespace[`standard:disconnect -> disconnect`]".to_string(),
-            ),
-        ))?;
-
-        Ok(Self {
+        Ok(Self(StandardFunction::new(
+            value,
             version,
-            callback: get_disconnect_fn,
-        })
+            "disconnect",
+            "standard",
+        )?))
     }
 
     pub(crate) async fn call_disconnect(&self) -> WalletResult<()> {
-        let outcome = self.callback.call0(&JsValue::null())?;
+        let outcome = self.0.callback.call0(&JsValue::null())?;
 
         let outcome = js_sys::Promise::resolve(&outcome);
 
@@ -39,23 +26,5 @@ impl Disconnect {
         }
 
         Ok(())
-    }
-}
-
-impl PartialOrd for Disconnect {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.version.cmp(&other.version))
-    }
-}
-
-impl Ord for Disconnect {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.version.cmp(&other.version)
-    }
-}
-
-impl Hash for Disconnect {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.version.hash(state);
     }
 }

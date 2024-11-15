@@ -9,7 +9,7 @@ use crate::WalletError;
 /// `single` and `singleGossip` are parsed as `confirmed`
 ///
 /// `root` and `max` are parsed as `finalized`,
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Default, PartialOrd, Ord, Clone, Copy, Hash)]
 pub enum Commitment {
     /// A transaction has been validated and recorded in the blockchain by a single node
     Processed,
@@ -17,7 +17,18 @@ pub enum Commitment {
     Confirmed,
     /// A has been included in a block that has been committed to the blockchain by the Solana cluster
     /// and is now irreversible.
+    #[default]
     Finalized,
+}
+
+impl Commitment {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Processed => "processed",
+            Self::Confirmed => "confirmed",
+            Self::Finalized => "finalized",
+        }
+    }
 }
 
 impl TryFrom<&str> for Commitment {

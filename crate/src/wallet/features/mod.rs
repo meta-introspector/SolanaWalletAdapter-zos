@@ -18,3 +18,6 @@ pub use sign_message::*;
 
 mod sign_tx;
 pub use sign_tx::*;
+
+mod standard_fn;
+pub use standard_fn::*;

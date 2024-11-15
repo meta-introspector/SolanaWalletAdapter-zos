@@ -1,9 +1,12 @@
+use ed25519_dalek::Signature;
 use js_sys::Function;
 use wasm_bindgen::{JsCast, JsValue};
 
 use core::hash::Hash;
 
-use crate::{Cluster, Reflection, SemverVersion, WalletAccount, WalletError, WalletResult};
+use crate::{
+    Cluster, Commitment, Reflection, SemverVersion, Utils, WalletAccount, WalletError, WalletResult,
+};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SignTransaction {
@@ -14,16 +17,16 @@ pub struct SignTransaction {
 }
 
 impl SignTransaction {
-    pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
+    fn new(value: JsValue, version: SemverVersion, key: &str) -> WalletResult<Self> {
         let reflection = Reflection::new(value)?;
         let inner_value = reflection
-            .reflect_inner(&"signTransaction")
+            .reflect_inner(key)
             .or(Err(WalletError::MissingSignTransactionFunction))?;
         let callback =
             inner_value
                 .dyn_into::<Function>()
                 .or(Err(WalletError::JsValueNotFunction(
-                    "Namespace[`solana:signTransaction -> signTransaction`]".to_string(),
+                    String::from("Namespace[`solana:") + key + "->" + key + "`]",
                 )))?;
 
         let (legacy, version_zero) = Self::get_tx_version_support(&reflection)?;
@@ -34,6 +37,14 @@ impl SignTransaction {
             legacy,
             version_zero,
         })
+    }
+
+    pub fn new_sign_tx(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
+        Self::new(value, version, "signTransaction")
+    }
+
+    pub fn new_sign_and_send_tx(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
+        Self::new(value, version, "signAndSendTransaction")
     }
 
     fn get_tx_version_support(inner_value: &Reflection) -> WalletResult<(bool, bool)> {
@@ -92,6 +103,40 @@ impl SignTransaction {
         let success = wasm_bindgen_futures::JsFuture::from(outcome).await?;
         Reflection::new(success)?.get_bytes_from_vec("signedTransaction")
     }
+
+    pub async fn call_sign_and_send_transaction(
+        &self,
+        wallet_account: &WalletAccount,
+        transaction_bytes: &[u8],
+        cluster: Cluster,
+        options: SendOptions,
+    ) -> WalletResult<Signature> {
+        let tx_bytes_value: js_sys::Uint8Array = transaction_bytes.into();
+
+        web_sys::console::log_2(&"CALLBACK".into(), &self.callback);
+
+        let mut tx_object = Reflection::new_object();
+        tx_object.set_object(&"account".into(), &wallet_account.js_value)?;
+        tx_object.set_object(&"transaction".into(), &tx_bytes_value)?;
+        tx_object.set_object(&"chain".into(), &cluster.chain().into())?;
+        tx_object.set_object(&"options".into(), &options.to_object()?)?;
+
+        web_sys::console::log_2(&"STRUCTURE".into(), &tx_object.get_inner());
+
+        let outcome = self.callback.call1(&JsValue::null(), &tx_object.take())?;
+
+        let outcome = js_sys::Promise::resolve(&outcome);
+
+        let success = wasm_bindgen_futures::JsFuture::from(outcome).await?;
+
+        web_sys::console::log_2(&"SUCCESS".into(), &success);
+
+        Reflection::new(success)?
+            .get_bytes_from_vec("signature")?
+            .get(0)
+            .map(|value| Utils::signature(Utils::to64byte_array(value)?))
+            .ok_or(WalletError::SendAndSignTransactionSignatureEmpty)?
+    }
 }
 
 impl PartialOrd for SignTransaction {
@@ -109,5 +154,23 @@ impl Ord for SignTransaction {
 impl Hash for SignTransaction {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.version.hash(state);
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+pub struct SendOptions {
+    preflight_commitment: Commitment,
+    skip_preflight: bool,
+    max_retries: u8,
+}
+
+impl SendOptions {
+    pub fn to_object(&self) -> WalletResult<JsValue> {
+        let mut reflection = Reflection::new_object();
+        reflection.set_object_str("preflightCommitment", &self.preflight_commitment.as_str())?;
+        reflection.set_object(&"skipPreflight".into(), &JsValue::from(self.skip_preflight))?;
+        reflection.set_object(&"maxRetries".into(), &JsValue::from(self.max_retries))?;
+
+        Ok(reflection.take())
     }
 }

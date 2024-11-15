@@ -1,27 +1,22 @@
-use std::hash::Hash;
-
-use js_sys::Function;
 use wasm_bindgen::JsValue;
 
-use crate::{Reflection, SemverVersion, WalletError, WalletResult};
+use crate::{Reflection, SemverVersion, StandardFunction, WalletError, WalletResult};
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct StandardEvents {
-    version: SemverVersion,
-    callback: Function,
-}
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct StandardEvents(StandardFunction);
+
 impl StandardEvents {
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
         let get_standard_event_fn = Reflection::new(value)?.get_function("on")?;
 
-        Ok(Self {
+        Ok(Self(StandardFunction {
             version,
             callback: get_standard_event_fn,
-        })
+        }))
     }
 
     pub(crate) async fn call_standard_event(&self) -> WalletResult<()> {
-        let outcome = self.callback.call0(&JsValue::from_bool(false))?;
+        let outcome = self.0.callback.call0(&JsValue::from_bool(false))?;
 
         let outcome = js_sys::Promise::resolve(&outcome);
 
@@ -31,23 +26,5 @@ impl StandardEvents {
         }
 
         Ok(())
-    }
-}
-
-impl PartialOrd for StandardEvents {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.version.cmp(&other.version))
-    }
-}
-
-impl Ord for StandardEvents {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.version.cmp(&other.version)
-    }
-}
-
-impl Hash for StandardEvents {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.version.hash(state);
     }
 }
