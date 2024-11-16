@@ -1,27 +1,30 @@
-use core::future::Future;
+use std::borrow::Borrow;
 
-use async_channel::{Receiver, Sender};
+use ed25519_dalek::Signature;
 use web_sys::{js_sys::Object, Document, Window};
 
-use crate::{Cluster, SigninInput, Wallet, WalletError, WalletResult};
-
-pub type MessageSender = Sender<MessageType>;
+use crate::{
+    Cluster, SendOptions, SignInOutput, SignedMessageOutput, SigninInput, Wallet, WalletAccount,
+    WalletError, WalletResult, WalletStorage,
+};
 
 /// Operations on a browser window.
 /// `Window` and `Document` object must be present otherwise
 /// an error is thrown.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct WalletAdapter {
     window: Window,
     document: Document,
-    wallets: Vec<Wallet>,
-    sender: MessageSender,
-    receiver: Receiver<MessageType>,
+    storage: WalletStorage,
+    connected_wallet: Option<Wallet>,
+    connected_account: Option<WalletAccount>,
 }
 
 impl WalletAdapter {
     /// Get the `Window` and `Document` object in the current browser window
     pub fn init() -> WalletResult<Self> {
+        let storage = WalletStorage::default();
+
         let window = if let Some(window) = web_sys::window() {
             window
         } else {
@@ -34,16 +37,12 @@ impl WalletAdapter {
             return Err(WalletError::MissingAccessToBrowserDocument);
         };
 
-        let (sender, receiver) = async_channel::unbounded::<MessageType>();
-
-        // let sender = Arc::new(sender);
-
         let new_self = Self {
             window,
             document,
-            wallets: Vec::default(),
-            sender,
-            receiver,
+            storage,
+            connected_wallet: Option::default(),
+            connected_account: Option::default(),
         };
 
         new_self.init_events()?;
@@ -51,40 +50,123 @@ impl WalletAdapter {
         Ok(new_self)
     }
 
-    pub fn execute<F>(mut self, runner: impl FnOnce(Sender<MessageType>) -> F + 'static)
-    where
-        F: Future<Output = ()> + 'static,
-    {
-        let first_sender = self.sender.clone();
+    pub async fn connect(&mut self, wallet_name: &str) -> WalletResult<WalletAccount> {
+        let wallet = self.get_wallet(wallet_name)?;
 
-        let listener = async move {
-            while let Ok(message_type) = self.receiver.recv().await {
-                match message_type {
-                    MessageType::Success(wallet) => {
-                        // log::info!("WALLET_ADAPTER> [SUCCESS]: {:#?}", &wallet);
-                        self.wallets.push(wallet);
-                    }
-                    MessageType::Failure(error) => {
-                        log::info!("WALLET_ADAPTER> [ERROR]: {:#?}", &error);
-                    }
-                    MessageType::Connect(name) => {
-                        connect(first_sender.clone(), &self.wallets, name).await
-                    }
-                    _ => todo!(),
-                }
-            }
-        };
+        let wallet_account = wallet.features.connect.call_connect().await?;
 
-        wasm_bindgen_futures::spawn_local(async move {
-            let local_sender = self.sender.clone();
+        self.set_connected_account(wallet_account.clone());
+        self.set_connected_wallet(wallet);
 
-            futures_lite::future::zip(listener, runner(local_sender)).await;
-        });
+        Ok(wallet_account)
+    }
+
+    pub async fn disconnect(&mut self) -> WalletResult<()> {
+        if let Some(wallet) = self.connected_wallet.take() {
+            wallet.features.disconnect.call_disconnect().await?;
+            self.set_disconnected();
+
+            Ok(())
+        } else {
+            Err(WalletError::WalletNotFound)
+        }
+    }
+
+    pub async fn sign_and_send_transaction(
+        &self,
+        transaction_bytes: &[u8],
+        cluster: Cluster,
+        options: SendOptions,
+    ) -> WalletResult<Signature> {
+        let account = self.connected_account()?;
+        let wallet = self.connected_wallet()?;
+        wallet
+            .features
+            .sign_and_send_tx
+            .call_sign_and_send_transaction(account, transaction_bytes, cluster, options)
+            .await
+    }
+
+    pub async fn sign_transaction(
+        &self,
+        transaction_bytes: &[u8],
+        cluster: Option<Cluster>,
+    ) -> WalletResult<Vec<Vec<u8>>> {
+        let account = self.connected_account()?;
+        let wallet = self.connected_wallet()?;
+        wallet
+            .features
+            .sign_tx
+            .call_sign_tx(account, transaction_bytes, cluster)
+            .await
+    }
+
+    pub async fn sign_message<'a>(
+        &self,
+        message: &'a [u8],
+    ) -> WalletResult<SignedMessageOutput<'a>> {
+        let account = self.connected_account()?;
+        let wallet = self.connected_wallet()?;
+
+        wallet
+            .features
+            .sign_message
+            .call_sign_message(account, message)
+            .await
+    }
+
+    pub async fn sign_in(
+        &self,
+        signin_input: &SigninInput,
+        public_key: [u8; 32],
+    ) -> WalletResult<SignInOutput> {
+        let wallet = self.connected_wallet()?;
+
+        if let Some(fn_exists) = wallet.features.sign_in.as_ref() {
+            fn_exists.call_signin(signin_input, public_key).await
+        } else {
+            Err(WalletError::MissingSignInFunction)
+        }
+    }
+
+    pub fn set_connected_account(&mut self, account_name: WalletAccount) -> &mut Self {
+        self.connected_account.replace(account_name);
+
+        self
+    }
+
+    pub fn set_connected_wallet(&mut self, wallet: Wallet) -> &mut Self {
+        self.connected_wallet.replace(wallet);
+
+        self
+    }
+
+    pub fn set_disconnected(&mut self) -> &mut Self {
+        self.connected_wallet.take();
+        self.connected_account.take();
+
+        self
+    }
+
+    pub fn is_connected(&self) -> bool {
+        self.connected_account.is_some()
+    }
+
+    pub fn connected_account(&self) -> WalletResult<&WalletAccount> {
+        self.connected_account
+            .as_ref()
+            .ok_or(WalletError::AccountNotFound)
+    }
+
+    pub fn connected_wallet(&self) -> WalletResult<&Wallet> {
+        self.connected_wallet
+            .as_ref()
+            .ok_or(WalletError::WalletNotFound)
     }
 
     fn init_events(&self) -> WalletResult<()> {
-        self.register_wallet_event(self.sender.clone())?;
-        self.dispatch_app_event(self.sender.clone());
+        self.register_wallet_event(self.storage.clone_inner())?;
+        self.dispatch_app_event(self.storage.clone_inner());
 
         Ok(())
     }
@@ -102,68 +184,17 @@ impl WalletAdapter {
         &self.document
     }
 
-    pub fn wallets(&self) -> &[Wallet] {
-        self.wallets.as_slice()
+    pub fn storage(&self) -> &WalletStorage {
+        self.storage.borrow()
     }
-}
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-pub enum MessageType {
-    Success(Wallet),
-    Failure(WalletError),
-    Connect(&'static str),
-    Disconnect(Wallet),
-    SignIn {
-        wallet: Option<String>,
-        signin_input: SigninInput,
-    },
-}
+    pub fn wallets(&self) -> Vec<Wallet> {
+        self.storage.borrow().get_wallets()
+    }
 
-async fn connect(sender: Sender<MessageType>, wallets: &[Wallet], name: &str) {
-    if let Some(solflare) = wallets.iter().find(|wallet| wallet.name() == name) {
-        match solflare.features().connect().await {
-            Ok(connection) => {
-                log::info!("CONNECT OUTCOME: {:?}", connection);
-
-                // match solflare.features().disconnect().await {
-                //     Ok(_) => log::info!("DISCONNECTED SUCCESSFULLY"),
-                //     Err(error) => log::info!("WALLET DISCONNECT ERROR: {:?}", error),
-                // }
-
-                // match solflare
-                //     .features()
-                //     .sign_message(&connection[0], &"Working".as_bytes())
-                //     .await
-                // {
-                //     Ok(value) => {
-                //         log::info!("SIGNED MESSAGE OUTPUT: {:?}", &value);
-                //     }
-                //     Err(error) => {
-                //         log::info!("SIGN MESSAGE ERROR: {:?}", error)
-                //     }
-                // }
-
-                match solflare
-                    .features()
-                    .sign_transaction(&connection[0], &[], Some(Cluster::MainNet))
-                    .await
-                {
-                    Ok(value) => {
-                        log::info!("SIGNED TX OUTPUT: {:?}", &value);
-                    }
-                    Err(error) => {
-                        log::info!("SIGN TX ERROR: {:?}", error)
-                    }
-                }
-            }
-
-            Err(error) => {
-                if let Some(error) = sender.send(MessageType::Failure(error)).await.err() {
-                    log::error!("Unable to send error message. Maybe `Receiver` already closed the channel. Sender Error `{:?}`", error);
-                }
-            }
-        }
-    } else {
-        panic!("{name} Not Found")
+    pub fn get_wallet(&self, wallet_name: &str) -> WalletResult<Wallet> {
+        self.storage
+            .get_wallet(wallet_name)
+            .ok_or(WalletError::WalletNotFound)
     }
 }

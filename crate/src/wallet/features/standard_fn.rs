@@ -18,19 +18,18 @@ impl StandardFunction {
         key: &str,
         namespace: &str,
     ) -> WalletResult<Self> {
-        let get_connect_value = Reflection::new(value)?
+        let fn_value = Reflection::new(value)?
             .reflect_inner(&key)
             .or(Err(WalletError::MissingConnectFunction))?;
-        let get_connect_fn =
-            get_connect_value
-                .dyn_into::<Function>()
-                .or(Err(WalletError::JsValueNotFunction(
-                    String::from("Namespace[`") + namespace + ":" + key + "-> " + key + "`]",
-                )))?;
+        let get_fn = fn_value
+            .dyn_into::<Function>()
+            .or(Err(WalletError::JsValueNotFunction(
+                String::from("Namespace[`") + namespace + ":" + key + "-> " + key + "`]",
+            )))?;
 
         Ok(Self {
             version,
-            callback: get_connect_fn,
+            callback: get_fn,
         })
     }
 }

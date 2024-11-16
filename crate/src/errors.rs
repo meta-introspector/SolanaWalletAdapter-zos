@@ -71,9 +71,9 @@ pub enum WalletError {
     /// The version was not found
     #[error("The version was not found")]
     VersionNotFound,
-    /// This feature is not supported as a standard feature
-    #[error("The feature `{0}` is not supported as a standard feature")]
-    UnsupportedStandardFeature(String),
+    /// This feature is not supported as a standard  or solana namespace feature
+    #[error("The feature `{0}` is not supported as a standard  or solana namespace feature")]
+    UnsupportedWalletFeature(String),
     /// Encountered an unsupported transaction version.
     /// Only `legacy` and `version zero` transactions are supported.
     #[error("Encountered an unsupported transaction version. Only `legacy` and `version zero` transactions are supported.")]
@@ -87,6 +87,14 @@ pub enum WalletError {
     /// The `connect` function of the `standard:connect` namespace was not found while parsing a wallet
     #[error("The `connect` function of the `standard:connect` namespace was not found while parsing a wallet")]
     MissingConnectFunction,
+    /// Attemted to connect to a wallet that does not exist or is yet to be registered
+    #[error("Attemted to connect to a wallet that does not exist or is yet to be registered")]
+    WalletNotFound,
+    /// Attemted to connect to an account that does not exist or might have been disconnected
+    #[error(
+        "Attemted to connect to an account that does not exist or might have been disconnected"
+    )]
+    AccountNotFound,
     /// Expected JsValue of a `js_sys::Function`
     #[error("Expected `{0}` to be a `JsValue` of type `js_sys::Function`")]
     JsValueNotFunction(String),
@@ -99,6 +107,9 @@ pub enum WalletError {
     /// Unable to connect to a wallet. The user may have rejected the request
     #[error("Unable to connect to a wallet. Error `{0}` request")]
     WalletConnectError(String),
+    /// The connect method did not return any accounts
+    #[error("The connect method did not return any accounts")]
+    ConnectHasNoAccounts,
     /// The wallet `standard:disconnect` feature is missing
     #[error("The wallet `standard:disconnect` feature is missing")]
     MissingDisconnectFunction,

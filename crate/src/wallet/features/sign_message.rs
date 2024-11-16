@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct SignMessage(StandardFunction);
+pub struct SignMessage(pub(crate) StandardFunction);
 
 impl SignMessage {
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
