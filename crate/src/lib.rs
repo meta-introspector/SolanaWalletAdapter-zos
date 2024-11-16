@@ -21,3 +21,6 @@ pub use constants::*;
 
 mod wallet;
 pub use wallet::*;
+
+mod storage;
+pub use storage::*;

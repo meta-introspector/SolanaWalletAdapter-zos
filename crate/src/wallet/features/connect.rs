@@ -14,7 +14,7 @@ impl Connect {
         )?))
     }
 
-    pub(crate) async fn call_connect(&self) -> WalletResult<Vec<WalletAccount>> {
+    pub(crate) async fn call_connect(&self) -> WalletResult<WalletAccount> {
         let outcome = self.0.callback.call0(&JsValue::from_bool(false))?;
 
         let outcome = js_sys::Promise::resolve(&outcome);
@@ -23,10 +23,19 @@ impl Connect {
             Ok(success) => {
                 let get_accounts = Reflection::new(success)?.get_js_array("accounts")?;
 
-                get_accounts
+                let wallet_account = get_accounts
                     .into_iter()
                     .map(|raw_account| WalletAccount::parse(Reflection::new(raw_account)?))
                     .collect::<WalletResult<Vec<WalletAccount>>>()
+                    .map(|mut accounts| {
+                        if accounts.is_empty() {
+                            Err(WalletError::ConnectHasNoAccounts)
+                        } else {
+                            Ok(accounts.remove(0))
+                        }
+                    })??;
+
+                Ok(wallet_account)
             }
             Err(error) => {
                 let value: WalletError = error.into();

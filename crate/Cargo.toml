@@ -10,15 +10,11 @@ repository.workspace = true
 readme.workspace = true
 
 [dependencies]
-log.workspace = true
 web-sys.workspace = true
 js-sys.workspace = true
 wasm-bindgen.workspace = true
-thiserror = "1.0.63"
-async-channel.workspace = true
-jzon.workspace = true
+thiserror = "2.0.3"
 wasm-bindgen-futures.workspace = true
-futures-lite = "2.4.0"
 humantime = "2.1.0"
 rand_core = { version = "0.6.4", features = ["getrandom"] }
 rand_chacha = "0.3.1"

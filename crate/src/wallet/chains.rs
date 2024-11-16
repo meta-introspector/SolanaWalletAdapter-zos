@@ -26,6 +26,17 @@ pub struct ChainSupport {
     pub localnet: bool,
 }
 
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+pub struct FeatureSupport {
+    pub connect: bool,
+    pub disconnect: bool,
+    pub events: bool,
+    pub sign_in: bool,
+    pub sign_message: bool,
+    pub sign_and_send_tx: bool,
+    pub sign_tx: bool,
+}
+
 /// Solana Clusters
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub enum Cluster {

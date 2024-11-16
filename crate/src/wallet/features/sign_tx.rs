@@ -113,23 +113,17 @@ impl SignTransaction {
     ) -> WalletResult<Signature> {
         let tx_bytes_value: js_sys::Uint8Array = transaction_bytes.into();
 
-        web_sys::console::log_2(&"CALLBACK".into(), &self.callback);
-
         let mut tx_object = Reflection::new_object();
         tx_object.set_object(&"account".into(), &wallet_account.js_value)?;
         tx_object.set_object(&"transaction".into(), &tx_bytes_value)?;
         tx_object.set_object(&"chain".into(), &cluster.chain().into())?;
         tx_object.set_object(&"options".into(), &options.to_object()?)?;
 
-        web_sys::console::log_2(&"STRUCTURE".into(), &tx_object.get_inner());
-
         let outcome = self.callback.call1(&JsValue::null(), &tx_object.take())?;
 
         let outcome = js_sys::Promise::resolve(&outcome);
 
         let success = wasm_bindgen_futures::JsFuture::from(outcome).await?;
-
-        web_sys::console::log_2(&"SUCCESS".into(), &success);
 
         Reflection::new(success)?
             .get_bytes_from_vec("signature")?

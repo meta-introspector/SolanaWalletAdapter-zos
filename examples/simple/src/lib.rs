@@ -1,6 +1,5 @@
-use async_channel::Sender;
 use log::Level;
-use wallet_adapter::{MessageType, WalletAdapter};
+use wallet_adapter::WalletAdapter;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -10,11 +9,16 @@ pub fn main(connect_ev_node: &str) {
 
     log::info!("TARGET NODE: {}", connect_ev_node);
 
-    let adapter = WalletAdapter::init().unwrap();
+    wasm_bindgen_futures::spawn_local(async move {
+        let mut adapter = WalletAdapter::init().unwrap();
+        adapter.connect("solflare").await.unwrap();
 
-    adapter.execute(runner);
-}
+        log::info!("CONNECTED WALLET: {:?}", &adapter.connected_wallet());
+        log::info!("CONNECTED ACCOUNT: {:?}", &adapter.connected_account());
 
-async fn runner(sender: Sender<MessageType>) {
-    sender.send(MessageType::Connect("Phantom")).await.unwrap()
+        // adapter.disconnect().await.unwrap();
+
+        let signed_msg = adapter.sign_message(b"FOO").await.unwrap();
+        log::info!("SIGNED MSG: {:?}", &signed_msg);
+    });
 }

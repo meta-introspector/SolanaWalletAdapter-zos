@@ -1,6 +1,15 @@
 use wasm_bindgen::JsValue;
 
-use crate::{Reflection, WalletError, WalletIcon, WalletResult};
+use crate::{
+    Reflection, WalletError, WalletIcon, WalletResult,
+    SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER, SOLANA_SIGN_IN_IDENTIFIER,
+    SOLANA_SIGN_MESSAGE_IDENTIFIER, SOLANA_SIGN_TRANSACTION_IDENTIFIER,
+    STANDARD_CONNECT_IDENTIFIER, STANDARD_DISCONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
+};
+
+use super::{
+    ChainSupport, Cluster, FeatureSupport,
+};
 
 /// Interface of a **WalletAccount**, also referred to as an **Account**.
 /// An account is a _read-only data object_ that is provided from the Wallet to the app,
@@ -25,7 +34,11 @@ pub struct WalletAccount {
     pub icon: Option<WalletIcon>,
     /// The Javascript Value Representation of a wallet,
     /// this mostly used internally in the wallet adapter
-    pub js_value: JsValue,
+    pub(crate) js_value: JsValue,
+    // Convinience field, instead of going through the `features` field
+    supported_features: FeatureSupport,
+    // Convinience field, instead of iteration through the `chains` field
+    supported_chains: ChainSupport,
 }
 
 impl core::fmt::Debug for WalletAccount {
@@ -47,6 +60,49 @@ impl WalletAccount {
         let public_key = reflection.byte32array("publicKey")?;
         let chains = reflection.vec_string("chains")?;
         let features = reflection.vec_string("features")?;
+
+        let mut supported_chains = ChainSupport::default();
+
+        chains.iter().try_for_each(|chain| {
+            if chain.as_str() == Cluster::MainNet.chain() {
+                supported_chains.mainnet = true;
+            } else if chain.as_str() == Cluster::DevNet.chain() {
+                supported_chains.devnet = true;
+            } else if chain.as_str() == Cluster::TestNet.chain() {
+                supported_chains.testnet = true;
+            } else if chain.as_str() == Cluster::LocalNet.chain() {
+                supported_chains.localnet = true;
+            } else {
+                return Err(WalletError::UnsupportedChain(chain.to_owned()));
+            }
+
+            Ok(())
+        })?;
+
+        let mut supported_features = FeatureSupport::default();
+
+        features.iter().try_for_each(|feature| {
+            if feature.as_str() == STANDARD_CONNECT_IDENTIFIER {
+                supported_features.connect = true;
+            } else if feature.as_str() == STANDARD_DISCONNECT_IDENTIFIER {
+                supported_features.disconnect = true;
+            } else if feature.as_str() == STANDARD_EVENTS_IDENTIFIER {
+                supported_features.events = true;
+            } else if feature.as_str() == SOLANA_SIGN_IN_IDENTIFIER {
+                supported_features.sign_in = true;
+            } else if feature.as_str() == SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER {
+                supported_features.sign_and_send_tx = true;
+            } else if feature.as_str() == SOLANA_SIGN_TRANSACTION_IDENTIFIER {
+                supported_features.sign_tx = true;
+            } else if feature.as_str() == SOLANA_SIGN_MESSAGE_IDENTIFIER {
+                supported_features.sign_message = true;
+            } else {
+                return Err(WalletError::UnsupportedWalletFeature(feature.to_owned()));
+            }
+
+            Ok(())
+        })?;
+
         let icon = WalletIcon::from_jsvalue(&reflection)?;
 
         let label = match reflection.string("label") {
@@ -67,8 +123,58 @@ impl WalletAccount {
             features,
             label,
             icon,
+            supported_chains,
+            supported_features,
             js_value: reflection.take(),
         })
+    }
+
+    pub fn mainnet(&self) -> bool {
+        self.supported_chains.mainnet
+    }
+
+    pub fn devnet(&self) -> bool {
+        self.supported_chains.devnet
+    }
+
+    pub fn testnet(&self) -> bool {
+        self.supported_chains.testnet
+    }
+
+    pub fn localnet(&self) -> bool {
+        self.supported_chains.localnet
+    }
+
+    pub fn icon(&self) -> Option<&WalletIcon> {
+        self.icon.as_ref()
+    }
+
+    pub fn standard_connect(&self) -> bool {
+        self.supported_features.connect
+    }
+
+    pub fn standard_disconnect(&self) -> bool {
+        self.supported_features.disconnect
+    }
+
+    pub fn standard_events(&self) -> bool {
+        self.supported_features.events
+    }
+
+    pub fn solana_signin(&self) -> bool {
+        self.supported_features.sign_in
+    }
+
+    pub fn solana_sign_message(&self) -> bool {
+        self.supported_features.sign_message
+    }
+
+    pub fn solana_sign_and_send_transaction(&self) -> bool {
+        self.supported_features.sign_and_send_tx
+    }
+
+    pub fn solana_sign_transaction(&self) -> bool {
+        self.supported_features.sign_tx
     }
 }
 
@@ -117,7 +223,7 @@ impl<'a> From<&'a WalletAccount> for InnerWalletAccount<'a> {
             address: value.address.as_str(),
             public_key: &value.public_key,
             chains: &value.chains.as_slice(),
-            features: &value.features.as_slice(),
+            features: &value.features,
             label: value.label.as_ref(),
             icon: value.icon.as_ref(),
         }

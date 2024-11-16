@@ -6,21 +6,32 @@ use crate::{
     WalletResult,
 };
 
-use super::ChainSupport;
+use super::{ChainSupport, FeatureSupport};
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Wallet {
     name: String,
     version: SemverVersion,
     icon: Option<WalletIcon>,
     accounts: Vec<WalletAccount>,
     chains: Vec<Cluster>,
-    features: Features,
+    pub(crate) features: Features,
+    // Convinience field, instead of going through the `features` field
+    supported_features: FeatureSupport,
     // Convinience field, instead of iteration through the `chains` field
     supported_chains: ChainSupport,
 }
 
 impl Wallet {
+    pub async fn events(&self) -> WalletResult<()> {
+        self.features
+            .events
+            .as_ref()
+            .ok_or(WalletError::MissingStandardEventsFunction)?
+            .call_standard_event()
+            .await
+    }
+
     pub fn from_jsvalue(value: JsValue) -> WalletResult<Self> {
         let reflection = Reflection::new(value)?;
 
@@ -52,7 +63,7 @@ impl Wallet {
         let version = SemverVersion::parse(&reflection.string("version")?)?;
         let icon = WalletIcon::from_jsvalue(&reflection)?;
         let accounts = Self::get_accounts(&reflection, "accounts")?;
-        let features = Features::parse(&reflection)?;
+        let (features, supported_features) = Features::parse(&reflection)?;
 
         Ok(Wallet {
             name,
@@ -61,11 +72,12 @@ impl Wallet {
             accounts,
             chains,
             features,
+            supported_features,
             supported_chains,
         })
     }
 
-    pub fn get_accounts(reflection: &Reflection, key: &str) -> WalletResult<Vec<WalletAccount>> {
+    fn get_accounts(reflection: &Reflection, key: &str) -> WalletResult<Vec<WalletAccount>> {
         let accounts_raw = Reflect::get(reflection.get_inner(), &key.into())?;
         Reflection::check_is_undefined(&accounts_raw)?;
 
@@ -110,6 +122,33 @@ impl Wallet {
     pub fn localnet(&self) -> bool {
         self.supported_chains.localnet
     }
+    pub fn standard_connect(&self) -> bool {
+        self.supported_features.connect
+    }
+
+    pub fn standard_disconnect(&self) -> bool {
+        self.supported_features.disconnect
+    }
+
+    pub fn standard_events(&self) -> bool {
+        self.supported_features.events
+    }
+
+    pub fn solana_signin(&self) -> bool {
+        self.supported_features.sign_in
+    }
+
+    pub fn solana_sign_message(&self) -> bool {
+        self.supported_features.sign_message
+    }
+
+    pub fn solana_sign_and_send_transaction(&self) -> bool {
+        self.supported_features.sign_and_send_tx
+    }
+
+    pub fn solana_sign_transaction(&self) -> bool {
+        self.supported_features.sign_tx
+    }
 
     pub fn icon(&self) -> Option<&WalletIcon> {
         self.icon.as_ref()
@@ -121,5 +160,24 @@ impl Wallet {
 
     pub fn version(&self) -> &SemverVersion {
         &self.version
+    }
+}
+
+impl core::fmt::Debug for Wallet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let chains = self
+            .chains
+            .iter()
+            .map(|cluster| cluster.chain())
+            .collect::<Vec<&str>>();
+
+        f.debug_struct("Wallet")
+            .field("name", &self.name)
+            .field("version", &self.version)
+            .field("icon", &self.icon)
+            .field("accounts", &self.accounts)
+            .field("chains", &chains)
+            .field("features", &self.features)
+            .finish()
     }
 }
