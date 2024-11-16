@@ -17,7 +17,18 @@ A lightweight Rust Solana Wallet that can be used in Rust based frontends and We
 - [x] Sign Message
 - [x] Sign Transaction
 - [x] Sign and Send Transaction
-- [ ] Custom Layouts 
+
+#### Templates
+- [ ] WebAssembly (No Frontend Framework) 
+- [ ] Sycamore
+- [ ] Yew
+- [ ] Dioxus 
+
+#### Examples
+- [ ] WebAssembly (No Frontend Framework) 
+- [ ] Sycamore
+- [ ] Yew
+- [ ] Dioxus
 
 #### Building
 1. Install `cargo-make` and `miniserve`
@@ -52,4 +63,3 @@ A lightweight Rust Solana Wallet that can be used in Rust based frontends and We
 
 #### LICENSE
 Apache-2.0 OR MIT
-
