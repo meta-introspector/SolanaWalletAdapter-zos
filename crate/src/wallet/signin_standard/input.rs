@@ -403,6 +403,7 @@ impl SigninInput {
 
     pub fn check_eq(&self, other: &str) -> WalletResult<()> {
         let other = Self::parser(other)?;
+
         if self.eq(&other) {
             Ok(())
         } else {

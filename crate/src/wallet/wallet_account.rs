@@ -1,15 +1,14 @@
+use std::borrow::Cow;
+
 use wasm_bindgen::JsValue;
 
 use crate::{
-    Reflection, WalletError, WalletIcon, WalletResult,
-    SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER, SOLANA_SIGN_IN_IDENTIFIER,
-    SOLANA_SIGN_MESSAGE_IDENTIFIER, SOLANA_SIGN_TRANSACTION_IDENTIFIER,
+    Reflection, WalletError, WalletIcon, WalletResult, SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER,
+    SOLANA_SIGN_IN_IDENTIFIER, SOLANA_SIGN_MESSAGE_IDENTIFIER, SOLANA_SIGN_TRANSACTION_IDENTIFIER,
     STANDARD_CONNECT_IDENTIFIER, STANDARD_DISCONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
 };
 
-use super::{
-    ChainSupport, Cluster, FeatureSupport,
-};
+use super::{ChainSupport, Cluster, FeatureSupport};
 
 /// Interface of a **WalletAccount**, also referred to as an **Account**.
 /// An account is a _read-only data object_ that is provided from the Wallet to the app,
@@ -55,6 +54,39 @@ impl core::fmt::Debug for WalletAccount {
 }
 
 impl WalletAccount {
+    pub fn shorten_address(&self) -> WalletResult<Cow<str>> {
+        if self.address.len() < 8 {
+            return Err(WalletError::InvalidBase58Address);
+        }
+
+        let first_part = &self.address[..4];
+        let last_part = &self.address[self.address.len() - 4..];
+
+        Ok(Cow::Borrowed(first_part) + "..." + last_part)
+    }
+
+    pub fn custom_shorten_address(&self, take: usize) -> WalletResult<Cow<str>> {
+        if self.address.len() < 8 {
+            return Err(WalletError::InvalidBase58Address);
+        }
+
+        let first_part = &self.address[..take];
+        let last_part = &self.address[self.address.len() - take..];
+
+        Ok(Cow::Borrowed(first_part) + "..." + last_part)
+    }
+
+    pub fn custom_shorten_address_rl(&self, left: usize, right: usize) -> WalletResult<Cow<str>> {
+        if self.address.len() < 8 {
+            return Err(WalletError::InvalidBase58Address);
+        }
+
+        let first_part = &self.address[..left];
+        let last_part = &self.address[self.address.len() - right..];
+
+        Ok(Cow::Borrowed(first_part) + "..." + last_part)
+    }
+
     pub fn parse(reflection: Reflection) -> WalletResult<Self> {
         let address = reflection.string("address")?;
         let public_key = reflection.byte32array("publicKey")?;

@@ -1,5 +1,5 @@
 [workspace]
-members = ["crate", "examples/simple"]
+members = ["crate", "examples/*"]
 
 resolver = "2"
 
@@ -14,13 +14,13 @@ repository = "https://github.com/JamiiDao/SolanaWalletAdapter"
 readme = "./README.md"
 
 [workspace.dependencies]
+wallet-adapter = { path = "./crate" }
 bs58 = { version = "0.5.1" }
 wasm-bindgen = "0.2.93"
 wasm-bindgen-futures = "0.4.45"
 log = "0.4.14"
 console_error_panic_hook = "0.1.6"
 console_log = "1.0.0"
-jzon = "0.12.5"
 js-sys = "0.3.70"
 web-sys = { version = "0.3.72", features = [
     "Window",
@@ -37,6 +37,9 @@ web-sys = { version = "0.3.72", features = [
     "RequestMode",
     "Response",
     "Headers",
+    "PointerEvent",
+    "Clipboard",
+    "Navigator",
 ] }
 
 [profile.release]

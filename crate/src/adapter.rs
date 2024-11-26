@@ -197,4 +197,48 @@ impl WalletAdapter {
             .get_wallet(wallet_name)
             .ok_or(WalletError::WalletNotFound)
     }
+
+    pub fn mainnet(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.mainnet())
+    }
+
+    pub fn devnet(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.devnet())
+    }
+
+    pub fn testnet(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.testnet())
+    }
+
+    pub fn localnet(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.localnet())
+    }
+
+    pub fn standard_connect(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.standard_connect())
+    }
+
+    pub fn standard_disconnect(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.standard_disconnect())
+    }
+
+    pub fn standard_events(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.standard_events())
+    }
+
+    pub fn solana_signin(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.solana_signin())
+    }
+
+    pub fn solana_sign_message(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.solana_sign_message())
+    }
+
+    pub fn solana_sign_and_send_transaction(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.solana_sign_and_send_transaction())
+    }
+
+    pub fn solana_sign_transaction(&self) -> WalletResult<bool> {
+        Ok(self.connected_wallet()?.solana_sign_transaction())
+    }
 }
