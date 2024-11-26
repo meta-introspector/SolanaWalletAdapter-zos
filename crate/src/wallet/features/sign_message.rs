@@ -101,8 +101,16 @@ impl<'a> SignedMessageOutput<'a> {
         Utils::public_key(self.public_key)
     }
 
+    pub fn address(&self) -> WalletResult<String> {
+        Ok(Utils::address(self.public_key()?))
+    }
+
     pub fn signature(&self) -> WalletResult<Signature> {
         Utils::signature(self.signature)
+    }
+
+    pub fn base58_signature(&self) -> WalletResult<String> {
+        Ok(Utils::base58_signature(self.signature()?))
     }
 }
 

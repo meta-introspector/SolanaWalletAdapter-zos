@@ -24,3 +24,4 @@ blake3 = { version = "1.5.1", default-features = false }
 ed25519-dalek = { version = "1", default-features = false, features = [
     "u64_backend",
 ] }
+log.workspace = true

@@ -17,6 +17,23 @@ pub const WALLET_STANDARD_VERSION: &str = "1.0.0";
 pub struct Utils;
 
 impl Utils {
+    pub fn public_key_rand() -> [u8; 32] {
+        Self::rand_32bytes()
+    }
+
+    pub fn rand_32bytes() -> [u8; 32] {
+        use rand_chacha::ChaCha20Rng;
+        use rand_core::{RngCore, SeedableRng};
+
+        let mut rng = ChaCha20Rng::from_entropy();
+
+        let mut buffer = [0u8; 32];
+
+        rng.fill_bytes(&mut buffer);
+
+        buffer
+    }
+
     pub fn jsvalue_to_error<T: core::fmt::Debug>(
         value: Result<T, JsValue>,
     ) -> Result<(), WalletError> {
@@ -64,6 +81,14 @@ impl Utils {
             .or(Err(WalletError::InvalidEd25519PublicKeyBytes))?;
 
         Self::signature(signature_bytes)
+    }
+
+    pub fn address(public_key: PublicKey) -> String {
+        bs58::encode(public_key.as_ref()).into_string()
+    }
+
+    pub fn base58_signature(signature: Signature) -> String {
+        bs58::encode(signature.as_ref()).into_string()
     }
 }
 
