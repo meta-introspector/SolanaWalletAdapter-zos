@@ -27,7 +27,7 @@ A lightweight Rust Solana Wallet that can be used in Rust based frontends and We
 #### Examples
 - [ ] WebAssembly (No Frontend Framework) 
 - [ ] Sycamore
-- [ ] Yew
+- [x] Yew
 - [x] Dioxus
 
 #### Building
