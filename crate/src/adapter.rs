@@ -11,7 +11,7 @@ use crate::{
 /// Operations on a browser window.
 /// `Window` and `Document` object must be present otherwise
 /// an error is thrown.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct WalletAdapter {
     window: Window,
     document: Document,
@@ -63,7 +63,7 @@ impl WalletAdapter {
 
     pub async fn disconnect(&mut self) -> WalletResult<()> {
         if let Some(wallet) = self.connected_wallet.take() {
-            wallet.features.disconnect.call_disconnect().await?;
+            wallet.disconnect().await?;
             self.set_disconnected();
 
             Ok(())
@@ -81,9 +81,7 @@ impl WalletAdapter {
         let account = self.connected_account()?;
         let wallet = self.connected_wallet()?;
         wallet
-            .features
-            .sign_and_send_tx
-            .call_sign_and_send_transaction(account, transaction_bytes, cluster, options)
+            .sign_and_send_transaction(transaction_bytes, cluster, options, account)
             .await
     }
 
@@ -95,9 +93,7 @@ impl WalletAdapter {
         let account = self.connected_account()?;
         let wallet = self.connected_wallet()?;
         wallet
-            .features
-            .sign_tx
-            .call_sign_tx(account, transaction_bytes, cluster)
+            .sign_transaction(transaction_bytes, cluster, account)
             .await
     }
 
@@ -108,11 +104,7 @@ impl WalletAdapter {
         let account = self.connected_account()?;
         let wallet = self.connected_wallet()?;
 
-        wallet
-            .features
-            .sign_message
-            .call_sign_message(account, message)
-            .await
+        wallet.sign_message(message, account).await
     }
 
     pub async fn sign_in(
@@ -122,11 +114,7 @@ impl WalletAdapter {
     ) -> WalletResult<SignInOutput> {
         let wallet = self.connected_wallet()?;
 
-        if let Some(fn_exists) = wallet.features.sign_in.as_ref() {
-            fn_exists.call_signin(signin_input, public_key).await
-        } else {
-            Err(WalletError::MissingSignInFunction)
-        }
+        wallet.sign_in(signin_input, public_key).await
     }
 
     pub fn set_connected_account(&mut self, account_name: WalletAccount) -> &mut Self {
