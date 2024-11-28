@@ -1,3 +1,4 @@
+use ed25519_dalek::Signature;
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys::Reflect;
 
@@ -6,7 +7,9 @@ use crate::{
     WalletResult,
 };
 
-use super::{ChainSupport, FeatureSupport};
+use super::{
+    ChainSupport, FeatureSupport, SendOptions, SignInOutput, SignedMessageOutput, SigninInput,
+};
 
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Wallet {
@@ -23,6 +26,62 @@ pub struct Wallet {
 }
 
 impl Wallet {
+    pub async fn connect(&self) -> WalletResult<WalletAccount> {
+        self.features.connect.call_connect().await
+    }
+
+    pub async fn disconnect(&self) -> WalletResult<()> {
+        self.features.disconnect.call_disconnect().await
+    }
+
+    pub async fn sign_in(
+        &self,
+        signin_input: &SigninInput,
+        public_key: [u8; 32],
+    ) -> WalletResult<SignInOutput> {
+        if let Some(fn_exists) = self.features.sign_in.as_ref() {
+            fn_exists.call_signin(signin_input, public_key).await
+        } else {
+            Err(WalletError::MissingSignInFunction)
+        }
+    }
+
+    pub async fn sign_message<'a>(
+        &self,
+        message: &'a [u8],
+        account: &WalletAccount,
+    ) -> WalletResult<SignedMessageOutput<'a>> {
+        self.features
+            .sign_message
+            .call_sign_message(account, message)
+            .await
+    }
+
+    pub async fn sign_transaction(
+        &self,
+        transaction_bytes: &[u8],
+        cluster: Option<Cluster>,
+        account: &WalletAccount,
+    ) -> WalletResult<Vec<Vec<u8>>> {
+        self.features
+            .sign_tx
+            .call_sign_tx(account, transaction_bytes, cluster)
+            .await
+    }
+
+    pub async fn sign_and_send_transaction(
+        &self,
+        transaction_bytes: &[u8],
+        cluster: Cluster,
+        options: SendOptions,
+        account: &WalletAccount,
+    ) -> WalletResult<Signature> {
+        self.features
+            .sign_and_send_tx
+            .call_sign_and_send_transaction(account, transaction_bytes, cluster, options)
+            .await
+    }
+
     pub async fn events(&self) -> WalletResult<()> {
         self.features
             .events

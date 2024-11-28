@@ -1,12 +1,8 @@
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::Wallet;
 
-pub(crate) type StorageSchema = HashMap<blake3::Hash, Wallet>;
+pub type StorageSchema = HashMap<blake3::Hash, Wallet>;
 
 pub type StorageType = Rc<RefCell<StorageSchema>>;
 
