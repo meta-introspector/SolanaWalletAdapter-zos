@@ -8,11 +8,19 @@ use crate::{
     Cluster, Commitment, Reflection, SemverVersion, Utils, WalletAccount, WalletError, WalletResult,
 };
 
+/// Used in `solana:SignTransaction` and `solana:SignAndSendTransaction`.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SignTransaction {
+    /// The [semver version](SemverVersion) of the
+    /// callback function supported by the wallet
     pub version: SemverVersion,
+    /// Whether the wallet supports signing legacy transactions.
+    /// If a wallet does not support this an error is returned
     pub legacy: bool,
+    /// Whether the wallet supports signing versioned transactions
     pub version_zero: bool,
+    // Internally called. Can be either `solana:signTransaction`
+    // or `solana:signAndSendTransaction` callback function
     callback: Function,
 }
 
@@ -39,10 +47,12 @@ impl SignTransaction {
         })
     }
 
+    /// Parse a `solana:signTransaction` callback from the [JsValue]
     pub fn new_sign_tx(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
         Self::new(value, version, "signTransaction")
     }
 
+    /// Parse a `solana:signAndSendTransaction` callback from the [JsValue]
     pub fn new_sign_and_send_tx(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
         Self::new(value, version, "signAndSendTransaction")
     }
@@ -104,7 +114,7 @@ impl SignTransaction {
         Reflection::new(success)?.get_bytes_from_vec("signedTransaction")
     }
 
-    pub async fn call_sign_and_send_transaction(
+    pub(crate) async fn call_sign_and_send_transaction(
         &self,
         wallet_account: &WalletAccount,
         transaction_bytes: &[u8],
@@ -151,6 +161,11 @@ impl Hash for SignTransaction {
     }
 }
 
+/// Options used in the `solana:signAndSendTransaction` method
+/// on a [crate::Wallet]. These options are:
+/// - [preflight_commitment](Commitment)
+/// - [skip_preflight](bool)
+/// - [max_retries](u8)
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct SendOptions {
     preflight_commitment: Commitment,
@@ -159,6 +174,9 @@ pub struct SendOptions {
 }
 
 impl SendOptions {
+    /// Converts [SendOptions] to a [JsValue] which can be passed
+    /// to the browser wallet when making requests.
+    /// Internally, it is a [js_sys::Object]
     pub fn to_object(&self) -> WalletResult<JsValue> {
         let mut reflection = Reflection::new_object();
         reflection.set_object_str("preflightCommitment", &self.preflight_commitment.as_str())?;

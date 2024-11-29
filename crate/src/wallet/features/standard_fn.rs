@@ -5,6 +5,9 @@ use wasm_bindgen::{JsCast, JsValue};
 
 use crate::{Reflection, SemverVersion, WalletError, WalletResult};
 
+/// A struct containing the [semver version](SemverVersion)
+/// and [callback function](js_sys::Function) within the `standard:` namespace as
+/// defined by the wallet standard
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct StandardFunction {
     pub(crate) version: SemverVersion,
@@ -12,6 +15,9 @@ pub struct StandardFunction {
 }
 
 impl StandardFunction {
+    /// Parse the [semver version](SemverVersion) and the [callback function](js_sys::Function)
+    /// given a [JsValue], a [key](str) and a [namespace](str) . The namespace is either
+    /// `standard:` or `solana:` as defined by the wallet standard
     pub fn new(
         value: JsValue,
         version: SemverVersion,

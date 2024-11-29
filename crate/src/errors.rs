@@ -4,6 +4,7 @@ use thiserror::Error;
 /// A Result<T, WalletError>
 pub type WalletResult<T> = Result<T, WalletError>;
 
+/// Error handling enum
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Error)]
 pub enum WalletError {
     /// An JavaScript Error corresponding to a [wasm_bindgen::JsValue] .
@@ -13,8 +14,11 @@ pub enum WalletError {
     /// Learn about this error type from [Error - Mozilla Developer Network](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)
     #[error("JsError{{ name: {name}, message: {message}, stack: {stack} }}")]
     JsError {
+        /// The name of the error from a Javascript error message
         name: String,
+        /// The message contained in the error
         message: String,
+        /// The stack from the JavaScript error message
         stack: String,
     },
     /// Unable to parse an `Err(JsValue)` to get the `name`, `message` or `stack`. One, some or all of these values might be missing
@@ -32,8 +36,8 @@ pub enum WalletError {
     /// A value of `undefined` or `null` was encountered
     #[error("A value of `undefined` or `null` was encountered")]
     ValueNotFound,
-    /// A value was expected but it dosen't exist in the `JsValue`
-    #[error("A value of `{0}` was expected but it dosen't exist in the `JsValue`")]
+    /// A value was expected but it doesn't exist in the `JsValue`
+    #[error("A value of `{0}` was expected but it dosent't exist in the `JsValue`")]
     ExpectedValueNotFound(String),
     /// Unable to access browser window
     #[error("Unable to access browser window")]
@@ -42,7 +46,7 @@ pub enum WalletError {
     #[error("Unable to access browser document")]
     MissingAccessToBrowserDocument,
     /// Only `processed`, `confirmed` and `finalized` commitments are supported by Solana clusters
-    #[error("Unsupported Commmitment level `{0}`. Only `processed`, `confirmed` and `finalized` commitments are supported by Solana clusters")]
+    #[error("Unsupported Commitment level `{0}`. Only `processed`, `confirmed` and `finalized` commitments are supported by Solana clusters")]
     UnsupportedCommitment(String),
     /// Unable to cast a wasm_bindgen closure to Function
     #[error("Unable to cast a wasm_bindgen closure to Function")]
@@ -87,12 +91,12 @@ pub enum WalletError {
     /// The `connect` function of the `standard:connect` namespace was not found while parsing a wallet
     #[error("The `connect` function of the `standard:connect` namespace was not found while parsing a wallet")]
     MissingConnectFunction,
-    /// Attemted to connect to a wallet that does not exist or is yet to be registered
-    #[error("Attemted to connect to a wallet that does not exist or is yet to be registered")]
+    /// Attempted to connect to a wallet that does not exist or is yet to be registered
+    #[error("Attempted to connect to a wallet that does not exist or is yet to be registered")]
     WalletNotFound,
-    /// Attemted to connect to an account that does not exist or might have been disconnected
+    /// Attempted to connect to an account that does not exist or might have been disconnected
     #[error(
-        "Attemted to connect to an account that does not exist or might have been disconnected"
+        "Attempted to connect to an account that does not exist or might have been disconnected"
     )]
     AccountNotFound,
     /// Expected JsValue of a `js_sys::Function`
@@ -100,8 +104,8 @@ pub enum WalletError {
     JsValueNotFunction(String),
     /// The JsValue is not a Uint8Array
     #[error("The JsValue `{0}` is not a js_sys::Array")]
-    JsValueNotUnint8Array(String),
-    /// The JsValue is not a Uint8Array
+    JsValueNotUint8Array(String),
+    /// The JsValue is not a js_sys::Array
     #[error("The JsValue `{0}` is not a js_sys::Array")]
     JsValueNotArray(String),
     /// Unable to connect to a wallet. The user may have rejected the request
@@ -116,7 +120,7 @@ pub enum WalletError {
     /// Unable to disconnect wallet.
     #[error("Wallet Disconnect error - `{0}`")]
     WalletDisconnectError(String),
-    /// Encountered and error while calling `standard:events` function
+    /// Encountered an error while calling `standard:events` function
     #[error("Encountered `standard:events` error `{0}`")]
     StandardEventsError(String),
     /// Called The Function for `standard:events` yet the wallet does not provide it
@@ -128,14 +132,14 @@ pub enum WalletError {
     /// Unable to cast a `JsValue` to a `js_sys::Function`
     #[error("Unable to cast a `JsValue` to a `js_sys::Function`")]
     CastJsValueAsFunction,
-    /// This token expires earlier than it was issued. Make sure to set the expiry time to be a later date then the issued time
-    #[error("This token expires earlier than it was issued. Make sure to set the expiry time to be a later date then the issued time")]
+    /// This token expires earlier than it was issued. Make sure to set the expiry time to be a later date than the issued time
+    #[error("This token expires earlier than it was issued. Make sure to set the expiry time to be a later date than the issued time")]
     ExpiryTimeEarlierThanIssuedTime,
-    /// This token becomes valid earlier than it was issued. Make sure to set the not_befire time to be equal to or a later date then the issued time
-    #[error("This token becomes valid earlier than it was issued. Make sure to set the not_befire time to be equal to or a later date then the issued time")]
+    /// This token becomes valid earlier than it was issued. Make sure to set the not_before time to be equal to or a later date than the issued time
+    #[error("This token becomes valid earlier than it was issued. Make sure to set the not_before time to be equal to or a later date than the issued time")]
     NotBeforeTimeEarlierThanIssuedTime,
-    /// This token becomes valid after it has already expired. Make sure to set the not_befire time to be equal to or a date before expiry time
-    #[error("This token becomes valid after it has already expired. Make sure to set the not_befire time to be equal to or a date before expiry time")]
+    /// This token becomes valid after it has already expired. Make sure to set the not_before time to be equal to or a date before expiry time
+    #[error("This token becomes valid after it has already expired. Make sure to set the not_before time to be equal to or a date before expiry time")]
     NotBeforeTimeLaterThanExpirationTime,
     /// The expiration time is set to expire in the past
     #[error("The expiration time is set to expire in the past")]
@@ -154,7 +158,7 @@ pub enum WalletError {
     InvalidISO8601Timestamp(String),
     /// The message signed by the wallet is not the same as the message sent to the wallet for signing
     #[error("The message signed by the wallet is not the same as the message sent to the wallet for signing")]
-    MessageReponseMismatch,
+    MessageResponseMismatch,
     /// The Ed25519 Signature is invalid for the signed message and public key")]
     #[error("The Ed25519 Signature is invalid for the signed message and public key")]
     InvalidSignature,
@@ -179,12 +183,6 @@ pub enum WalletError {
     /// The `sendAndSignTransaction` method did not return any signature
     #[error("The `sendAndSignTransaction` method did not return any signature")]
     SendAndSignTransactionSignatureEmpty,
-}
-
-impl WalletError {
-    pub fn not_found(&self) -> bool {
-        self == &WalletError::ValueNotFound
-    }
 }
 
 impl From<JsValue> for WalletError {

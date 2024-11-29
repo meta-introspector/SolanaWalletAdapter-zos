@@ -34,9 +34,9 @@ pub struct WalletAccount {
     /// The Javascript Value Representation of a wallet,
     /// this mostly used internally in the wallet adapter
     pub(crate) js_value: JsValue,
-    // Convinience field, instead of going through the `features` field
+    // Convenience field, instead of going through the `features` field
     supported_features: FeatureSupport,
-    // Convinience field, instead of iteration through the `chains` field
+    // Convenience field, instead of iteration through the `chains` field
     supported_chains: ChainSupport,
 }
 
@@ -54,6 +54,10 @@ impl core::fmt::Debug for WalletAccount {
 }
 
 impl WalletAccount {
+    /// Get the shortened address of the `Base58 address` .
+    /// It displays the first 4 characters and the last for characters
+    /// separated by ellipsis eg `FXdl...RGd4` .
+    /// If the address is less than 8 characters, an error is thrown
     pub fn shorten_address(&self) -> WalletResult<Cow<str>> {
         if self.address.len() < 8 {
             return Err(WalletError::InvalidBase58Address);
@@ -65,8 +69,11 @@ impl WalletAccount {
         Ok(Cow::Borrowed(first_part) + "..." + last_part)
     }
 
+    /// Same as [Self::shorten_address] but with a custom range
+    /// instead of taking the first 4 character and the last 4 characters
+    /// it uses a custom range.
     pub fn custom_shorten_address(&self, take: usize) -> WalletResult<Cow<str>> {
-        if self.address.len() < 8 {
+        if self.address.len() < take + take {
             return Err(WalletError::InvalidBase58Address);
         }
 
@@ -76,8 +83,11 @@ impl WalletAccount {
         Ok(Cow::Borrowed(first_part) + "..." + last_part)
     }
 
+    /// Same as [Self::shorten_address] but with a custom range
+    /// instead of taking the first 4 character and the last 4 characters
+    /// it uses a custom range for first characters before ellipsis and last characters after ellipsis.
     pub fn custom_shorten_address_rl(&self, left: usize, right: usize) -> WalletResult<Cow<str>> {
-        if self.address.len() < 8 {
+        if self.address.len() < left + right {
             return Err(WalletError::InvalidBase58Address);
         }
 
@@ -87,7 +97,8 @@ impl WalletAccount {
         Ok(Cow::Borrowed(first_part) + "..." + last_part)
     }
 
-    pub fn parse(reflection: Reflection) -> WalletResult<Self> {
+    /// Parse A [WalletAccount] from [JsValue]
+    pub(crate) fn parse(reflection: Reflection) -> WalletResult<Self> {
         let address = reflection.string("address")?;
         let public_key = reflection.byte32array("publicKey")?;
         let chains = reflection.vec_string("chains")?;
@@ -161,50 +172,62 @@ impl WalletAccount {
         })
     }
 
+    /// Checks if MainNet is supported
     pub fn mainnet(&self) -> bool {
         self.supported_chains.mainnet
     }
 
+    /// Checks if DevNet is supported
     pub fn devnet(&self) -> bool {
         self.supported_chains.devnet
     }
 
+    /// Checks if TestNet is supported
     pub fn testnet(&self) -> bool {
         self.supported_chains.testnet
     }
 
+    /// Checks if LocalNet is supported
     pub fn localnet(&self) -> bool {
         self.supported_chains.localnet
     }
 
+    /// An optional [WalletIcon]
     pub fn icon(&self) -> Option<&WalletIcon> {
         self.icon.as_ref()
     }
 
+    /// Checks if `standard:connect` is supported
     pub fn standard_connect(&self) -> bool {
         self.supported_features.connect
     }
 
+    /// Checks if `standard:disconnect` is supported
     pub fn standard_disconnect(&self) -> bool {
         self.supported_features.disconnect
     }
 
+    /// Checks if `standard:events` is supported
     pub fn standard_events(&self) -> bool {
         self.supported_features.events
     }
 
+    /// Checks if `solana:signIn` is supported
     pub fn solana_signin(&self) -> bool {
         self.supported_features.sign_in
     }
 
+    /// Checks if `solana:signMessage` is supported
     pub fn solana_sign_message(&self) -> bool {
         self.supported_features.sign_message
     }
 
+    /// Checks if `solana:signAndSendTransaction` is supported
     pub fn solana_sign_and_send_transaction(&self) -> bool {
         self.supported_features.sign_and_send_tx
     }
 
+    /// Checks if `solana:signTransaction` is supported
     pub fn solana_sign_transaction(&self) -> bool {
         self.supported_features.sign_tx
     }

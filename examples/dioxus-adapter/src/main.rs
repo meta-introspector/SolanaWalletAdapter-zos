@@ -12,10 +12,7 @@ use wallet_adapter::{
     Cluster, SendOptions, SignInOutput, SignedMessageOutput, SigninInput, Utils, WalletAdapter,
 };
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{
-    wasm_bindgen::{prelude::Closure, JsCast},
-    Headers, HtmlElement, Request, RequestInit, Response,
-};
+use web_sys::{wasm_bindgen::JsCast, Headers, Request, RequestInit, Response};
 
 fn main() {
     dioxus_logger::init(Level::INFO).expect("failed to init logger");
@@ -260,7 +257,7 @@ pub fn SignIn(adapter: Signal<WalletAdapter>) -> Element {
                             .set_statement(message)
                             .set_chain_id(wallet_adapter::Cluster::DevNet)
                             // NOTE: Some wallets require this field or the wallet adapter
-                            // will return an error `MessageReponseMismatch` which is as
+                            // will return an error `MessageResponseMismatch` which is as
                             // a result of the sent message not corresponding with the signed message
                             .set_address(&adapter.read().connected_account().unwrap().address)
                             .unwrap();

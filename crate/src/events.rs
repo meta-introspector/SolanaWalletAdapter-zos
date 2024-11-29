@@ -10,6 +10,7 @@ use crate::{
 };
 
 impl WalletAdapter {
+    /// An App Ready event registered to the browser window
     pub fn dispatch_app_event(&self, storage: StorageType) {
         let app_ready_init = CustomEventInit::new();
         app_ready_init.set_bubbles(false);
@@ -24,6 +25,7 @@ impl WalletAdapter {
         self.window().dispatch_event(&app_ready_ev).unwrap();
     }
 
+    /// The register wallet event registered to the browser window
     pub fn register_wallet_event(&self, storage: StorageType) -> WalletResult<()> {
         let inner_storage = Rc::clone(&storage);
 
@@ -59,7 +61,7 @@ impl WalletAdapter {
         Ok(())
     }
 
-    pub fn register_object(storage: StorageType) -> Object {
+    pub(crate) fn register_object(storage: StorageType) -> Object {
         // The `register` function that logs and returns a closure like in your JS code
         let register =
             Closure::wrap(

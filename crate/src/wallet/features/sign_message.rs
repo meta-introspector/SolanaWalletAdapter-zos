@@ -8,10 +8,13 @@ use crate::{
     Reflection, SemverVersion, StandardFunction, Utils, WalletAccount, WalletError, WalletResult,
 };
 
+/// `solana:signMessage` containing the `version` and `callback` within
+/// the [StandardFunction] field
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SignMessage(pub(crate) StandardFunction);
 
 impl SignMessage {
+    /// Parse the callback for `solana:signMessage` from the [JsValue]
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
         Ok(Self(StandardFunction::new(
             value,
@@ -21,6 +24,7 @@ impl SignMessage {
         )?))
     }
 
+    /// Internal callback to request a browser wallet to sign a message
     pub(crate) async fn call_sign_message<'a>(
         &self,
         wallet_account: &WalletAccount,
@@ -54,7 +58,7 @@ impl SignMessage {
 
             let signed_message = signed_message
                 .dyn_into::<Uint8Array>()
-                .or(Err(WalletError::JsValueNotUnint8Array(
+                .or(Err(WalletError::JsValueNotUint8Array(
                     "solana:signedMessage -> SignedMessageOutput::signedMessage".to_string(),
                 )))?
                 .to_vec();
@@ -83,6 +87,7 @@ impl SignMessage {
     }
 }
 
+/// The output of a signed message
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]
 pub struct SignedMessageOutput<'a> {
     message: &'a [u8],
@@ -91,24 +96,30 @@ pub struct SignedMessageOutput<'a> {
 }
 
 impl<'a> SignedMessageOutput<'a> {
+    /// Get the message as a UTF-8 [str]
     pub fn message(&self) -> &str {
         //Should never fail since verified message is always UTF-8 Format hence `.unwrap()` is used.
         // This is verified to be the input message where the input message is always UTF-8 encoded
         str::from_utf8(&self.message).unwrap()
     }
 
+    /// Get the public key as an [Ed25519 Public Key](PublicKey)
     pub fn public_key(&self) -> WalletResult<PublicKey> {
         Utils::public_key(self.public_key)
     }
 
+    /// Get the Base58 address of the  [Ed25519 Public Key](PublicKey) that signed the message
     pub fn address(&self) -> WalletResult<String> {
         Ok(Utils::address(self.public_key()?))
     }
 
+    /// Get the [Ed25519 Signature](Signature) that was generated when
+    /// the [Ed25519 Public Key](PublicKey) signed the UTF-8 encoded message
     pub fn signature(&self) -> WalletResult<Signature> {
         Utils::signature(self.signature)
     }
 
+    /// Get the  [Ed25519 Signature](Signature) encoded in Base58 format
     pub fn base58_signature(&self) -> WalletResult<String> {
         Ok(Utils::base58_signature(self.signature()?))
     }

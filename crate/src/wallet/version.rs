@@ -5,6 +5,7 @@ use web_sys::js_sys::Reflect;
 
 use crate::{WalletError, WalletResult};
 
+/// Semver Versioning struct
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SemverVersion {
     major: u8,
@@ -13,6 +14,22 @@ pub struct SemverVersion {
 }
 
 impl SemverVersion {
+    /// The major version
+    pub fn major(&self) -> u8 {
+        self.major
+    }
+
+    /// The minor version
+    pub fn minor(&self) -> u8 {
+        self.minor
+    }
+
+    /// The patch version
+    pub fn patch(&self) -> u8 {
+        self.patch
+    }
+
+    /// Parse the version from a [JsValue]
     pub fn from_jsvalue(value: &JsValue) -> WalletResult<Self> {
         let reflect_value =
             Reflect::get(value, &"version".into()).or(Err(WalletError::VersionNotFound))?;
@@ -25,6 +42,8 @@ impl SemverVersion {
 
         SemverVersion::parse(&version)
     }
+
+    /// Parse a semver versioned string  into [Self]
     pub fn parse(version: &str) -> WalletResult<Self> {
         let chunks = version.split(".").collect::<Vec<&str>>();
 
@@ -48,10 +67,7 @@ impl SemverVersion {
         })
     }
 
-    pub fn get_version(&self) -> &Self {
-        self
-    }
-
+    /// Get the string version of [Self] in the format `major.minor.patch`
     pub fn stringify_version(&self) -> Cow<str> {
         Cow::Borrowed("")
             + Cow::Owned(self.major.to_string())

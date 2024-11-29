@@ -5,10 +5,13 @@ use crate::{
     WalletError, WalletResult,
 };
 
+/// A `solana:signin` struct containing the `version` and `callback`
+/// within [StandardFunction]
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SignIn(StandardFunction);
 
 impl SignIn {
+    /// Parse the `solana:signin` callback function from the [JsValue]
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
         Ok(Self(StandardFunction::new(
             value, version, "signIn", "solana",

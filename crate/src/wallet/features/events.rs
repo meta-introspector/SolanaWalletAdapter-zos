@@ -2,10 +2,13 @@ use wasm_bindgen::JsValue;
 
 use crate::{Reflection, SemverVersion, StandardFunction, WalletError, WalletResult};
 
+/// `standard:events` struct containing the `version` and `callback`
+/// within the [StandardFunction] field
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StandardEvents(StandardFunction);
 
 impl StandardEvents {
+    /// parse the callback for `standard:events` from the [JsValue]
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
         let get_standard_event_fn = Reflection::new(value)?.get_function("on")?;
 

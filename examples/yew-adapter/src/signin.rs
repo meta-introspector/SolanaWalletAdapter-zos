@@ -35,7 +35,7 @@ pub fn SignInComponent(controller: &AdapterActions) -> Html {
                                     .set_statement(message)
                                     .set_chain_id(wallet_adapter::Cluster::DevNet)
                                     // NOTE: Some wallets require this field or the wallet adapter
-                                    // will return an error `MessageReponseMismatch` which is as
+                                    // will return an error `MessageResponseMismatch` which is as
                                     // a result of the sent message not corresponding with the signed message
                                     .set_address(&address)
                                     .unwrap();

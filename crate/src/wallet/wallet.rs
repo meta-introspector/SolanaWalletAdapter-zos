@@ -11,6 +11,7 @@ use super::{
     ChainSupport, FeatureSupport, SendOptions, SignInOutput, SignedMessageOutput, SigninInput,
 };
 
+/// A wallet implementing wallet standard
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Wallet {
     name: String,
@@ -19,21 +20,24 @@ pub struct Wallet {
     accounts: Vec<WalletAccount>,
     chains: Vec<Cluster>,
     pub(crate) features: Features,
-    // Convinience field, instead of going through the `features` field
+    // Convenience field, instead of going through the `features` field
     supported_features: FeatureSupport,
-    // Convinience field, instead of iteration through the `chains` field
+    // Convenience field, instead of iteration through the `chains` field
     supported_chains: ChainSupport,
 }
 
 impl Wallet {
+    /// Send a request to connect to a browser wallet
     pub async fn connect(&self) -> WalletResult<WalletAccount> {
         self.features.connect.call_connect().await
     }
 
+    /// Send a request to the browser wallet to disconnect
     pub async fn disconnect(&self) -> WalletResult<()> {
         self.features.disconnect.call_disconnect().await
     }
 
+    /// Send a signin request to the browser wallet
     pub async fn sign_in(
         &self,
         signin_input: &SigninInput,
@@ -46,6 +50,8 @@ impl Wallet {
         }
     }
 
+    /// Send a sign message request to the browser wallet.
+    /// Message must be UTF-8 encoded
     pub async fn sign_message<'a>(
         &self,
         message: &'a [u8],
@@ -57,6 +63,8 @@ impl Wallet {
             .await
     }
 
+    /// Send a sign transaction request to the browser wallet.
+    /// The transaction bytes expected are encoded using serde in byte form.
     pub async fn sign_transaction(
         &self,
         transaction_bytes: &[u8],
@@ -69,6 +77,7 @@ impl Wallet {
             .await
     }
 
+    /// Send a sign and send transaction request to the browser wallet.
     pub async fn sign_and_send_transaction(
         &self,
         transaction_bytes: &[u8],
@@ -82,6 +91,7 @@ impl Wallet {
             .await
     }
 
+    /// Call the standard events feature
     pub async fn events(&self) -> WalletResult<()> {
         self.features
             .events
@@ -91,6 +101,7 @@ impl Wallet {
             .await
     }
 
+    /// Parse the Wallet details from a [JsValue]
     pub fn from_jsvalue(value: JsValue) -> WalletResult<Self> {
         let reflection = Reflection::new(value)?;
 
@@ -154,69 +165,87 @@ impl Wallet {
             .collect::<WalletResult<Vec<WalletAccount>>>()
     }
 
+    /// Get the features of the wallet
     pub fn features(&self) -> &Features {
         &self.features
     }
 
+    /// Get the accounts provided by the wallet
     pub fn accounts(&self) -> &[WalletAccount] {
         &self.accounts
     }
 
+    /// Get the chains supported by the wallet
     pub fn chains(&self) -> &[Cluster] {
         &self.chains
     }
 
+    /// Check whether the wallet supports mainnet cluster
     pub fn mainnet(&self) -> bool {
         self.supported_chains.mainnet
     }
 
+    /// Check whether the wallet supports devnet cluster
     pub fn devnet(&self) -> bool {
         self.supported_chains.devnet
     }
 
+    /// Check whether the wallet supports testnet cluster
     pub fn testnet(&self) -> bool {
         self.supported_chains.testnet
     }
 
+    /// Check whether the wallet supports localnet cluster
     pub fn localnet(&self) -> bool {
         self.supported_chains.localnet
     }
+
+    /// Check whether the wallet supports `standard:connect` feature
     pub fn standard_connect(&self) -> bool {
         self.supported_features.connect
     }
 
+    /// Check whether the wallet supports `standard:disconnect` feature
     pub fn standard_disconnect(&self) -> bool {
         self.supported_features.disconnect
     }
 
+    /// Check whether the wallet supports `standard:events` feature
     pub fn standard_events(&self) -> bool {
         self.supported_features.events
     }
 
+    /// Check whether the wallet supports `solana:signIn` feature
     pub fn solana_signin(&self) -> bool {
         self.supported_features.sign_in
     }
 
+    /// Check whether the wallet supports `solana:signMessage` feature
     pub fn solana_sign_message(&self) -> bool {
         self.supported_features.sign_message
     }
 
+    /// Check whether the wallet supports `solana:signAndSendTransaction` feature
     pub fn solana_sign_and_send_transaction(&self) -> bool {
         self.supported_features.sign_and_send_tx
     }
 
+    /// Check whether the wallet supports `solana:signTransaction` feature
     pub fn solana_sign_transaction(&self) -> bool {
         self.supported_features.sign_tx
     }
 
+    /// Get the optional [wallet icon](WalletIcon)
     pub fn icon(&self) -> Option<&WalletIcon> {
         self.icon.as_ref()
     }
 
+    /// Get the name of the wallet
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    /// Get the version of the wallet standard that the wallet supports
     pub fn version(&self) -> &SemverVersion {
         &self.version
     }

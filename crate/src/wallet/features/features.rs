@@ -1,12 +1,15 @@
-
 use crate::{
-    Connect, Disconnect, FeatureSupport, Reflection, SemverVersion, SignIn,
-    SignMessage, SignTransaction, StandardEvents,
-    WalletError, WalletResult, SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER,
-    SOLANA_SIGN_IN_IDENTIFIER, SOLANA_SIGN_MESSAGE_IDENTIFIER, SOLANA_SIGN_TRANSACTION_IDENTIFIER,
+    Connect, Disconnect, FeatureSupport, Reflection, SemverVersion, SignIn, SignMessage,
+    SignTransaction, StandardEvents, WalletError, WalletResult,
+    SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER, SOLANA_SIGN_IN_IDENTIFIER,
+    SOLANA_SIGN_MESSAGE_IDENTIFIER, SOLANA_SIGN_TRANSACTION_IDENTIFIER,
     STANDARD_CONNECT_IDENTIFIER, STANDARD_DISCONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
 };
 
+/// All the features of `standard` and `solana` events as specified
+/// in the wallet standard. These features are contained within a
+/// [crate::Wallet] struct allowing to check if a wallet supports a certain
+/// feature and also calling the callback functions to make requests to a browser wallet.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Features {
     /// standard:connect
@@ -28,7 +31,8 @@ pub struct Features {
 }
 
 impl Features {
-    pub fn parse(reflection: &Reflection) -> WalletResult<(Self, FeatureSupport)> {
+    /// Parse all the features from a wallet described as a [wasm_bindgen::JsValue]
+    pub(crate) fn parse(reflection: &Reflection) -> WalletResult<(Self, FeatureSupport)> {
         let features_keys = reflection.object_to_vec_string("features")?;
         let features_object = Reflection::new_from_str(reflection.get_inner(), "features")?;
 
@@ -80,6 +84,7 @@ impl Features {
         Ok((features, supported_features))
     }
 
+    /// Get all extensions on the wallet
     pub fn extensions(&self) -> &[String] {
         &self.extensions
     }

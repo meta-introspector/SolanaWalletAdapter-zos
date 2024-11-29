@@ -22,6 +22,7 @@ pub enum Commitment {
 }
 
 impl Commitment {
+    /// Get the commitment as a [str] format
     pub fn as_str(&self) -> &str {
         match self {
             Self::Processed => "processed",

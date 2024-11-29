@@ -18,22 +18,37 @@ pub const TESTNET_ENDPOINT: &'static str = "https://api.testnet.solana.com";
 /// Solana Localnet cluster
 pub const LOCALNET_ENDPOINT: &'static str = "http://localhost:8899";
 
+/// Used as a helper struct to contain all the chains supported by a wallet
+/// as defined by the wallet standard
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub struct ChainSupport {
+    /// Main Net cluster
     pub mainnet: bool,
+    /// Dev Net cluster
     pub devnet: bool,
+    /// Test Net cluster
     pub testnet: bool,
+    /// Local Net cluster
     pub localnet: bool,
 }
 
+/// Used as a helper struct to contain all the features supported by a wallet
+/// as defined by the wallet standard
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub struct FeatureSupport {
+    /// 'standard:connect'
     pub connect: bool,
+    /// 'standard:disconnect'
     pub disconnect: bool,
+    /// 'standard:events'
     pub events: bool,
+    /// 'solana:signIn'
     pub sign_in: bool,
+    /// 'solana:signMessage'
     pub sign_message: bool,
+    /// 'solana:signAndSendTransaction'
     pub sign_and_send_tx: bool,
+    /// 'solana:signTransaction'
     pub sign_tx: bool,
 }
 

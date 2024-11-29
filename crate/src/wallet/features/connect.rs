@@ -4,16 +4,20 @@ use crate::{
     Reflection, SemverVersion, StandardFunction, WalletAccount, WalletError, WalletResult,
 };
 
+/// The `standard:connect` struct containing a `version` and `callback`
+/// within [StandardFunction] field
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Connect(StandardFunction);
 
 impl Connect {
+    /// Initialize a new `standard:connect` function by parsing a [JsValue]
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
         Ok(Self(StandardFunction::new(
             value, version, "connect", "standard",
         )?))
     }
 
+    /// Connect to a wallet by calling the callback function
     pub(crate) async fn call_connect(&self) -> WalletResult<WalletAccount> {
         let outcome = self.0.callback.call0(&JsValue::from_bool(false))?;
 

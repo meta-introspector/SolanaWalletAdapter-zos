@@ -11,7 +11,7 @@ use crate::{
 /// Operations on a browser window.
 /// `Window` and `Document` object must be present otherwise
 /// an error is thrown.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct WalletAdapter {
     window: Window,
     document: Document,
@@ -50,6 +50,7 @@ impl WalletAdapter {
         Ok(new_self)
     }
 
+    /// Send a connect request to the browser wallet
     pub async fn connect(&mut self, wallet_name: &str) -> WalletResult<WalletAccount> {
         let wallet = self.get_wallet(wallet_name)?;
 
@@ -61,6 +62,7 @@ impl WalletAdapter {
         Ok(wallet_account)
     }
 
+    /// Send a disconnect request to the browser wallet
     pub async fn disconnect(&mut self) -> WalletResult<()> {
         if let Some(wallet) = self.connected_wallet.take() {
             wallet.disconnect().await?;
@@ -72,6 +74,7 @@ impl WalletAdapter {
         }
     }
 
+    /// Send a sign and send transaction request to the browser wallet
     pub async fn sign_and_send_transaction(
         &self,
         transaction_bytes: &[u8],
@@ -85,6 +88,7 @@ impl WalletAdapter {
             .await
     }
 
+    /// Send a connect request to the browser wallet
     pub async fn sign_transaction(
         &self,
         transaction_bytes: &[u8],
@@ -97,6 +101,7 @@ impl WalletAdapter {
             .await
     }
 
+    /// Send a sign message request to the browser wallet
     pub async fn sign_message<'a>(
         &self,
         message: &'a [u8],
@@ -107,6 +112,7 @@ impl WalletAdapter {
         wallet.sign_message(message, account).await
     }
 
+    /// Send a sign in request to the browser wallet to Sign In With Solana
     pub async fn sign_in(
         &self,
         signin_input: &SigninInput,
@@ -117,18 +123,21 @@ impl WalletAdapter {
         wallet.sign_in(signin_input, public_key).await
     }
 
+    /// Set the connected account
     pub fn set_connected_account(&mut self, account_name: WalletAccount) -> &mut Self {
         self.connected_account.replace(account_name);
 
         self
     }
 
+    /// Set the connected wallet
     pub fn set_connected_wallet(&mut self, wallet: Wallet) -> &mut Self {
         self.connected_wallet.replace(wallet);
 
         self
     }
 
+    /// Set the disconnected account
     pub fn set_disconnected(&mut self) -> &mut Self {
         self.connected_wallet.take();
         self.connected_account.take();
@@ -136,16 +145,19 @@ impl WalletAdapter {
         self
     }
 
+    /// Check if an [account](WalletAccount) is connected
     pub fn is_connected(&self) -> bool {
         self.connected_account.is_some()
     }
 
+    /// Get the connected [account](WalletAccount)
     pub fn connected_account(&self) -> WalletResult<&WalletAccount> {
         self.connected_account
             .as_ref()
             .ok_or(WalletError::AccountNotFound)
     }
 
+    /// Get the connected [wallet](Wallet)
     pub fn connected_wallet(&self) -> WalletResult<&Wallet> {
         self.connected_wallet
             .as_ref()
@@ -164,68 +176,84 @@ impl WalletAdapter {
         self.window.get(property)
     }
 
+    /// Get the browser window
     pub fn window(&self) -> &Window {
         &self.window
     }
 
+    /// Get the browser document
     pub fn document(&self) -> &Document {
         &self.document
     }
 
+    /// Get the storage where the adapter stores the registered wallets
     pub fn storage(&self) -> &WalletStorage {
         self.storage.borrow()
     }
 
+    /// Get the registered wallets
     pub fn wallets(&self) -> Vec<Wallet> {
         self.storage.borrow().get_wallets()
     }
 
+    /// Get a certain wallet by its name
     pub fn get_wallet(&self, wallet_name: &str) -> WalletResult<Wallet> {
         self.storage
             .get_wallet(wallet_name)
             .ok_or(WalletError::WalletNotFound)
     }
 
+    /// Check if the connected wallet supports mainnet cluster
     pub fn mainnet(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.mainnet())
     }
 
+    /// Check if the connected wallet supports devnet cluster
     pub fn devnet(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.devnet())
     }
 
+    /// Check if the connected wallet supports testnet cluster
     pub fn testnet(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.testnet())
     }
 
+    /// Check if the connected wallet supports localnet cluster
     pub fn localnet(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.localnet())
     }
 
+    /// Check if the connected wallet supports `standard:connect` feature
     pub fn standard_connect(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.standard_connect())
     }
 
+    /// Check if the connected wallet supports `standard:disconnect` feature
     pub fn standard_disconnect(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.standard_disconnect())
     }
 
+    /// Check if the connected wallet supports `standard:events` feature
     pub fn standard_events(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.standard_events())
     }
 
+    /// Check if the connected wallet supports `solana:signIn` feature
     pub fn solana_signin(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.solana_signin())
     }
 
+    /// Check if the connected wallet supports `solana:signMessage` feature
     pub fn solana_sign_message(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.solana_sign_message())
     }
 
+    /// Check if the connected wallet supports `solana:signAndSendTransaction` feature
     pub fn solana_sign_and_send_transaction(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.solana_sign_and_send_transaction())
     }
 
+    /// Check if the connected wallet supports `solana:signTransaction` feature
     pub fn solana_sign_transaction(&self) -> WalletResult<bool> {
         Ok(self.connected_wallet()?.solana_sign_transaction())
     }

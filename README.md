@@ -58,7 +58,7 @@ A lightweight Rust Solana Wallet that can be used in Rust based frontends and We
     ```sh
     $ cargo make serve
     ```
-7. Open browser and navigate to `locahost:5500`
+7. Open browser and navigate to `localhost:5500`
 
 
 #### LICENSE
