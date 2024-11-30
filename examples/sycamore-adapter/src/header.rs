@@ -1,5 +1,4 @@
 use sycamore::prelude::*;
-use wasm_bindgen::prelude::*;
 
 use crate::ConnectedArgs;
 

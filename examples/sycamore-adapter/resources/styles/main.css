@@ -6,7 +6,6 @@ body {
 #disconnected-content {
     display: flex;
     flex-direction: column;
-    padding: 20px;
     justify-content: center;
     align-items: center;
     justify-items: center;
@@ -48,7 +47,7 @@ body {
     list-style: none;
     position: absolute;
     top: 7%;
-    right: 15%;
+    right: 21%;
     margin: 0;
     color: #fafafa;
     display: none;
@@ -69,8 +68,7 @@ body {
 }
 
 #modal-container {
-    min-height: 100%;
-    min-width: 80%;
+    min-width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -79,13 +77,14 @@ body {
     top: 0;
     padding: 50px;
     overflow: hidden;
+    min-height: 100vh;
 }
 
 #modal-content {
     min-height: 50vh;
-    width: 80%;
-    background-color: #dadada;
-    color: #1a1a1a;
+    min-width: 30%;
+    background-color: #161313;
+    color: #fafafa;
     padding: 30px;
     border-radius: 10px;
     font-family: 'Courier New', Courier, monospace;
@@ -107,7 +106,7 @@ body {
 }
 
 .wallet-list-entry:hover {
-    background-color: #c0b8b8;
+    background-color: #3c07f9;
 }
 
 .wallet-icon img {
@@ -171,7 +170,7 @@ body {
     background-color: #000000;
     margin: 15px;
     border-radius: 20px;
-
+    min-width: 50%;
     white-space: normal;
     word-wrap: break-word;
     overflow: hidden;
@@ -189,4 +188,11 @@ body {
 
 #disconnected {
     padding: 20px;
+}
+
+#body-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
