@@ -4,8 +4,8 @@ use ed25519_dalek::Signature;
 use web_sys::{js_sys::Object, Document, Window};
 
 use crate::{
-    Cluster, SendOptions, SignInOutput, SignedMessageOutput, SigninInput, Wallet, WalletAccount,
-    WalletError, WalletResult, WalletStorage,
+    events::InitEvents, Cluster, SendOptions, SignInOutput, SignedMessageOutput, SigninInput,
+    Wallet, WalletAccount, WalletError, WalletResult, WalletStorage,
 };
 
 /// Operations on a browser window.
@@ -37,15 +37,15 @@ impl WalletAdapter {
             return Err(WalletError::MissingAccessToBrowserDocument);
         };
 
-        let new_self = Self {
-            window,
+        let mut new_self = Self {
+            window: window.clone(),
             document,
             storage,
             connected_wallet: Option::default(),
             connected_account: Option::default(),
         };
 
-        new_self.init_events()?;
+        InitEvents::new(&window).init(&mut new_self.storage)?;
 
         Ok(new_self)
     }
@@ -162,13 +162,6 @@ impl WalletAdapter {
         self.connected_wallet
             .as_ref()
             .ok_or(WalletError::WalletNotFound)
-    }
-
-    fn init_events(&self) -> WalletResult<()> {
-        self.register_wallet_event(self.storage.clone_inner())?;
-        self.dispatch_app_event(self.storage.clone_inner());
-
-        Ok(())
     }
 
     /// Get an entry in the `Window` object
