@@ -71,19 +71,20 @@ fn RootPage(adapter: SycamoreWalletAdapter) -> View {
         (if adapter.connected.get_clone().is_some(){
             view!{
                 (Header(adapter.connected))
-                SignIn(connected_wallet= &adapter.connected.get_clone().as_ref().unwrap().connected_wallet,
+                div(id="body-content"){
+                    SignIn(connected_wallet= &adapter.connected.get_clone().as_ref().unwrap().connected_wallet,
                      connected_account =&adapter.connected.get_clone().as_ref().unwrap().connected_account,
-                )
-                SignMessage(connected_wallet= &adapter.connected.get_clone().as_ref().unwrap().connected_wallet,
-                     connected_account =&adapter.connected.get_clone().as_ref().unwrap().connected_account,
-                )
-                SignTx(connected_wallet= &adapter.connected.get_clone().as_ref().unwrap().connected_wallet,
-                    connected_account =&adapter.connected.get_clone().as_ref().unwrap().connected_account,
-                )
-                SignAndSendTx(connected_wallet= &adapter.connected.get_clone().as_ref().unwrap().connected_wallet,
-                    connected_account =&adapter.connected.get_clone().as_ref().unwrap().connected_account,
-                )
-
+                    )
+                    SignMessage(connected_wallet= &adapter.connected.get_clone().as_ref().unwrap().connected_wallet,
+                        connected_account =&adapter.connected.get_clone().as_ref().unwrap().connected_account,
+                    )
+                    SignTx(connected_wallet= &adapter.connected.get_clone().as_ref().unwrap().connected_wallet,
+                        connected_account =&adapter.connected.get_clone().as_ref().unwrap().connected_account,
+                    )
+                    SignAndSendTx(connected_wallet= &adapter.connected.get_clone().as_ref().unwrap().connected_wallet,
+                        connected_account =&adapter.connected.get_clone().as_ref().unwrap().connected_account,
+                    )
+                }
             }
         }else {
 
@@ -133,10 +134,7 @@ fn RootPage(adapter: SycamoreWalletAdapter) -> View {
                    view!{
                         div (id="modal-container"){
                             div(id="modal-content") {
-                                div(id="wallet-list") {
-                                    (list_entries)
-                                }
-
+                                (list_entries)
                                 button(class="btn-primary", on:click=move |_| {
                                     show_modal.set(false)
                                 }) { "CANCEL" }

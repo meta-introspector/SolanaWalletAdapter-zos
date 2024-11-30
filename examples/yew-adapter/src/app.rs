@@ -38,25 +38,28 @@ pub fn app() -> Html {
                 connected_wallet={connected_wallet.clone()}
                 connected_account={connected_account.clone()}
             />
-            <SignInComponent
-                connected_wallet= {connected_wallet.clone().as_ref().borrow().clone().unwrap()}
-                connected_account={connected_account.clone().as_ref().unwrap().clone()} />
+            <div id="body-content">
+                <SignInComponent
+                    connected_wallet= {connected_wallet.clone().as_ref().borrow().clone().unwrap()}
+                    connected_account={connected_account.clone().as_ref().unwrap().clone()} />
 
-            <SignMessageComponent
-                connected_wallet= {connected_wallet.clone().as_ref().borrow().clone().unwrap()}
-                connected_account={connected_account.clone().as_ref().unwrap().clone()} />
+                <SignMessageComponent
+                    connected_wallet= {connected_wallet.clone().as_ref().borrow().clone().unwrap()}
+                    connected_account={connected_account.clone().as_ref().unwrap().clone()} />
 
-            <SignTxComponent
-                connected_wallet= {connected_wallet.clone().as_ref().borrow().clone().unwrap()}
-                connected_account={connected_account.clone().as_ref().unwrap().clone()} />
+                <SignTxComponent
+                    connected_wallet= {connected_wallet.clone().as_ref().borrow().clone().unwrap()}
+                    connected_account={connected_account.clone().as_ref().unwrap().clone()} />
 
-            <SignAndSendTxComponent
-                connected_wallet= {connected_wallet.clone().as_ref().borrow().clone().unwrap()}
-                connected_account={connected_account.clone().as_ref().unwrap().clone()} />
+                <SignAndSendTxComponent
+                    connected_wallet= {connected_wallet.clone().as_ref().borrow().clone().unwrap()}
+                    connected_account={connected_account.clone().as_ref().unwrap().clone()} />
+            </div>
 
         }else {
-            <div>
-                <div>{"DISCONNECTED"}</div>
+            <div id="disconnected-content">
+                <h1> {"Rust Wallet Adapter Demo"}</h1>
+                <div> {"WALLET DISCONNECTED"} </div>
                 <button id="btn-primary" onclick={Callback::from(move |_| {
 
                     show_modal_cloned.set(true);
@@ -91,6 +94,8 @@ pub fn Connected(adapter: &YewAdapter) -> Html {
 
 #[function_component]
 pub fn ShowModalComponent(adapter: &YewAdapter) -> Html {
+    let modal = adapter.show_modal.clone();
+
     html! {
         <div id="modal-container">
             <div id="modal-content">
@@ -127,7 +132,9 @@ pub fn ShowModalComponent(adapter: &YewAdapter) -> Html {
                             </div>
                         }
                     }).collect::<Html>() }
-
+                <button id="btn-primary" onclick={Callback::from(move |_| {
+                    modal.set(false);
+                })}>{"CANCEL"}</button>
             </div>
         </div>
     }
