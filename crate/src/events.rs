@@ -2,14 +2,34 @@ use std::rc::Rc;
 
 use js_sys::{Function, Object, Reflect};
 use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
-use web_sys::{CustomEvent, CustomEventInit};
+use web_sys::{CustomEvent, CustomEventInit, Window};
 
 use crate::{
-    StorageType, Utils, Wallet, WalletAdapter, WalletError, WalletResult,
+    StorageType, Utils, Wallet, WalletError, WalletResult, WalletStorage,
     WINDOW_APP_READY_EVENT_TYPE,
 };
 
-impl WalletAdapter {
+/// Used to initialize the `Register` and `AppReady` events to the browser window
+#[derive(Debug, PartialEq, Eq)]
+pub struct InitEvents<'a> {
+    window: &'a Window,
+}
+
+impl<'a> InitEvents<'a> {
+    /// Instantiate [Self](self)
+    pub fn new(window: &'a Window) -> Self {
+        Self { window }
+    }
+
+    /// Register events by providing a [WalletStorage] that is used to store
+    /// all registered wallets
+    pub fn init(&self, storage: &'a mut WalletStorage) -> WalletResult<()> {
+        self.register_wallet_event(storage.clone_inner())?;
+        self.dispatch_app_event(storage.clone_inner());
+
+        Ok(())
+    }
+
     /// An App Ready event registered to the browser window
     pub fn dispatch_app_event(&self, storage: StorageType) {
         let app_ready_init = CustomEventInit::new();
@@ -22,7 +42,7 @@ impl WalletAdapter {
             CustomEvent::new_with_event_init_dict(WINDOW_APP_READY_EVENT_TYPE, &app_ready_init)
                 .unwrap();
 
-        self.window().dispatch_event(&app_ready_ev).unwrap();
+        self.window.dispatch_event(&app_ready_ev).unwrap();
     }
 
     /// The register wallet event registered to the browser window
@@ -51,7 +71,7 @@ impl WalletAdapter {
             .dyn_ref::<Function>()
             .ok_or(WalletError::CastClosureToFunction)?;
 
-        self.window().add_event_listener_with_callback(
+        self.window.add_event_listener_with_callback(
             crate::WINDOW_REGISTER_WALLET_EVENT_TYPE,
             listener_fn,
         )?;

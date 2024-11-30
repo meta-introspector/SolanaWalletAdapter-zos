@@ -15,6 +15,7 @@ mod utils;
 pub use utils::*;
 
 mod events;
+pub use events::*;
 
 mod constants;
 pub use constants::*;
