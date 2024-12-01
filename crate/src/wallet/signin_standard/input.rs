@@ -594,6 +594,7 @@ impl SigninInput {
 }
 
 #[cfg(test)]
+#[cfg(target_arch = "wasm32")]
 mod signin_input_sanity_checks {
     use super::*;
 
