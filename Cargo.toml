@@ -5,13 +5,15 @@ resolver = "2"
 
 [workspace.package]
 authors = ["448-OG <superuser@448.africa>"]
-version = "0.1.0"
+version = "1.0.0-beta.1"
 license = "Apache-2.0 OR MIT"
 edition = "2021"
 description = "Solana Wallet Adapter for Rust clients written in pure Rust"
 homepage = "https://github.com/JamiiDao"
 repository = "https://github.com/JamiiDao/SolanaWalletAdapter"
 readme = "./README.md"
+keywords = ["solana", "solana-pay", "wallet", "blockchain", "wallet-adapter"]
+categories = ["cryptography::cryptocurrencies"]
 
 [workspace.dependencies]
 wallet-adapter = { path = "./crate" }

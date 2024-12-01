@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 #![forbid(missing_docs)]
-#![doc = include_str!("../../README.md")]
+#![doc = include_str!(concat!("../", std::env!("CARGO_PKG_README")))]
 
 mod adapter;
 pub use adapter::*;
