@@ -520,15 +520,15 @@ Then run `cargo generate --name temp-wasm https://github.com/JamiiDao/Solana-Rus
 where `<template subfolder name>` is the name of the directory containing the template. Examples:
 - Dioxus template
 ```sh
-cargo generate --name temp-wasm https://github.com/JamiiDao/Solana-Rust-Wallet-Adapter-Templates dioxus
+cargo generate --name <project name> https://github.com/JamiiDao/Solana-Rust-Wallet-Adapter-Templates dioxus
 ```
 - Yew template
 ```sh
-cargo generate --name temp-wasm https://github.com/JamiiDao/Solana-Rust-Wallet-Adapter-Templates yew
+cargo generate --name <project name> https://github.com/JamiiDao/Solana-Rust-Wallet-Adapter-Templates yew
 ```
 - Sycamore Template
 ```sh
-cargo generate --name temp-wasm https://github.com/JamiiDao/Solana-Rust-Wallet-Adapter-Templates sycamore
+cargo generate --name <project name> https://github.com/JamiiDao/Solana-Rust-Wallet-Adapter-Templates sycamore
 ```
 All templates can be found at [Solana-Rust-Wallet-Adapter-Templates(https://github.com/JamiiDao/Solana-Rust-Wallet-Adapter-Templates)
 
