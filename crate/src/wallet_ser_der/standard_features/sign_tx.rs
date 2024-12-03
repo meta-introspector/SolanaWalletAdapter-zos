@@ -75,7 +75,7 @@ impl SignTransaction {
         tx_version_support.iter().try_for_each(|value| {
             if value == JsValue::from_str("legacy") {
                 legacy = true;
-            } else if value == JsValue::from(0) {
+            } else if value == 0 {
                 version_zero = true;
             } else {
                 return Err(WalletError::UnsupportedTransactionVersion);
@@ -84,7 +84,7 @@ impl SignTransaction {
             Ok(())
         })?;
 
-        if legacy != true {
+        if !legacy {
             return Err(WalletError::LegacyTransactionSupportRequired);
         }
 
@@ -137,7 +137,7 @@ impl SignTransaction {
 
         Reflection::new(success)?
             .get_bytes_from_vec("signature")?
-            .get(0)
+            .first()
             .map(|value| {
                 let bytes = Utils::to64byte_array(value)?;
                 Ok(Utils::signature(bytes))
@@ -182,7 +182,7 @@ impl SendOptions {
     /// Internally, it is a [js_sys::Object]
     pub fn to_object(&self) -> WalletResult<JsValue> {
         let mut reflection = Reflection::new_object();
-        reflection.set_object_str("preflightCommitment", &self.preflight_commitment.as_str())?;
+        reflection.set_object_str("preflightCommitment", self.preflight_commitment.as_str())?;
         reflection.set_object(&"skipPreflight".into(), &JsValue::from(self.skip_preflight))?;
         reflection.set_object(&"maxRetries".into(), &JsValue::from(self.max_retries))?;
 

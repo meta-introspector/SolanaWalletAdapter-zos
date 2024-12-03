@@ -121,7 +121,6 @@ impl Wallet {
                         supported_chains.testnet = true;
                     } else if cluster_inner == &Cluster::LocalNet {
                         supported_chains.localnet = true;
-                    } else {
                     }
                 }
 

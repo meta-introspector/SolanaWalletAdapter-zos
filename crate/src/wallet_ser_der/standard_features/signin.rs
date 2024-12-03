@@ -26,7 +26,7 @@ impl SignIn {
         let outcome = self
             .0
             .callback
-            .call1(&JsValue::null(), &signin_input.get_object()?.into())?;
+            .call1(&JsValue::null(), &signin_input.get_object()?)?;
 
         let outcome = js_sys::Promise::resolve(&outcome);
 

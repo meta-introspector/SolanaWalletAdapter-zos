@@ -117,7 +117,7 @@ impl Reflection {
     }
 
     pub(crate) fn new_from_str(value: &JsValue, key: &str) -> WalletResult<Self> {
-        let inner = Reflect::get(&value, &key.into())?;
+        let inner = Reflect::get(value, &key.into())?;
 
         Reflection::new(inner)
     }
@@ -151,9 +151,9 @@ impl Reflection {
             return Err(WalletError::JsValueNotObject);
         }
 
-        let target = self.0.dyn_ref::<Object>().unwrap();
+        let target = self.0.dyn_ref::<Object>().unwrap(); // check above ensure it is an object hence unwrapping shpuld never fail
 
-        Reflect::set(&target, &key, &value)?;
+        Reflect::set(target, key, value)?;
 
         self.0 = target.into();
 
@@ -278,7 +278,7 @@ impl Reflection {
 
     pub(crate) fn check_is_undefined(value: &JsValue) -> WalletResult<()> {
         if value.is_undefined() || value.is_null() {
-            return Err(WalletError::ValueNotFound);
+            Err(WalletError::ValueNotFound)
         } else {
             Ok(())
         }

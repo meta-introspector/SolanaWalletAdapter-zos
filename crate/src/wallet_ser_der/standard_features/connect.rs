@@ -43,7 +43,8 @@ impl Connect {
             }
             Err(error) => {
                 let value: WalletError = error.into();
-                return Err(WalletError::WalletConnectError(value.to_string()));
+
+                Err(WalletError::WalletConnectError(value.to_string()))
             }
         }
     }

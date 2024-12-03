@@ -20,8 +20,8 @@ pub use events::*;
 mod constants;
 pub use constants::*;
 
-mod wallet;
-pub use wallet::*;
+mod wallet_ser_der;
+pub use wallet_ser_der::*;
 
 mod storage;
 pub use storage::*;
