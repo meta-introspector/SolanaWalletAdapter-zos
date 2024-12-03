@@ -191,7 +191,7 @@ impl From<JsValue> for WalletError {
             Reflect::get(&value, &key.into())
                 .map_err(|_: JsValue| WalletError::UnableToParseJsError)?
                 .as_string()
-                .map_or(Err(WalletError::JsErrorNotString), |inner| Ok(inner))
+                .ok_or(WalletError::JsErrorNotString)
         };
 
         let name = match reflect("name") {

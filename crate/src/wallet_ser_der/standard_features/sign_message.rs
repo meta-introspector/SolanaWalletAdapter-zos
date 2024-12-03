@@ -51,7 +51,7 @@ impl SignMessage {
             ))?
             .to_vec();
 
-        if let Some(inner) = signed_message_result.get(0) {
+        if let Some(inner) = signed_message_result.first() {
             let reflect_outcome = Reflection::new(inner.clone())?;
             let signed_message = reflect_outcome.reflect_inner("signedMessage")?;
             let signature_value = reflect_outcome.reflect_inner("signature")?;
@@ -74,7 +74,7 @@ impl SignMessage {
 
             let public_key = Utils::public_key(wallet_account.public_key)?;
 
-            Utils::verify_signature(public_key, &message, signature)?;
+            Utils::verify_signature(public_key, message, signature)?;
 
             Ok(SignedMessageOutput {
                 message,
@@ -100,7 +100,7 @@ impl<'a> SignedMessageOutput<'a> {
     pub fn message(&self) -> &str {
         //Should never fail since verified message is always UTF-8 Format hence `.unwrap()` is used.
         // This is verified to be the input message where the input message is always UTF-8 encoded
-        str::from_utf8(&self.message).unwrap()
+        str::from_utf8(self.message).unwrap()
     }
 
     /// Get the public key as an [Ed25519 Public Key](VerifyingKey)

@@ -1,22 +1,22 @@
 use crate::WalletError;
 
 /// Solana Mainnet cluster,  https://api.mainnet-beta.solana.com
-pub const MAINNET_IDENTIFIER: &'static str = "solana:mainnet";
+pub const MAINNET_IDENTIFIER: &str = "solana:mainnet";
 /// Solana Devnet cluster, e.g. https://api.devnet.solana.com
-pub const DEVNET_IDENTIFIER: &'static str = "solana:devnet";
+pub const DEVNET_IDENTIFIER: &str = "solana:devnet";
 /// Solana Testnet cluster, e.g. https://api.testnet.solana.com
-pub const TESTNET_IDENTIFIER: &'static str = "solana:testnet";
+pub const TESTNET_IDENTIFIER: &str = "solana:testnet";
 /// Solana Localnet cluster, e.g. http://localhost:8899
-pub const LOCALNET_IDENTIFIER: &'static str = "solana:localnet";
+pub const LOCALNET_IDENTIFIER: &str = "solana:localnet";
 
 /// Solana Mainnet cluster
-pub const MAINNET_ENDPOINT: &'static str = "https://api.mainnet-beta.solana.com";
+pub const MAINNET_ENDPOINT: &str = "https://api.mainnet-beta.solana.com";
 /// Solana Devnet cluster
-pub const DEVNET_ENDPOINT: &'static str = "https://api.devnet.solana.com";
+pub const DEVNET_ENDPOINT: &str = "https://api.devnet.solana.com";
 /// Solana Testnet cluster
-pub const TESTNET_ENDPOINT: &'static str = "https://api.testnet.solana.com";
+pub const TESTNET_ENDPOINT: &str = "https://api.testnet.solana.com";
 /// Solana Localnet cluster
-pub const LOCALNET_ENDPOINT: &'static str = "http://localhost:8899";
+pub const LOCALNET_ENDPOINT: &str = "http://localhost:8899";
 
 /// Used as a helper struct to contain all the chains supported by a wallet
 /// as defined by the wallet standard

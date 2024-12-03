@@ -182,15 +182,13 @@ impl SigninInput {
     pub fn time_now() -> WalletResult<SystemTime> {
         let date_now = js_sys::Date::now() as u64;
 
-        Ok(SystemTime::from(
-            UNIX_EPOCH
-                .checked_add(Duration::from_millis(date_now))
-                .ok_or(WalletError::JsError {
-                    name: "UNIX_EPOCH.checked_add(js_sys::Date::now()".to_string(),
-                    message: "Unable to get the current time".to_string(),
-                    stack: "INTERNAL ERROR".to_string(),
-                })?,
-        ))
+        UNIX_EPOCH
+            .checked_add(Duration::from_millis(date_now))
+            .ok_or(WalletError::JsError {
+                name: "UNIX_EPOCH.checked_add(js_sys::Date::now()".to_string(),
+                message: "Unable to get the current time".to_string(),
+                stack: "INTERNAL ERROR".to_string(),
+            })
     }
 
     /// Converts [SystemTime] to ISO 8601 datetime string as required by
@@ -399,7 +397,6 @@ impl SigninInput {
 
         input
             .split("\n")
-            .into_iter()
             .enumerate()
             .try_for_each(|(index, input)| {
                 if index == 1 {

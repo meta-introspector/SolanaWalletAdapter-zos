@@ -235,10 +235,7 @@ impl WalletAccount {
 
 impl PartialOrd for WalletAccount {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        let inner_self: InnerWalletAccount = self.into();
-        let inner_other: InnerWalletAccount = other.into();
-
-        Some(inner_self.cmp(&inner_other))
+        Some(self.cmp(other))
     }
 }
 
@@ -277,7 +274,7 @@ impl<'a> From<&'a WalletAccount> for InnerWalletAccount<'a> {
         Self {
             address: value.address.as_str(),
             public_key: &value.public_key,
-            chains: &value.chains.as_slice(),
+            chains: value.chains.as_slice(),
             features: &value.features,
             label: value.label.as_ref(),
             icon: value.icon.as_ref(),

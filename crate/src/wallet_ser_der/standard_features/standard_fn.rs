@@ -25,7 +25,7 @@ impl StandardFunction {
         namespace: &str,
     ) -> WalletResult<Self> {
         let fn_value = Reflection::new(value)?
-            .reflect_inner(&key)
+            .reflect_inner(key)
             .or(Err(WalletError::MissingConnectFunction))?;
         let get_fn = fn_value
             .dyn_into::<Function>()

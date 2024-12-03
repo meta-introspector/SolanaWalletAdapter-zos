@@ -20,11 +20,7 @@ impl WalletStorage {
 
     /// Get all the wallets from storage
     pub fn get_wallets(&self) -> Vec<Wallet> {
-        self.0
-            .borrow()
-            .values()
-            .map(|wallet| wallet.clone())
-            .collect::<Vec<Wallet>>()
+        self.0.borrow().values().cloned().collect::<Vec<Wallet>>()
     }
 
     /// Get a certain wallet by name from storage
@@ -32,7 +28,7 @@ impl WalletStorage {
         let storage_ref = self.0.borrow();
         storage_ref
             .get(&blake3::hash(wallet_name.to_lowercase().as_bytes()))
-            .map(|wallet| wallet.clone())
+            .cloned()
     }
 }
 
