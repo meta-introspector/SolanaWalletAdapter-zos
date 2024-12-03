@@ -1,6 +1,9 @@
 [package]
 name = "sycamore-adapter"
 edition.workspace = true
+version = "0.1.0"
+license = "MIT OR Apache-2.0"
+publish = false
 
 [lib]
 name = "sycamore_adapter"
@@ -11,9 +14,6 @@ sycamore = { version = "0.9.1" }
 bs58.workspace = true
 wasm-bindgen-futures.workspace = true
 wallet-adapter = { path = "../../crate" }
-log.workspace = true
-console_error_panic_hook.workspace = true
-console_log.workspace = true
 wasm-bindgen.workspace = true
 web-sys.workspace = true
 solana-sdk = "2.1.2"
