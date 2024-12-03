@@ -64,9 +64,9 @@ See [Template Usage](#template-usage) for more details
 ### Initializing `Register` and `AppReady`
 This is done automatically when calling `WalletAdapter::init()`. The `Register` and `AppReady` events are registered to the browser window and document in the current page allowing browser extension wallet to register themselves as per the wallet standard specification.
 ```rust
-# fn foo() -> wallet_adapter::WalletResult<()>{
 use wallet_adapter::WalletAdapter;
 
+fn foo() -> wallet_adapter::WalletResult<()>{
 // Initializing the wallet adapter
 let adapter = WalletAdapter::init()?;
 
@@ -84,8 +84,8 @@ adapter.window();
 // Expose the browser document
 adapter.document();
 
-# Ok::<(), wallet_adapter::WalletError>(())
-# }
+Ok::<(), wallet_adapter::WalletError>(())
+}
 ```
 
 
@@ -93,8 +93,9 @@ Alternatively, for some templates where handling events like `onclick` requires 
 The `wallet_adapter::InitEvents` requires an in-memory storage solution to store the registered wallets for retrieval. The `wallet_adapter::WalletStorage` can be used instead which wraps a HashMap with a `Rc<RefCell<>>` to allow usage in closures that move variables out of their environment.
 
 ```rust
-# fn foo() -> wallet_adapter::WalletResult<()> {
 use wallet_adapter::{WalletStorage, InitEvents};
+
+fn foo() -> wallet_adapter::WalletResult<()> {
 
 // Get the Window object where the `AppReady` and `Register` events will be initialized
 let window = web_sys::window().expect("No Browser Window Detected");
@@ -102,8 +103,8 @@ let mut storage = WalletStorage::default();
 // Initialize the events
 let init_events = InitEvents::new(&window).init(&mut storage)?;
 
-# Ok::<(), wallet_adapter::WalletError>(())
-# }
+Ok::<(), wallet_adapter::WalletError>(())
+}
 ```
 #### In-memory storage for registered wallets.
 `wallet_adapter::WalletStorage` handles storage of registered wallets. The in-memory storage is a `HashMap<hash, Wallet>`
@@ -127,8 +128,9 @@ storage.clone_inner();
 
 ### Connecting to a browser extension wallet and checking for features
 ```rust
-# async fn foo() -> wallet_adapter::WalletResult<()> {
 use wallet_adapter::WalletAdapter;
+
+async fn foo() -> wallet_adapter::WalletResult<()> {
 
 let mut adapter = WalletAdapter::init()?;
 adapter.connect("Phantom").await?;
@@ -166,30 +168,30 @@ adapter.solana_sign_transaction();
 // Is `solana:signAndSendTransaction` feature specified in wallet standard supported
 adapter.solana_sign_and_send_transaction();
 
-# Ok::<(), wallet_adapter::WalletError>(())
-# }
+Ok::<(), wallet_adapter::WalletError>(())
+}
 ```
 
 ### Disconnecting from the wallet
 ```rust
-# async fn foo() -> wallet_adapter::WalletResult<()> {
 use wallet_adapter::{WalletAdapter, SigninInput};
 
+async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
 adapter.connect("Phantom").await?;
 
 // Disconnect from the wallet
 adapter.disconnect().await?;
 
-# Ok::<(), wallet_adapter::WalletError>(())
-# }
+Ok::<(), wallet_adapter::WalletError>(())
+}
 ```
 
 ### Sign In With Solana (SIWS)
 ```rust
-# async fn foo() -> wallet_adapter::WalletResult<()> {
 use wallet_adapter::{WalletAdapter, SigninInput};
 
+async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
 adapter.connect("Phantom").await?;
 
@@ -214,8 +216,8 @@ signin_input
 // Get the public key in bytes of the connected 
 let signin_output = adapter.sign_in(&signin_input, public_key).await.unwrap();
 
-# Ok::<(), wallet_adapter::WalletError>(())
-# }
+Ok::<(), wallet_adapter::WalletError>(())
+}
 ```
 Sign In With Solana (SIWS) supports more options for the Sign In With Solana Standard. Check the methods on the [SigninInput] struct.
 **NOTE** that an error is thrown by the library in case the message signed, public key don't match or if the signature is not valid for the signing public key.
@@ -223,9 +225,9 @@ Sign In With Solana (SIWS) supports more options for the Sign In With Solana Sta
 ### Sign Message
 All messages must be UTF-8 encoded string of bytes
 ```rust
-# async fn foo() -> wallet_adapter::WalletResult<()> {
 use wallet_adapter::{WalletAdapter, SigninInput};
 
+async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
 adapter.connect("Phantom").await?;
 // Check if the wallet supports signing a message
@@ -234,19 +236,19 @@ if adapter.solana_sign_message()? {
 }else {
     // Tell user Sign message is not supported
 }
-# Ok::<(), wallet_adapter::WalletError>(())
-# }
+Ok::<(), wallet_adapter::WalletError>(())
+}
 ```
 **NOTE** that an error is thrown by the library in case the message, public key don't match or if the signature is not valid for the signing public key.
 ### Sign Transaction
 Here, we simulate signing a SOL transfer instruction
 ```rust
-# async fn foo() -> wallet_adapter::WalletResult<()> {
 use wallet_adapter::{WalletAdapter, Cluster, Utils,};
 use solana_sdk::{
     native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_instruction, transaction::Transaction,
 };
 
+async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
 adapter.connect("Phantom").await?;
 
@@ -293,8 +295,8 @@ if adapter.is_connected() {
     let deser_tx_output = bincode::deserialize::<Transaction>(&output[0]).unwrap();
 }
 
-# Ok::<(), wallet_adapter::WalletError>(())
-# }
+Ok::<(), wallet_adapter::WalletError>(())
+}
 
 ```
 Remember to add the necessary dependencies for this part in the `Cargo.toml` manifest.
@@ -309,7 +311,6 @@ bincode = "1.3.3"
 ### Sign And Send Transaction
 Here, we simulate signing and sending a SOL transfer instruction
 ```rust
-# async fn foo() -> wallet_adapter::WalletResult<()> {
 use std::str::FromStr;
 
 use wallet_adapter::{WalletAdapter, Cluster, Utils, SendOptions};
@@ -320,6 +321,7 @@ use solana_sdk::{
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{wasm_bindgen::JsCast, Headers, Request, RequestInit, Response};
 
+async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
 adapter.connect("Phantom").await?;
 
@@ -441,8 +443,8 @@ if adapter.is_connected() {
     let signature = adapter.sign_and_send_transaction(&tx_bytes, Cluster::DevNet, send_options).await?;
     let signature_with_link = String::from("https://explorer.solana.com/tx/") + &Utils::base58_signature(signature).as_str() + "?cluster=devnet";
 }
-# Ok::<(), wallet_adapter::WalletError>(())
-# }
+Ok::<(), wallet_adapter::WalletError>(())
+}
 
 ```
 Remember to add the necessary dependencies for this part in the `Cargo.toml` manifest.
