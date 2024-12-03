@@ -10,6 +10,9 @@ repository.workspace = true
 readme.workspace = true
 
 [dependencies]
+ed25519-dalek = { version = "2.1.1", default-features = false, features = [
+    "signature",
+] }
 web-sys.workspace = true
 js-sys.workspace = true
 wasm-bindgen.workspace = true
@@ -21,10 +24,6 @@ rand_chacha = "0.3.1"
 getrandom = { version = "0.2.15", features = ["js"] }
 bs58.workspace = true
 blake3 = { version = "1.5.1", default-features = false }
-ed25519-dalek = { version = "1", default-features = false, features = [
-    "u64_backend",
-] }
-log.workspace = true
 
 
 [dev-dependencies]

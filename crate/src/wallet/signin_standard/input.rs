@@ -478,7 +478,7 @@ impl SigninInput {
         signature_bytes: [u8; 64],
     ) -> WalletResult<()> {
         let public_key = Utils::public_key(public_key_bytes)?;
-        let signature = Utils::signature(signature_bytes)?;
+        let signature = Utils::signature(signature_bytes);
 
         Utils::verify_signature(public_key, message, signature)
     }

@@ -1,4 +1,4 @@
-use ed25519_dalek::{PublicKey, Signature};
+use ed25519_dalek::{Signature, VerifyingKey};
 use js_sys::Uint8Array;
 use wasm_bindgen::{JsCast, JsValue};
 
@@ -103,25 +103,25 @@ impl<'a> SignedMessageOutput<'a> {
         str::from_utf8(&self.message).unwrap()
     }
 
-    /// Get the public key as an [Ed25519 Public Key](PublicKey)
-    pub fn public_key(&self) -> WalletResult<PublicKey> {
+    /// Get the public key as an [Ed25519 Public Key](VerifyingKey)
+    pub fn public_key(&self) -> WalletResult<VerifyingKey> {
         Utils::public_key(self.public_key)
     }
 
-    /// Get the Base58 address of the  [Ed25519 Public Key](PublicKey) that signed the message
+    /// Get the Base58 address of the  [Ed25519 Public Key](VerifyingKey) that signed the message
     pub fn address(&self) -> WalletResult<String> {
         Ok(Utils::address(self.public_key()?))
     }
 
     /// Get the [Ed25519 Signature](Signature) that was generated when
-    /// the [Ed25519 Public Key](PublicKey) signed the UTF-8 encoded message
-    pub fn signature(&self) -> WalletResult<Signature> {
+    /// the [Ed25519 Public Key](VerifyingKey) signed the UTF-8 encoded message
+    pub fn signature(&self) -> Signature {
         Utils::signature(self.signature)
     }
 
     /// Get the  [Ed25519 Signature](Signature) encoded in Base58 format
     pub fn base58_signature(&self) -> WalletResult<String> {
-        Ok(Utils::base58_signature(self.signature()?))
+        Ok(Utils::base58_signature(self.signature()))
     }
 }
 

@@ -1,4 +1,4 @@
-use ed25519_dalek::{PublicKey, Signature, Verifier};
+use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::{JsCast, JsValue};
 
@@ -48,13 +48,14 @@ impl Utils {
     }
 
     /// Parse a [PublicKey] from an array of 32 bytes
-    pub fn public_key(public_key_bytes: [u8; 32]) -> WalletResult<PublicKey> {
-        PublicKey::from_bytes(&public_key_bytes).or(Err(WalletError::InvalidEd25519PublicKeyBytes))
+    pub fn public_key(public_key_bytes: [u8; 32]) -> WalletResult<VerifyingKey> {
+        VerifyingKey::from_bytes(&public_key_bytes)
+            .or(Err(WalletError::InvalidEd25519PublicKeyBytes))
     }
 
     /// Parse a [Signature] from an array of 64 bytes
-    pub fn signature(signature_bytes: [u8; 64]) -> WalletResult<Signature> {
-        Signature::from_bytes(&signature_bytes).or(Err(WalletError::InvalidEd25519SignatureBytes))
+    pub fn signature(signature_bytes: [u8; 64]) -> Signature {
+        Signature::from_bytes(&signature_bytes)
     }
 
     /// Convert a slice of bytes into a 32 byte array. This is useful especially if a [PublicKey] is
@@ -71,7 +72,7 @@ impl Utils {
 
     /// Verify a [message](str) using a [PublicKey] and [Signature]
     pub fn verify_signature(
-        public_key: PublicKey,
+        public_key: VerifyingKey,
         message: &[u8],
         signature: Signature,
     ) -> WalletResult<()> {
@@ -91,17 +92,17 @@ impl Utils {
             .try_into()
             .or(Err(WalletError::InvalidEd25519PublicKeyBytes))?;
 
-        Self::signature(signature_bytes)
+        Ok(Self::signature(signature_bytes))
     }
 
     /// Generate the Base58 address from a [PublicKey]
-    pub fn address(public_key: PublicKey) -> String {
+    pub fn address(public_key: VerifyingKey) -> String {
         bs58::encode(public_key.as_ref()).into_string()
     }
 
     /// Generate a Base58 encoded string from a [Signature]
     pub fn base58_signature(signature: Signature) -> String {
-        bs58::encode(signature.as_ref()).into_string()
+        bs58::encode(signature.to_bytes()).into_string()
     }
 }
 

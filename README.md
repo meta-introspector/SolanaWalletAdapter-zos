@@ -532,6 +532,14 @@ cargo generate --name <project name> https://github.com/JamiiDao/Solana-Rust-Wal
 ```
 All templates can be found at [Solana-Rust-Wallet-Adapter-Templates(https://github.com/JamiiDao/Solana-Rust-Wallet-Adapter-Templates)
 
+##### Running Dioxus examples and templates using Dioxus cli.
+- Install dioxus cli from [https://dioxuslabs.com/](https://dioxuslabs.com/).
+
+- Build, run and serve a dioxus project
+  ```sh
+    dx serve --hot-reload
+   ```
+
 
 Templates like Yew and Sycamore don't come with there own build tool like Dioxus. For such templates install a server like `miniserve`
 that supports sending the WebAssembly files to the browser with the MIME `application/wasm` .

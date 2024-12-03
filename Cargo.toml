@@ -5,7 +5,7 @@ resolver = "2"
 
 [workspace.package]
 authors = ["448-OG <superuser@448.africa>"]
-version = "1.0.1-beta.1"
+version = "1.0.2-beta"
 license = "Apache-2.0 OR MIT"
 edition = "2021"
 description = "Solana Wallet Adapter for Rust clients written in pure Rust"
@@ -20,9 +20,6 @@ wallet-adapter = { path = "./crate" }
 bs58 = { version = "0.5.1" }
 wasm-bindgen = "0.2.95"
 wasm-bindgen-futures = "0.4.7"
-log = "0.4.14"
-console_error_panic_hook = "0.1.6"
-console_log = "1.0.0"
 js-sys = "0.3.74"
 web-sys = { version = "0.3.74", features = [
     "Window",

@@ -138,7 +138,10 @@ impl SignTransaction {
         Reflection::new(success)?
             .get_bytes_from_vec("signature")?
             .get(0)
-            .map(|value| Utils::signature(Utils::to64byte_array(value)?))
+            .map(|value| {
+                let bytes = Utils::to64byte_array(value)?;
+                Ok(Utils::signature(bytes))
+            })
             .ok_or(WalletError::SendAndSignTransactionSignatureEmpty)?
     }
 }
