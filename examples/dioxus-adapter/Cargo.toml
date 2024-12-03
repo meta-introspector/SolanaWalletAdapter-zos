@@ -3,6 +3,8 @@ name = "dioxus-adapter"
 version = "0.1.0"
 authors = ["448 OG <superuser@448.africa>"]
 edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,9 +12,6 @@ edition = "2021"
 dioxus = { version = "0.5.6", features = ["web"] }
 
 wallet-adapter.workspace = true
-log.workspace = true
-console_error_panic_hook.workspace = true
-console_log.workspace = true
 web-sys.workspace = true
 wasm-bindgen-futures.workspace = true
 
