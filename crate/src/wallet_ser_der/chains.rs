@@ -9,6 +9,15 @@ pub const TESTNET_IDENTIFIER: &str = "solana:testnet";
 /// Solana Localnet cluster, e.g. http://localhost:8899
 pub const LOCALNET_IDENTIFIER: &str = "solana:localnet";
 
+/// Solana Mainnet cluster,  https://api.mainnet-beta.solana.com
+pub const MAINNET: &str = "mainnet";
+/// Solana Devnet cluster, e.g. https://api.devnet.solana.com
+pub const DEVNET: &str = "devnet";
+/// Solana Testnet cluster, e.g. https://api.testnet.solana.com
+pub const TESTNET: &str = "testnet";
+/// Solana Localnet cluster, e.g. http://localhost:8899
+pub const LOCALNET: &str = "localnet";
+
 /// Solana Mainnet cluster
 pub const MAINNET_ENDPOINT: &str = "https://api.mainnet-beta.solana.com";
 /// Solana Devnet cluster
@@ -53,11 +62,12 @@ pub struct FeatureSupport {
 }
 
 /// Solana Clusters
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, Default, PartialOrd, Ord, Clone, Copy, Hash)]
 pub enum Cluster {
     /// Solana Mainnet cluster,  https://api.mainnet-beta.solana.com
     MainNet,
     /// Solana Devnet cluster, e.g. https://api.devnet.solana.com
+    #[default]
     DevNet,
     /// Solana Testnet cluster, e.g. https://api.testnet.solana.com
     TestNet,
@@ -85,6 +95,22 @@ impl Cluster {
             Cluster::LocalNet => LOCALNET_IDENTIFIER,
         }
     }
+
+    /// A Solana cluster identifier as a &str
+    pub fn display(&self) -> &str {
+        match self {
+            Cluster::MainNet => MAINNET,
+            Cluster::DevNet => DEVNET,
+            Cluster::TestNet => TESTNET,
+            Cluster::LocalNet => LOCALNET,
+        }
+    }
+}
+
+impl core::fmt::Display for Cluster {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.display())
+    }
 }
 
 impl TryFrom<&str> for Cluster {
@@ -100,6 +126,10 @@ impl TryFrom<&str> for Cluster {
             DEVNET_ENDPOINT => Self::DevNet,
             TESTNET_ENDPOINT => Self::TestNet,
             LOCALNET_ENDPOINT => Self::LocalNet,
+            MAINNET => Self::MainNet,
+            DEVNET => Self::DevNet,
+            TESTNET => Self::TestNet,
+            LOCALNET => Self::LocalNet,
             _ => return Err(WalletError::UnsupportedChain(value.to_string())),
         };
 

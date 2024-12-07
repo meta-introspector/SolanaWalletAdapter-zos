@@ -133,7 +133,25 @@ use wallet_adapter::WalletAdapter;
 async fn foo() -> wallet_adapter::WalletResult<()> {
 
 let mut adapter = WalletAdapter::init()?;
-adapter.connect("Phantom").await?;
+
+// Lookup a wallet from the registered wallet by it's name
+// and then use that wallet entry to perform a connection request
+adapter.connect_by_name("Phantom").await?;
+
+// Assuming in a frontend application you have a list of 
+// registered wallets to iterate through in order to show a modal
+// or a dropdown of registered wallets and you are building an
+// onclick event to do a connection, you cal use the `WalletAdapter::connect()` method instead
+
+for wallet in adapter.wallets() {
+    // An onclick event from any frontend framework
+    // onclick:move|_| {
+        adapter.connect(wallet).await?; // The `wallet` can be used inside the onclick event
+    // }
+}
+
+// Get all clusters supported by a connected wallet
+adapter.clusters()?;
 
 // Is MainNet cluster supported
 adapter.mainnet();
@@ -178,7 +196,7 @@ use wallet_adapter::{WalletAdapter, SigninInput};
 
 async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
-adapter.connect("Phantom").await?;
+adapter.connect_by_name("Phantom").await?;
 
 // Disconnect from the wallet
 adapter.disconnect().await?;
@@ -193,7 +211,7 @@ use wallet_adapter::{WalletAdapter, SigninInput};
 
 async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
-adapter.connect("Phantom").await?;
+adapter.connect_by_name("Phantom").await?;
 
 // The message to show the user
 let statement = "Login To Dev Website";
@@ -229,7 +247,7 @@ use wallet_adapter::{WalletAdapter, SigninInput};
 
 async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
-adapter.connect("Phantom").await?;
+adapter.connect_by_name("Phantom").await?;
 // Check if the wallet supports signing a message
 if adapter.solana_sign_message()? {
     adapter.sign_message(b"SOLANA ROCKS!!!").await?;
@@ -250,7 +268,7 @@ use solana_sdk::{
 
 async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
-adapter.connect("Phantom").await?;
+adapter.connect_by_name("Phantom").await?;
 
 // Construct a transaction in a manner that the browser wallet extension
 // can deserialize the transaction from bytes.
@@ -323,7 +341,7 @@ use web_sys::{wasm_bindgen::JsCast, Headers, Request, RequestInit, Response};
 
 async fn foo() -> wallet_adapter::WalletResult<()> {
 let mut adapter = WalletAdapter::init()?;
-adapter.connect("Phantom").await?;
+adapter.connect_by_name("Phantom").await?;
 
 // The variables for the code is the same as the one for Sign Transaction
 

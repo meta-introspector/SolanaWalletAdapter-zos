@@ -95,7 +95,7 @@ pub struct SignedMessageOutput<'a> {
     signature: [u8; 64],
 }
 
-impl<'a> SignedMessageOutput<'a> {
+impl SignedMessageOutput<'_> {
     /// Get the message as a UTF-8 [str]
     pub fn message(&self) -> &str {
         //Should never fail since verified message is always UTF-8 Format hence `.unwrap()` is used.
@@ -125,7 +125,7 @@ impl<'a> SignedMessageOutput<'a> {
     }
 }
 
-impl<'a> Default for SignedMessageOutput<'a> {
+impl Default for SignedMessageOutput<'_> {
     fn default() -> Self {
         Self {
             message: &[],

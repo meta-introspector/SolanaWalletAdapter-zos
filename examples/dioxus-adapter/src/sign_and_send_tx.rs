@@ -6,13 +6,22 @@ use serde::Deserialize;
 use solana_sdk::{
     native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_instruction, transaction::Transaction,
 };
-use wallet_adapter::{Cluster, SendOptions, Utils, WalletAdapter};
+use wallet_adapter::{Cluster, SendOptions, Utils};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{wasm_bindgen::JsCast, Headers, Request, RequestInit, Response};
 
-pub fn SignAndSendTx(adapter: Signal<WalletAdapter>) -> Element {
-    let mut signed_tx_output: Signal<String> = use_signal(|| String::default());
-    let public_key = adapter.read().connected_account().unwrap().public_key;
+use crate::DioxusWalletAdapter;
+
+pub fn SignAndSendTx() -> Element {
+    let adapter: Signal<DioxusWalletAdapter> = use_context();
+
+    let mut signed_tx_output: Signal<String> = use_signal(String::default);
+    let public_key = adapter
+        .read()
+        .connection
+        .connected_account()
+        .unwrap()
+        .public_key;
     let pubkey = Pubkey::new_from_array(public_key);
     let recipient_pubkey = Pubkey::new_from_array(Utils::public_key_rand());
     let sol = LAMPORTS_PER_SOL;
@@ -21,7 +30,7 @@ pub fn SignAndSendTx(adapter: Signal<WalletAdapter>) -> Element {
         if signed_tx_output.read().is_empty() {
             div {class:"inner-section",
                     div {class:"inner-header", "SIGN AND SEND SOL TX"}
-                    div {class:"inner-body", "FROM: {adapter.read().connected_account().unwrap().address.as_str()}"}
+                    div {class:"inner-body", "FROM: {adapter.read().connection.connected_account().unwrap().address.as_str()}"}
                     div {class:"inner-body", "TO: {recipient_pubkey}"}
                     div {class:"inner-body", "LAMPORTS: {sol}"}
                     button {
@@ -33,7 +42,7 @@ pub fn SignAndSendTx(adapter: Signal<WalletAdapter>) -> Element {
                                 let blockhash = get_blockhash().await;
                                 tx.message.recent_blockhash = blockhash;
                                 let tx_bytes = bincode::serialize(&tx).unwrap();
-                                let signature = adapter.read().sign_and_send_transaction(&tx_bytes, Cluster::DevNet, SendOptions::default()).await;
+                                let signature = adapter.read().connection.sign_and_send_transaction(&tx_bytes, Cluster::DevNet, SendOptions::default()).await;
                                 info!("RAW: {:?}", &signature);
                                 let signature = signature.unwrap();
                                 let output = String::from("https://explorer.solana.com/tx/") + Utils::base58_signature(signature).as_str() + "?cluster=devnet";
@@ -46,7 +55,7 @@ pub fn SignAndSendTx(adapter: Signal<WalletAdapter>) -> Element {
         }else {
             div {class:"inner-section",
                 div {class:"inner-header", "SIGNED SEND SOL TX"}
-                div {class:"inner-body", "FROM: {adapter.read().connected_account().unwrap().address.as_str()}"}
+                div {class:"inner-body", "FROM: {adapter.read().connection.connected_account().unwrap().address.as_str()}"}
                 div {class:"inner-body", "TO: {recipient_pubkey}"}
                 div {class:"inner-body", "LAMPORTS: {sol}"}
                 div {class:"inner-body",
