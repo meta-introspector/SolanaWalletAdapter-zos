@@ -1,12 +1,17 @@
 use dioxus::prelude::*;
-use wallet_adapter::{SignedMessageOutput, WalletAdapter};
+use wallet_adapter::SignedMessageOutput;
 
-pub fn SignMessage(adapter: Signal<WalletAdapter>) -> Element {
+use crate::DioxusWalletAdapter;
+
+pub fn SignMessage() -> Element {
+    let adapter: Signal<DioxusWalletAdapter> = use_context();
+
     let mut signed_message_output: Signal<Option<SignedMessageOutput>> =
         use_signal(|| Option::None);
     let message = "Using Dioxus Framework";
     let sign_message_supported = adapter
         .read()
+        .connection
         .connected_wallet()
         .unwrap()
         .solana_sign_message();
@@ -21,7 +26,7 @@ pub fn SignMessage(adapter: Signal<WalletAdapter>) -> Element {
                         id:"btn-primary",
                         onclick: move |_| {
                             spawn(async move {
-                                let output = adapter.read().sign_message(message.as_bytes()).await.unwrap();
+                                let output = adapter.read().connection.sign_message(message.as_bytes()).await.unwrap();
                                 signed_message_output.write().replace(output);
                             });
                         },

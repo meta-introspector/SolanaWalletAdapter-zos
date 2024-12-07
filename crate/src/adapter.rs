@@ -51,7 +51,20 @@ impl WalletAdapter {
     }
 
     /// Send a connect request to the browser wallet
-    pub async fn connect(&mut self, wallet_name: &str) -> WalletResult<WalletAccount> {
+    pub async fn connect(&mut self, wallet: Wallet) -> WalletResult<WalletAccount> {
+        // let wallet = self.get_wallet(wallet_name)?;
+
+        let wallet_account = wallet.features.connect.call_connect().await?;
+
+        self.set_connected_account(wallet_account.clone());
+        self.set_connected_wallet(wallet);
+
+        Ok(wallet_account)
+    }
+
+    /// Lookup a wallet entry by name from the registered wallets
+    /// and then send a connect request to the browser extension wallet
+    pub async fn connect_by_name(&mut self, wallet_name: &str) -> WalletResult<WalletAccount> {
         let wallet = self.get_wallet(wallet_name)?;
 
         let wallet_account = wallet.features.connect.call_connect().await?;
@@ -182,6 +195,26 @@ impl WalletAdapter {
     /// Get the storage where the adapter stores the registered wallets
     pub fn storage(&self) -> &WalletStorage {
         self.storage.borrow()
+    }
+
+    /// Get the clusters supported by the connected wallet
+    pub fn clusters(&self) -> WalletResult<Vec<Cluster>> {
+        let mut clusters = Vec::<Cluster>::default();
+
+        if self.mainnet()? {
+            clusters.push(Cluster::MainNet);
+        }
+        if self.devnet()? {
+            clusters.push(Cluster::DevNet);
+        }
+        if self.localnet()? {
+            clusters.push(Cluster::LocalNet);
+        }
+        if self.testnet()? {
+            clusters.push(Cluster::TestNet);
+        }
+
+        Ok(clusters)
     }
 
     /// Get the registered wallets
