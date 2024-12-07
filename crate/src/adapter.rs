@@ -52,8 +52,6 @@ impl WalletAdapter {
 
     /// Send a connect request to the browser wallet
     pub async fn connect(&mut self, wallet: Wallet) -> WalletResult<WalletAccount> {
-        // let wallet = self.get_wallet(wallet_name)?;
-
         let wallet_account = wallet.features.connect.call_connect().await?;
 
         self.set_connected_account(wallet_account.clone());

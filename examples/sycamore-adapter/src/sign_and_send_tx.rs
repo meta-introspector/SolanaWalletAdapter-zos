@@ -4,24 +4,30 @@ use serde::Deserialize;
 use solana_sdk::{
     native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_instruction, transaction::Transaction,
 };
-use sycamore::prelude::*;
-use wallet_adapter::{Cluster, SendOptions, Utils};
-use wasm_bindgen::prelude::*;
+use sycamore::{futures::spawn_local_scoped, prelude::*};
+use wallet_adapter::{Cluster, SendOptions, Utils, WalletAdapter};
+use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Headers, Request, RequestInit, Response};
 
-use crate::Controller;
-
 #[component]
-pub fn SignAndSendTx(controller: Controller) -> View {
+pub fn SignAndSendTxComponent() -> View {
+    let adapter = use_context::<Signal<WalletAdapter>>();
+
     let signed_tx_output: Signal<String> = create_signal(String::default());
-    let public_key = controller.connected_account.public_key;
+    let connected_account = adapter
+        .get_clone()
+        .connected_account()
+        .cloned()
+        .as_ref()
+        .unwrap()
+        .clone();
+
+    let public_key = connected_account.public_key;
     let pubkey = Pubkey::new_from_array(public_key);
     let recipient_pubkey = Pubkey::new_from_array(Utils::public_key_rand());
     let sol = LAMPORTS_PER_SOL;
-    let connected_wallet = create_signal(controller.connected_wallet.clone());
-    let account = create_signal(controller.connected_account.clone());
-    let address = controller.connected_account.address.to_string();
+    let address = connected_account.address.to_string();
 
     view! {
         (if signed_tx_output.get_clone().is_empty() {
@@ -32,16 +38,16 @@ pub fn SignAndSendTx(controller: Controller) -> View {
                 div (class="inner-body"){ "FROM: " (address)}
                 div (class="inner-body"){ "TO: " (recipient_pubkey.to_string())}
                 div (class="inner-body"){ "LAMPORTS: " (sol)}
-                button (id="btn-primary",
+                button (class="btn-inner",
                     on:click={
                         move |_| {
-                            wasm_bindgen_futures::spawn_local(async move {
+                            spawn_local_scoped(async move {
                                 let instr = system_instruction::transfer(&pubkey, &recipient_pubkey, sol);
                                 let mut tx = Transaction::new_with_payer(&[instr], Some(&pubkey));
                                 let blockhash = get_blockhash().await;
                                 tx.message.recent_blockhash = blockhash;
                                 let tx_bytes = bincode::serialize(&tx).unwrap();
-                                let signature = connected_wallet.get_clone().sign_and_send_transaction(&tx_bytes, Cluster::DevNet, SendOptions::default(), &account.get_clone()).await.unwrap();
+                                let signature = adapter.get_clone().sign_and_send_transaction(&tx_bytes, Cluster::DevNet, SendOptions::default()).await.unwrap();
                                 let output = String::from("https://explorer.solana.com/tx/") + Utils::base58_signature(signature).as_str() + "?cluster=devnet";
                                 signed_tx_output.set(output);
                             });

@@ -26,6 +26,3 @@ serde = { version = "1.0.215", features = ["derive"] }
 [features]
 default = ["web"]
 web = ["dioxus/web"]
-
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
