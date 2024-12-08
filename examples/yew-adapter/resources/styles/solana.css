@@ -2924,9 +2924,14 @@ html {
 }
 
 html,
+<<<<<<< HEAD
 body,
 #root {
     height: 100%;
+=======
+body {
+    min-height: 100%;
+>>>>>>> 8d9d449 (bug fixes for examples)
 }
 
 .wallet-adapter-button-trigger {

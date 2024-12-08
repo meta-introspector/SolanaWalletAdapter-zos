@@ -1,26 +1,21 @@
-use std::{cell::RefCell, rc::Rc};
-
 use wallet_adapter::WalletAdapter;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-// use crate::{SignAndSendTxComponent, SignInComponent, SignMessageComponent, SignTxComponent};
-use crate::{Dashboard, Footer, Header};
-
-pub(crate) type YewAdapter = Rc<RefCell<WalletAdapter>>;
+use crate::Dashboard;
 
 #[function_component(App)]
 pub fn app() -> Html {
     let init_adapter = WalletAdapter::init().unwrap();
 
-    let adapter = use_state(|| Rc::new(RefCell::new(init_adapter)));
+    let adapter = use_state(|| init_adapter);
 
     html! {
-        <ContextProvider<YewAdapter> context={(*adapter).clone()}>
+        <ContextProvider<WalletAdapter> context={(*adapter).clone()}>
             <BrowserRouter>
                 <Switch<Route> render={switch} />
             </BrowserRouter>
-        </ContextProvider<YewAdapter>>
+        </ContextProvider<WalletAdapter>>
 
     }
 }
@@ -36,15 +31,7 @@ pub(crate) enum Route {
 
 fn switch(routes: Route) -> Html {
     match routes {
-        Route::Home => html! {
-            <div id="root">
-                <div class="h-full flex flex-col">
-                    <Header/>
-                    <Dashboard/>
-                    <Footer/>
-                </div>
-            </div>
-        },
+        Route::Home => html! {<Dashboard/>},
         Route::NotFound => html! { <h1>{ "Page Not Found" }</h1> },
     }
 }
