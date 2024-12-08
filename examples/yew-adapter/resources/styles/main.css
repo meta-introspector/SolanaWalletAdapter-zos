@@ -1,3 +1,22 @@
+<<<<<<< HEAD
+=======
+body {
+    background: #1b1b1b;
+    color: #fafafa;
+    min-height: 100vh !important;
+    overflow: visible !important;
+}
+
+#root {
+    background: #1b1b1b;
+    min-height: 100%;
+}
+
+.navbar {
+    background: #101010;
+}
+
+>>>>>>> 8d9d449 (bug fixes for examples)
 #main {
     min-height: 100vh;
     display: flex;
