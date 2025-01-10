@@ -1,12 +1,14 @@
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
+use async_channel::{Receiver, Sender};
 use js_sys::{Function, Object, Reflect};
 use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
+use wasm_bindgen_futures::spawn_local;
 use web_sys::{CustomEvent, CustomEventInit, Window};
 
 use crate::{
-    StorageType, Utils, Wallet, WalletError, WalletResult, WalletStorage,
-    WINDOW_APP_READY_EVENT_TYPE,
+    ConnectionInfo, Logger, StorageType, Utils, Wallet, WalletAccount, WalletAdapter, WalletError,
+    WalletResult, WalletStorage, WINDOW_APP_READY_EVENT_TYPE,
 };
 
 /// Used to initialize the `Register` and `AppReady` events to the browser window
@@ -23,9 +25,33 @@ impl<'a> InitEvents<'a> {
 
     /// Register events by providing a [WalletStorage] that is used to store
     /// all registered wallets
-    pub fn init(&self, storage: &'a mut WalletStorage) -> WalletResult<()> {
+    pub fn init(
+        &self,
+        adapter: &mut WalletAdapter,
+        receiver: WalletEventReceiver,
+    ) -> WalletResult<()> {
+        let storage = adapter.storage();
+        let connection_info = adapter.connection_info_inner();
         self.register_wallet_event(storage.clone_inner())?;
         self.dispatch_app_event(storage.clone_inner());
+
+        spawn_local(async move {
+            Logger::value(
+                &(String::new()
+                    + "Initializing the Receiver with bounded capacity of "
+                    + &receiver.capacity().unwrap_or(0).to_string()
+                    + "in a background thread...."),
+            );
+
+            if let Ok(wallet_event) = receiver.recv().await {
+                let wallet = connection_info
+                    .as_ref()
+                    .borrow_mut()
+                    .set_account(WalletAccount::default());
+            } else {
+                Logger::value("Error: the channel is empty and closed.");
+            }
+        });
 
         Ok(())
     }
@@ -117,3 +143,29 @@ impl<'a> InitEvents<'a> {
         register_object
     }
 }
+
+/// Events emitted by connected browser extensions
+/// when an account is connected, disconnected or changed.
+/// Wallets implementing the wallet standard emit these events
+/// from the `standard:events` events namespace specifically,
+/// `wallet.features[standard:events].on`
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+pub enum WalletEvent {
+    /// An account has been connected and an event `change` emitted.
+    Connected,
+    /// An account has been disconnected and an event `change` emitted.
+    Disconnected,
+    /// An account has been connected and an event `change` emitted.
+    /// The wallet adapter then updates the connected [WalletAccount].
+    AccountChanged,
+    /// Events can be asynchronous and happen within scopes of an event listner,
+    /// these errors can be important in different scenarios. This enum field
+    /// will help with that
+    BackgroundTaskError(WalletError),
+}
+
+/// The `Sender` part of an [async_channel::bounded] channel
+pub type WalletEventSender = Sender<WalletEvent>;
+
+/// The `Receiver` part of an [async_channel::bounded] channel
+pub type WalletEventReceiver = Receiver<WalletEvent>;

@@ -21,6 +21,11 @@ pub enum WalletError {
         /// The stack from the JavaScript error message
         stack: String,
     },
+    /// Occurs when casting a JavaScript type to a Rust type using [js_sys::JsCast] trait
+    /// and `foo.dyn_ref::<T>()` or `foo.dyn_into::<T>()` where `foo`
+    /// is a variable of type [wasm_bindgen::JsValue]
+    #[error("Occurs when casting a JavaScript type to a Rust type using `js_sys::JsCast` trait and `foo.dyn_ref::<T>()` or `foo.dyn_into::<T>()` where `foo` is a variable of type `wasm_bindgen::JsValue`")]
+    JsCast(String),
     /// Unable to parse an `Err(JsValue)` to get the `name`, `message` or `stack`. One, some or all of these values might be missing
     #[error("Unable to parse an `Err(JsValue)` to get the `name`, `message` or `stack`. One, some or all of these values might be missing")]
     UnableToParseJsError,

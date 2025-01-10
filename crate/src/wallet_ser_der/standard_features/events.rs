@@ -1,4 +1,5 @@
-use wasm_bindgen::JsValue;
+use js_sys::Function;
+use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
 
 use crate::{Reflection, SemverVersion, StandardFunction, WalletError, WalletResult};
 
@@ -11,6 +12,20 @@ impl StandardEvents {
     /// parse the callback for `standard:events` from the [JsValue]
     pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
         let get_standard_event_fn = Reflection::new(value)?.get_function("on")?;
+
+        let on_account_change = Closure::wrap(Box::new(move |value: JsValue| {
+            web_sys::console::log_2(&"CALLED ON CONNECTED FEATURE".into(), &value);
+        }) as Box<dyn Fn(_)>);
+        let on_account_change_fn = on_account_change.as_ref().dyn_ref::<Function>().unwrap();
+
+        get_standard_event_fn
+            .call2(
+                &JsValue::null(),
+                &"change".into(),
+                &on_account_change_fn.into(),
+            )
+            .unwrap();
+        on_account_change.forget();
 
         Ok(Self(StandardFunction {
             version,

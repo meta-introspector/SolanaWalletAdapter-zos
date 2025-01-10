@@ -1,3 +1,5 @@
+use core::fmt;
+
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::{JsCast, JsValue};
@@ -13,6 +15,28 @@ pub type SignatureBytes = [u8; 64];
 /// The Version of the Wallet Standard currently implemented.
 /// This may be used by the app to determine compatibility and feature detect.
 pub const WALLET_STANDARD_VERSION: &str = "1.0.0";
+
+pub(crate) struct Logger;
+
+impl Logger {
+    pub fn value(value: impl fmt::Debug) {
+        Self::key_value("", value)
+    }
+
+    pub fn key_value(key: impl fmt::Debug, value: impl fmt::Debug) {
+        #[cfg(any(all(feature = "logging", debug_assertions)))]
+        log::info!("{key:?} {value:?}");
+    }
+
+    pub fn web_sys_value(key: &JsValue) {
+        Self::web_sys_key_value(key, &"".into());
+    }
+
+    pub fn web_sys_key_value(key: &JsValue, value: &JsValue) {
+        #[cfg(any(feature = "logging", debug_assertions))]
+        web_sys::console::log_2(key, value);
+    }
+}
 
 /// Helper utilities
 pub struct Utils;
