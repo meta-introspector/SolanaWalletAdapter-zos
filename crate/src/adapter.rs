@@ -10,7 +10,7 @@ use web_sys::{js_sys::Object, Document, Window};
 
 use crate::{
     events::InitEvents, Cluster, SendOptions, SignInOutput, SignedMessageOutput, SigninInput,
-    Wallet, WalletAccount, WalletError, WalletEvent, WalletEventSender, WalletResult,
+    Wallet, WalletAccount, WalletError, WalletEvent, WalletEventReceiver, WalletResult,
     WalletStorage,
 };
 
@@ -85,6 +85,18 @@ impl ConnectionInfo {
     pub fn connected_account(&self) -> WalletResult<&WalletAccount> {
         self.account.as_ref().ok_or(WalletError::WalletNotFound)
     }
+
+    /// Get the connected [wallet](Wallet) but return an [Option]
+    /// to show the wallet exists instead of a [WalletResult]
+    pub fn connected_wallet_raw(&self) -> Option<&Wallet> {
+        self.wallet.as_ref()
+    }
+
+    /// Get the connected [account](WalletAccount)
+    /// but return an [Option] to show the account exists instead of a [WalletResult]
+    pub fn connected_account_raw(&self) -> Option<&WalletAccount> {
+        self.account.as_ref()
+    }
 }
 
 pub(crate) type ConnectionInfoInner = Rc<RefCell<ConnectionInfo>>;
@@ -98,7 +110,7 @@ pub struct WalletAdapter {
     document: Document,
     storage: WalletStorage,
     connection_info: ConnectionInfoInner,
-    wallet_events: WalletEventSender,
+    wallet_events: WalletEventReceiver,
 }
 
 impl WalletAdapter {
@@ -134,12 +146,19 @@ impl WalletAdapter {
             document,
             storage,
             connection_info: Rc::new(RefCell::new(ConnectionInfo::default())),
-            wallet_events: sender,
+            wallet_events: receiver,
         };
 
-        InitEvents::new(&window).init(&mut new_self, receiver)?;
+        InitEvents::new(&window).init(&mut new_self, sender)?;
 
         Ok(new_self)
+    }
+
+    /// Listen for [WalletEvent] to be notified when a wallet
+    /// receives `connected`, `disconnected` and `accountChanged` events triggered
+    /// when the `change` event is dispatched by a connected browser extension
+    pub fn events(&self) -> WalletEventReceiver {
+        self.wallet_events.clone()
     }
 
     /// Send a connect request to the browser wallet

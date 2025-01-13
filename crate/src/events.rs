@@ -1,15 +1,20 @@
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 
 use async_channel::{Receiver, Sender};
 use js_sys::{Function, Object, Reflect};
 use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
-use wasm_bindgen_futures::spawn_local;
 use web_sys::{CustomEvent, CustomEventInit, Window};
 
 use crate::{
-    ConnectionInfo, Logger, StorageType, Utils, Wallet, WalletAccount, WalletAdapter, WalletError,
-    WalletResult, WalletStorage, WINDOW_APP_READY_EVENT_TYPE,
+    ConnectionInfoInner, StorageType, Utils, Wallet, WalletAdapter, WalletError, WalletResult,
+    WINDOW_APP_READY_EVENT_TYPE,
 };
+
+/// The `Sender` part of an [async_channel::bounded] channel
+pub type WalletEventSender = Sender<WalletEvent>;
+
+/// The `Receiver` part of an [async_channel::bounded] channel
+pub type WalletEventReceiver = Receiver<WalletEvent>;
 
 /// Used to initialize the `Register` and `AppReady` events to the browser window
 #[derive(Debug, PartialEq, Eq)]
@@ -25,44 +30,35 @@ impl<'a> InitEvents<'a> {
 
     /// Register events by providing a [WalletStorage] that is used to store
     /// all registered wallets
-    pub fn init(
-        &self,
-        adapter: &mut WalletAdapter,
-        receiver: WalletEventReceiver,
-    ) -> WalletResult<()> {
+    pub fn init(&self, adapter: &mut WalletAdapter, sender: WalletEventSender) -> WalletResult<()> {
         let storage = adapter.storage();
         let connection_info = adapter.connection_info_inner();
-        self.register_wallet_event(storage.clone_inner())?;
-        self.dispatch_app_event(storage.clone_inner());
-
-        spawn_local(async move {
-            Logger::value(
-                &(String::new()
-                    + "Initializing the Receiver with bounded capacity of "
-                    + &receiver.capacity().unwrap_or(0).to_string()
-                    + "in a background thread...."),
-            );
-
-            if let Ok(wallet_event) = receiver.recv().await {
-                let wallet = connection_info
-                    .as_ref()
-                    .borrow_mut()
-                    .set_account(WalletAccount::default());
-            } else {
-                Logger::value("Error: the channel is empty and closed.");
-            }
-        });
+        self.register_wallet_event(
+            storage.clone_inner(),
+            connection_info.clone(),
+            sender.clone(),
+        )?;
+        self.dispatch_app_event(
+            storage.clone_inner(),
+            connection_info.clone(),
+            sender.clone(),
+        );
 
         Ok(())
     }
 
     /// An App Ready event registered to the browser window
-    pub fn dispatch_app_event(&self, storage: StorageType) {
+    pub fn dispatch_app_event(
+        &self,
+        storage: StorageType,
+        connection_info: ConnectionInfoInner,
+        sender: WalletEventSender,
+    ) {
         let app_ready_init = CustomEventInit::new();
         app_ready_init.set_bubbles(false);
         app_ready_init.set_cancelable(false);
         app_ready_init.set_composed(false);
-        app_ready_init.set_detail(&Self::register_object(storage));
+        app_ready_init.set_detail(&Self::register_object(storage, connection_info, sender));
 
         let app_ready_ev =
             CustomEvent::new_with_event_init_dict(WINDOW_APP_READY_EVENT_TYPE, &app_ready_init)
@@ -72,7 +68,12 @@ impl<'a> InitEvents<'a> {
     }
 
     /// The register wallet event registered to the browser window
-    pub fn register_wallet_event(&self, storage: StorageType) -> WalletResult<()> {
+    pub fn register_wallet_event(
+        &self,
+        storage: StorageType,
+        connection_info: ConnectionInfoInner,
+        sender: WalletEventSender,
+    ) -> WalletResult<()> {
         let inner_storage = Rc::clone(&storage);
 
         let listener_closure = Closure::wrap(Box::new(move |custom_event: CustomEvent| {
@@ -87,7 +88,11 @@ impl<'a> InitEvents<'a> {
 
             Utils::jsvalue_to_error(detail.call1(
                 &JsValue::null(),
-                &Self::register_object(inner_storage.clone()),
+                &Self::register_object(
+                    inner_storage.clone(),
+                    connection_info.clone(),
+                    sender.clone(),
+                ),
             ))
             .unwrap()
         }) as Box<dyn Fn(_)>);
@@ -107,27 +112,30 @@ impl<'a> InitEvents<'a> {
         Ok(())
     }
 
-    pub(crate) fn register_object(storage: StorageType) -> Object {
+    pub(crate) fn register_object(
+        storage: StorageType,
+        connection_info: ConnectionInfoInner,
+        sender: WalletEventSender,
+    ) -> Object {
         // The `register` function that logs and returns a closure like in your JS code
-        let register =
-            Closure::wrap(
-                Box::new(move |value: JsValue| match Wallet::from_jsvalue(value) {
-                    Ok(wallet) => {
-                        let inner_outcome = storage.clone();
+        let register = Closure::wrap(Box::new(move |value: JsValue| {
+            match Wallet::from_jsvalue(value, sender.clone(), connection_info.clone()) {
+                Ok(wallet) => {
+                    let inner_outcome = storage.clone();
 
-                        inner_outcome.borrow_mut().insert(
-                            blake3::hash(wallet.name().to_lowercase().as_bytes()),
-                            wallet,
-                        );
-                    }
-                    Err(error) => {
-                        web_sys::console::error_2(
-                            &"REGISTER EVENT ERROR".into(),
-                            &error.to_string().into(),
-                        );
-                    }
-                }) as Box<dyn Fn(_)>,
-            );
+                    inner_outcome.borrow_mut().insert(
+                        blake3::hash(wallet.name().to_lowercase().as_bytes()),
+                        wallet,
+                    );
+                }
+                Err(error) => {
+                    web_sys::console::error_2(
+                        &"REGISTER EVENT ERROR".into(),
+                        &error.to_string().into(),
+                    );
+                }
+            }
+        }) as Box<dyn Fn(_)>);
 
         // Create an object and set the `register` property
         let register_object = Object::new();
@@ -149,7 +157,7 @@ impl<'a> InitEvents<'a> {
 /// Wallets implementing the wallet standard emit these events
 /// from the `standard:events` events namespace specifically,
 /// `wallet.features[standard:events].on`
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub enum WalletEvent {
     /// An account has been connected and an event `change` emitted.
     Connected,
@@ -158,14 +166,4 @@ pub enum WalletEvent {
     /// An account has been connected and an event `change` emitted.
     /// The wallet adapter then updates the connected [WalletAccount].
     AccountChanged,
-    /// Events can be asynchronous and happen within scopes of an event listner,
-    /// these errors can be important in different scenarios. This enum field
-    /// will help with that
-    BackgroundTaskError(WalletError),
 }
-
-/// The `Sender` part of an [async_channel::bounded] channel
-pub type WalletEventSender = Sender<WalletEvent>;
-
-/// The `Receiver` part of an [async_channel::bounded] channel
-pub type WalletEventReceiver = Receiver<WalletEvent>;

@@ -190,6 +190,12 @@ pub enum WalletError {
     SendAndSignTransactionSignatureEmpty,
 }
 
+impl WalletError {
+    pub(crate) fn format_error(error_code: &str, error: &str) -> String {
+        String::from("WE") + error_code + "> " + error
+    }
+}
+
 impl From<JsValue> for WalletError {
     fn from(value: JsValue) -> Self {
         let reflect = |key: &str| -> Result<String, Self> {

@@ -1,6 +1,6 @@
 use crate::{
-    Connect, Disconnect, FeatureSupport, Reflection, SemverVersion, SignIn, SignMessage,
-    SignTransaction, StandardEvents, WalletError, WalletResult,
+    Connect, ConnectionInfoInner, Disconnect, FeatureSupport, Reflection, SemverVersion, SignIn,
+    SignMessage, SignTransaction, StandardEvents, WalletError, WalletEventSender, WalletResult,
     SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER, SOLANA_SIGN_IN_IDENTIFIER,
     SOLANA_SIGN_MESSAGE_IDENTIFIER, SOLANA_SIGN_TRANSACTION_IDENTIFIER,
     STANDARD_CONNECT_IDENTIFIER, STANDARD_DISCONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
@@ -32,7 +32,11 @@ pub struct Features {
 
 impl Features {
     /// Parse all the features from a wallet described as a [wasm_bindgen::JsValue]
-    pub(crate) fn parse(reflection: &Reflection) -> WalletResult<(Self, FeatureSupport)> {
+    pub(crate) fn parse(
+        reflection: &Reflection,
+        sender: WalletEventSender,
+        connection_info: ConnectionInfoInner,
+    ) -> WalletResult<(Self, FeatureSupport)> {
         let features_keys = reflection.object_to_vec_string("features")?;
         let features_object = Reflection::new_from_str(reflection.get_inner(), "features")?;
 
@@ -52,9 +56,12 @@ impl Features {
                     features.disconnect = Disconnect::new(inner_object, version)?;
                     supported_features.disconnect = true;
                 } else if feature == STANDARD_EVENTS_IDENTIFIER {
-                    features
-                        .events
-                        .replace(StandardEvents::new(inner_object, version)?);
+                    features.events.replace(StandardEvents::new(
+                        inner_object,
+                        version,
+                        sender.clone(),
+                        connection_info.clone(),
+                    )?);
                     supported_features.events = true;
                 } else if feature == SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER {
                     features.sign_and_send_tx =

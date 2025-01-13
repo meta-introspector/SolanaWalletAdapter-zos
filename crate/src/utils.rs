@@ -1,7 +1,5 @@
-use core::fmt;
-
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-use js_sys::{Array, Function, Object, Reflect};
+use js_sys::{Array, Function, Object, Reflect, Uint8Array};
 use wasm_bindgen::{JsCast, JsValue};
 
 use crate::{WalletError, WalletResult};
@@ -15,28 +13,6 @@ pub type SignatureBytes = [u8; 64];
 /// The Version of the Wallet Standard currently implemented.
 /// This may be used by the app to determine compatibility and feature detect.
 pub const WALLET_STANDARD_VERSION: &str = "1.0.0";
-
-pub(crate) struct Logger;
-
-impl Logger {
-    pub fn value(value: impl fmt::Debug) {
-        Self::key_value("", value)
-    }
-
-    pub fn key_value(key: impl fmt::Debug, value: impl fmt::Debug) {
-        #[cfg(any(all(feature = "logging", debug_assertions)))]
-        log::info!("{key:?} {value:?}");
-    }
-
-    pub fn web_sys_value(key: &JsValue) {
-        Self::web_sys_key_value(key, &"".into());
-    }
-
-    pub fn web_sys_key_value(key: &JsValue, value: &JsValue) {
-        #[cfg(any(feature = "logging", debug_assertions))]
-        web_sys::console::log_2(key, value);
-    }
-}
 
 /// Helper utilities
 pub struct Utils;
@@ -318,5 +294,50 @@ impl Reflection {
 
     pub(crate) fn get_inner(&self) -> &JsValue {
         &self.0
+    }
+
+    pub(crate) fn js_typeof(value: &JsValue) -> String {
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof
+        // The `typeof` in Js should always be a string hence unwrapping
+        value.js_typeof().as_string().unwrap()
+    }
+
+    pub(crate) fn as_function_owned(value: JsValue, code: &str) -> WalletResult<Function> {
+        let js_typeof = Self::js_typeof(&value);
+
+        value
+            .dyn_into::<Function>()
+            .or(Err(Self::concat_error("Function", &js_typeof, code)))
+    }
+
+    fn concat_error(expected: &str, encountered: &str, error_code: &str) -> WalletError {
+        WalletError::JsCast(
+            String::from("WE")
+                + error_code
+                + "> Expected a typeof JS "
+                + expected
+                + "but encountered a typeof Js `"
+                + encountered
+                + "`.",
+        )
+    }
+
+    pub(crate) fn as_bytes(value: &JsValue, error_code: &str) -> WalletResult<Vec<u8>> {
+        let js_typeof = Self::js_typeof(&value);
+
+        value
+            .dyn_ref::<Uint8Array>()
+            .ok_or(Self::concat_error("Uint8Array", &js_typeof, error_code))
+            .map(|value| value.to_vec())
+    }
+
+    pub(crate) fn reflect_inner_as_bytes(
+        &self,
+        key: &str,
+        error_code: &str,
+    ) -> WalletResult<Vec<u8>> {
+        let array_of_bytes = self.reflect_inner(key)?;
+
+        Self::as_bytes(&array_of_bytes, error_code)
     }
 }

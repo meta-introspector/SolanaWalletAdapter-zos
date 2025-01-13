@@ -3,8 +3,8 @@ use wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys::Reflect;
 
 use crate::{
-    Cluster, Features, Reflection, SemverVersion, WalletAccount, WalletError, WalletIcon,
-    WalletResult,
+    Cluster, ConnectionInfoInner, Features, Reflection, SemverVersion, WalletAccount, WalletError,
+    WalletEventSender, WalletIcon, WalletResult,
 };
 
 use super::{
@@ -102,7 +102,11 @@ impl Wallet {
     }
 
     /// Parse the Wallet details from a [JsValue]
-    pub fn from_jsvalue(value: JsValue) -> WalletResult<Self> {
+    pub fn from_jsvalue(
+        value: JsValue,
+        sender: WalletEventSender,
+        connection_info: ConnectionInfoInner,
+    ) -> WalletResult<Self> {
         let reflection = Reflection::new(value)?;
 
         let mut supported_chains = ChainSupport::default();
@@ -132,7 +136,7 @@ impl Wallet {
         let version = SemverVersion::parse(&reflection.string("version")?)?;
         let icon = WalletIcon::from_jsvalue(&reflection)?;
         let accounts = Self::get_accounts(&reflection, "accounts")?;
-        let (features, supported_features) = Features::parse(&reflection)?;
+        let (features, supported_features) = Features::parse(&reflection, sender, connection_info)?;
 
         Ok(Wallet {
             name,
