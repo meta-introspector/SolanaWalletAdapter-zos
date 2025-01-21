@@ -124,7 +124,7 @@ pub fn ShowModal() -> Element {
                 button {onclick:move|_|{
                     let wallet = wallet.clone();
                         spawn(async move {
-                            adapter.write().connection.connect(wallet).await.unwrap();
+                            adapter.write().connection.connect(wallet).await.unwrap_or_default();
                             adapter.write().show_modal = false;
                         });
                     },
