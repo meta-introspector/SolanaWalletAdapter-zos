@@ -1,4 +1,4 @@
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsValue;
 
 use crate::{
     Reflection, SemverVersion, SignInOutput, SigninInput, StandardFunction, WalletAccount,
@@ -12,9 +12,9 @@ pub struct SignIn(StandardFunction);
 
 impl SignIn {
     /// Parse the `solana:signin` callback function from the [JsValue]
-    pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
+    pub(crate) fn new(reflection: &Reflection, version: SemverVersion) -> WalletResult<Self> {
         Ok(Self(StandardFunction::new(
-            value, version, "signIn", "solana",
+            reflection, version, "signIn", "solana",
         )?))
     }
 
@@ -38,7 +38,7 @@ impl SignIn {
         let account = WalletAccount::parse(Reflection::new(account)?)?;
 
         let message_value = first_index.reflect_inner("signedMessage")?;
-        let message_bytes = message_value.dyn_into::<js_sys::Uint8Array>()?.to_vec();
+        let message_bytes = Reflection::new(message_value)?.as_bytes()?;
         let message =
             core::str::from_utf8(&message_bytes).map_err(|error| WalletError::JsError {
                 name: "Invalid UTF-8 Message".to_string(),
@@ -49,9 +49,8 @@ impl SignIn {
         signin_input.check_eq(message)?;
 
         let signature_value = first_index.reflect_inner("signature")?;
-        let signature_bytes: [u8; 64] = signature_value
-            .dyn_into::<js_sys::Uint8Array>()?
-            .to_vec()
+        let signature_bytes: [u8; 64] = Reflection::new(signature_value)?
+            .as_bytes()?
             .try_into()
             .or(Err(WalletError::InvalidEd25519SignatureBytes))?;
 

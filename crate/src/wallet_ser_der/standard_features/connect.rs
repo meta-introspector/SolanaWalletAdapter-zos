@@ -11,9 +11,9 @@ pub struct Connect(StandardFunction);
 
 impl Connect {
     /// Initialize a new `standard:connect` function by parsing a [JsValue]
-    pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
+    pub(crate) fn new(reflection: &Reflection, version: SemverVersion) -> WalletResult<Self> {
         Ok(Self(StandardFunction::new(
-            value, version, "connect", "standard",
+            reflection, version, "connect", "standard",
         )?))
     }
 
@@ -23,9 +23,10 @@ impl Connect {
 
         let outcome = js_sys::Promise::resolve(&outcome);
 
-        match wasm_bindgen_futures::JsFuture::from(outcome).await {
-            Ok(success) => {
-                let get_accounts = Reflection::new(success)?.get_js_array("accounts")?;
+        wasm_bindgen_futures::JsFuture::from(outcome)
+            .await
+            .map(|success| {
+                let get_accounts = Reflection::new(success)?.reflect_js_array("accounts")?;
 
                 let wallet_account = get_accounts
                     .into_iter()
@@ -40,12 +41,11 @@ impl Connect {
                     })??;
 
                 Ok(wallet_account)
-            }
-            Err(error) => {
+            })
+            .map_err(|error| {
                 let value: WalletError = error.into();
 
-                Err(WalletError::WalletConnectError(value.to_string()))
-            }
-        }
+                WalletError::WalletConnectError(value.to_string())
+            })?
     }
 }

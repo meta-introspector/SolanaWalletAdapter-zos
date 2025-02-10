@@ -1,6 +1,5 @@
 use ed25519_dalek::{Signature, VerifyingKey};
-use js_sys::Uint8Array;
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsValue;
 
 use core::str;
 
@@ -15,9 +14,9 @@ pub struct SignMessage(pub(crate) StandardFunction);
 
 impl SignMessage {
     /// Parse the callback for `solana:signMessage` from the [JsValue]
-    pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
+    pub(crate) fn new(reflection: &Reflection, version: SemverVersion) -> WalletResult<Self> {
         Ok(Self(StandardFunction::new(
-            value,
+            reflection,
             version,
             "signMessage",
             "solana",
@@ -44,11 +43,13 @@ impl SignMessage {
 
         let outcome = js_sys::Promise::resolve(&outcome);
         let signed_message_result = wasm_bindgen_futures::JsFuture::from(outcome).await?;
-        let signed_message_result = signed_message_result
-            .dyn_ref::<js_sys::Array>()
-            .ok_or(WalletError::JsValueNotArray(
-                "solana:signedMessage -> SignedMessageOutput".to_string(),
-            ))?
+        let incase_of_error = Err(WalletError::InternalError(format!(
+            "solana:signedMessage -> SignedMessageOutput: Casting `{signed_message_result:?}` did not yield a Uini8Array"
+        )));
+
+        let signed_message_result = Reflection::new(signed_message_result)?
+            .as_array()
+            .or(incase_of_error)?
             .to_vec();
 
         if let Some(inner) = signed_message_result.first() {
@@ -56,11 +57,13 @@ impl SignMessage {
             let signed_message = reflect_outcome.reflect_inner("signedMessage")?;
             let signature_value = reflect_outcome.reflect_inner("signature")?;
 
-            let signed_message = signed_message
-                .dyn_into::<Uint8Array>()
-                .or(Err(WalletError::JsValueNotUint8Array(
-                    "solana:signedMessage -> SignedMessageOutput::signedMessage".to_string(),
-                )))?
+            let incase_of_error = Err(WalletError::InternalError(format!(
+                "solana:signedMessage -> SignedMessageOutput::signedMessage: Cast `{signed_message:?}` did not yield a JsValue"
+            )));
+
+            let signed_message = Reflection::new(signed_message)?
+                .as_bytes()
+                .or(incase_of_error)?
                 .to_vec();
 
             if signed_message != message {

@@ -14,13 +14,12 @@ impl WalletIcon {
     pub(crate) fn from_jsvalue(reflection: &Reflection) -> WalletResult<Option<WalletIcon>> {
         let icon = match reflection.string("icon") {
             Ok(icon) => Option::Some(WalletIcon(Cow::Owned(icon))),
-            Err(error) => {
-                if error == WalletError::JsValueNotString {
-                    Option::None
-                } else {
+            Err(error) => match error {
+                WalletError::InternalError(_) => Option::None,
+                _ => {
                     return Err(error);
                 }
-            }
+            },
         };
 
         Ok(icon)

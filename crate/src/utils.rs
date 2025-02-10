@@ -1,5 +1,7 @@
+use std::borrow::Cow;
+
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-use js_sys::{Array, Function, Object, Reflect, Uint8Array};
+use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::{JsCast, JsValue};
 
 use crate::{WalletError, WalletResult};
@@ -82,12 +84,14 @@ impl Utils {
     }
 
     /// Convert a [JsValue] to a [Signature]
-    pub fn jsvalue_to_signature(value: JsValue, error_identifier: &str) -> WalletResult<Signature> {
+    pub fn jsvalue_to_signature(value: JsValue, namespace: &str) -> WalletResult<Signature> {
+        let in_case_of_error = Err(WalletError::InternalError(format!(
+            "{namespace}: `{value:?}` cannot be cast to a Uint8Array, only a JsValue of bytes can be cast."
+        )));
+
         let signature_bytes: [u8; 64] = value
             .dyn_into::<js_sys::Uint8Array>()
-            .or(Err(WalletError::JsValueNotUint8Array(
-                error_identifier.to_string(),
-            )))?
+            .or(in_case_of_error)?
             .to_vec()
             .try_into()
             .or(Err(WalletError::InvalidEd25519PublicKeyBytes))?;
@@ -104,12 +108,41 @@ impl Utils {
     pub fn base58_signature(signature: Signature) -> String {
         bs58::encode(signature.to_bytes()).into_string()
     }
+
+    /// Get the shortened string of the `Base58 string` .
+    /// It displays the first 4 characters and the last for characters
+    /// separated by ellipsis eg `FXdl...RGd4` .
+    /// If the string is less than 8 characters, an error is thrown
+    pub fn shorten_base58(base58_str: &str) -> WalletResult<Cow<str>> {
+        if base58_str.len() < 8 {
+            return Err(WalletError::InvalidBase58Address);
+        }
+
+        let first_part = &base58_str[..4];
+        let last_part = &base58_str[base58_str.len() - 4..];
+
+        Ok(Cow::Borrowed(first_part) + "..." + last_part)
+    }
+
+    /// Same as [Self::shorten_base58] but with a custom range
+    /// instead of taking the first 4 character and the last 4 characters
+    /// it uses a custom range.
+    pub fn custom_shorten_base58(base58_str: &str, take: usize) -> WalletResult<Cow<str>> {
+        if base58_str.len() < take + take {
+            return Err(WalletError::InvalidBase58Address);
+        }
+
+        let first_part = &base58_str[..take];
+        let last_part = &base58_str[base58_str.len() - take..];
+
+        Ok(Cow::Borrowed(first_part) + "..." + last_part)
+    }
 }
 
 #[derive(Debug)]
 pub(crate) struct Reflection(JsValue);
 
-impl Reflection {
+impl<'wa> Reflection {
     pub(crate) fn new(value: JsValue) -> WalletResult<Self> {
         Reflection::check_is_undefined(&value)?;
 
@@ -148,7 +181,9 @@ impl Reflection {
 
     pub(crate) fn set_object(&mut self, key: &JsValue, value: &JsValue) -> WalletResult<&Self> {
         if !self.0.is_object() {
-            return Err(WalletError::JsValueNotObject);
+            return Err(WalletError::InternalError(format!(
+                "Attempted to set the key `{key:?} in type `{value:?} which is not a JS object"
+            )));
         }
 
         let target = self.0.dyn_ref::<Object>().unwrap(); // check above ensure it is an object hence unwrapping should never fail
@@ -171,7 +206,9 @@ impl Reflection {
     pub(crate) fn string(&self, key: &str) -> WalletResult<String> {
         let name = Reflect::get(&self.0, &key.into())?;
 
-        let parsed = name.as_string().ok_or(WalletError::JsValueNotString)?;
+        let parsed = name.as_string().ok_or(WalletError::InternalError(format!(
+            "Reflecting {key:?} did not yield a JsString"
+        )))?;
 
         Ok(parsed)
     }
@@ -181,16 +218,30 @@ impl Reflection {
 
         js_array
             .iter()
-            .map(|value| Reflection::new(value)?.get_bytes(key))
+            .map(|value| Reflection::new(value)?.reflect_bytes(key))
             .collect::<WalletResult<Vec<Vec<u8>>>>()
     }
 
-    pub(crate) fn get_bytes(&self, key: &str) -> WalletResult<Vec<u8>> {
+    pub(crate) fn as_bytes(self) -> WalletResult<Vec<u8>> {
+        let js_typeof = Self::js_typeof(&self.0);
+
+        Ok(self
+            .0
+            .dyn_into::<js_sys::Uint8Array>()
+            .or(Err(Self::concat_error("Uint8Array", &js_typeof)))?
+            .to_vec())
+    }
+
+    pub(crate) fn reflect_bytes(&self, key: &str) -> WalletResult<Vec<u8>> {
         let js_value = Reflect::get(&self.0, &key.into())?;
+
+        let incase_of_error = Err(WalletError::InternalError(format!(
+            "`{js_value:?}` reflected from key `{key}` of JsValue `{:?}` cannot be cast to a Uint8Array, only a JsValue of bytes can be cast.", self.0
+        )));
 
         let to_uint8array = js_value
             .dyn_into::<js_sys::Uint8Array>()
-            .or(Err(WalletError::JsValueNotUint8Array(key.to_string())))?;
+            .or(incase_of_error)?;
 
         Ok(to_uint8array.to_vec())
     }
@@ -213,11 +264,13 @@ impl Reflection {
     }
 
     pub(crate) fn get_string(value: &JsValue) -> WalletResult<String> {
-        value.as_string().ok_or(WalletError::JsValueNotString)
+        value.as_string().ok_or(WalletError::InternalError(format!(
+            "{value:?} is not a JsString"
+        )))
     }
 
     pub(crate) fn vec_string(&self, key: &str) -> WalletResult<Vec<String>> {
-        let to_js_array = self.get_js_array(key)?;
+        let to_js_array = self.reflect_js_array(key)?;
 
         to_js_array
             .iter()
@@ -225,14 +278,10 @@ impl Reflection {
             .collect::<WalletResult<Vec<String>>>()
     }
 
-    pub(crate) fn get_js_array(&self, key: &str) -> WalletResult<Array> {
-        let js_value = Reflect::get(&self.0, &key.into())?;
+    pub(crate) fn reflect_js_array(&self, key: &str) -> WalletResult<Array> {
+        let js_value = self.reflect_inner(key)?;
 
-        if !js_value.is_array() {
-            return Err(WalletError::ExpectedArray(key.to_string()));
-        }
-
-        Ok(js_value.unchecked_into())
+        Self::new(js_value)?.as_array()
     }
 
     pub(crate) fn vec_string_and_filter(
@@ -240,17 +289,17 @@ impl Reflection {
         key: &str,
         filter: &str,
     ) -> WalletResult<Vec<String>> {
-        let js_value = Reflect::get(&self.0, &key.into())?;
+        let js_value = self.reflect_inner(key)?;
 
-        if !js_value.is_array() {
-            return Err(WalletError::ExpectedArray(key.to_string()));
-        }
-
-        let to_js_array: js_sys::Array = js_value.unchecked_into();
+        let to_js_array = Reflection::new(js_value)?.as_array()?;
 
         to_js_array
             .iter()
-            .map(|value| value.as_string().ok_or(WalletError::JsValueNotString))
+            .map(|value| {
+                value.as_string().ok_or(WalletError::InternalError(format!(
+                    "{value:?} is not a JsString"
+                )))
+            })
             .map(|value| {
                 let value = value?;
 
@@ -264,15 +313,21 @@ impl Reflection {
     }
 
     pub(crate) fn object_to_vec_string(&self, key: &str) -> WalletResult<Vec<String>> {
-        let features_value = Reflect::get(&self.0, &key.into())?;
+        let features_value = self.reflect_inner(key)?;
+
+        let js_typeof = Self::js_typeof(&self.0);
 
         let features_object = features_value
             .dyn_ref::<Object>()
-            .ok_or(WalletError::ExpectedObject(key.to_string()))?;
+            .ok_or(Self::concat_error("JS Object", &js_typeof))?;
 
         Object::keys(features_object)
             .iter()
-            .map(|value| value.as_string().ok_or(WalletError::JsValueNotString))
+            .map(|value| {
+                value.as_string().ok_or(WalletError::InternalError(format!(
+                    "{value:?} is not a JsString"
+                )))
+            })
             .collect::<WalletResult<Vec<String>>>()
     }
 
@@ -287,9 +342,11 @@ impl Reflection {
     pub(crate) fn get_function(&self, key: &str) -> WalletResult<Function> {
         let js_value = Reflect::get(&self.0, &key.into())?;
 
-        js_value
-            .dyn_into::<Function>()
-            .or(Err(WalletError::JsValueNotFunction(key.to_string())))
+        let incase_of_error = Err(WalletError::InternalError(format!(
+            "`{js_value:?}` reflected from key `{key}` of JsValue `{:?}` cannot be cast to a js_sys::Function, only a JsValue of bytes can be cast.", self.0
+        )));
+
+        js_value.dyn_into::<Function>().or(incase_of_error)
     }
 
     pub(crate) fn get_inner(&self) -> &JsValue {
@@ -302,42 +359,42 @@ impl Reflection {
         value.js_typeof().as_string().unwrap()
     }
 
-    pub(crate) fn as_function_owned(value: JsValue, code: &str) -> WalletResult<Function> {
-        let js_typeof = Self::js_typeof(&value);
+    pub(crate) fn as_function_owned(self) -> WalletResult<Function> {
+        let js_typeof = Self::js_typeof(&self.0);
 
-        value
+        self.0
             .dyn_into::<Function>()
-            .or(Err(Self::concat_error("Function", &js_typeof, code)))
+            .or(Err(Self::concat_error("Function", &js_typeof)))
     }
 
-    fn concat_error(expected: &str, encountered: &str, error_code: &str) -> WalletError {
-        WalletError::JsCast(
-            String::from("WE")
-                + error_code
-                + "> Expected a typeof JS "
+    pub(crate) fn as_array(self) -> WalletResult<Array> {
+        let js_typeof = Self::js_typeof(&self.0);
+
+        self.0
+            .dyn_into::<Array>()
+            .or(Err(Self::concat_error("Array", &js_typeof)))
+    }
+
+    fn concat_error(expected: &str, encountered: &str) -> WalletError {
+        WalletError::InternalError(
+            String::new()
+                + "Expected a typeof JS "
                 + expected
                 + "but encountered a typeof Js `"
                 + encountered
                 + "`.",
         )
     }
+}
 
-    pub(crate) fn as_bytes(value: &JsValue, error_code: &str) -> WalletResult<Vec<u8>> {
-        let js_typeof = Self::js_typeof(&value);
-
-        value
-            .dyn_ref::<Uint8Array>()
-            .ok_or(Self::concat_error("Uint8Array", &js_typeof, error_code))
-            .map(|value| value.to_vec())
+impl Default for Reflection {
+    fn default() -> Self {
+        Reflection(JsValue::undefined())
     }
+}
 
-    pub(crate) fn reflect_inner_as_bytes(
-        &self,
-        key: &str,
-        error_code: &str,
-    ) -> WalletResult<Vec<u8>> {
-        let array_of_bytes = self.reflect_inner(key)?;
-
-        Self::as_bytes(&array_of_bytes, error_code)
+impl Clone for Reflection {
+    fn clone(&self) -> Self {
+        Reflection(self.0.clone())
     }
 }

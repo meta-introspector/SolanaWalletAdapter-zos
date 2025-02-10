@@ -4,14 +4,14 @@ use std::{
     rc::Rc,
 };
 
-use async_channel::bounded;
+use async_channel::{bounded, Receiver};
 use ed25519_dalek::Signature;
 use web_sys::{js_sys::Object, Document, Window};
 
 use crate::{
-    events::InitEvents, Cluster, SendOptions, SignInOutput, SignedMessageOutput, SigninInput,
-    Wallet, WalletAccount, WalletError, WalletEvent, WalletEventReceiver, WalletResult,
-    WalletStorage,
+    events::InitEvents, send_wallet_event, Cluster, SendOptions, SignInOutput, SignedMessageOutput,
+    SigninInput, Wallet, WalletAccount, WalletError, WalletEvent, WalletEventReceiver,
+    WalletEventSender, WalletResult, WalletStorage,
 };
 
 /// Containsthe connected wallet and account.
@@ -22,6 +22,7 @@ use crate::{
 pub struct ConnectionInfo {
     wallet: Option<Wallet>,
     account: Option<WalletAccount>,
+    previous_accounts: Vec<WalletAccount>,
 }
 
 impl ConnectionInfo {
@@ -44,34 +45,26 @@ impl ConnectionInfo {
         self
     }
 
-    /// Send a disconnect request to the browser wallet
-    pub async fn disconnect(&mut self) -> WalletResult<()> {
-        if let Some(wallet) = self.wallet.take() {
-            wallet.disconnect().await?;
-            self.set_disconnected();
-
-            Ok(())
-        } else {
-            Err(WalletError::WalletNotFound)
-        }
-    }
-
     /// Send a connect request to the browser wallet
-    pub async fn connect(wallet: Wallet) -> WalletResult<Self> {
-        let wallet_account = wallet.features.connect.call_connect().await?;
+    pub async fn connect(&mut self, sender: WalletEventSender) -> WalletResult<WalletAccount> {
+        let wallet = self.connected_wallet()?;
 
-        let mut connection_info = Self::new();
-        connection_info
-            .set_account(wallet_account)
-            .set_wallet(wallet);
+        let connected_account = wallet.features.connect.call_connect().await?;
 
-        Ok(connection_info)
+        self.set_account(connected_account.clone());
+
+        send_wallet_event(WalletEvent::Connected(connected_account.clone()), sender).await;
+
+        Ok(connected_account)
     }
 
     /// Set the disconnected account
-    pub fn set_disconnected(&mut self) -> &mut Self {
+    pub async fn set_disconnected(&mut self, sender: WalletEventSender) -> &mut Self {
         self.wallet.take();
         self.account.take();
+        self.previous_accounts.clear();
+
+        send_wallet_event(WalletEvent::Disconnected, sender).await;
 
         self
     }
@@ -97,6 +90,94 @@ impl ConnectionInfo {
     pub fn connected_account_raw(&self) -> Option<&WalletAccount> {
         self.account.as_ref()
     }
+
+    /// Emit an [event](WalletEvent) after processing the `[standard:events].on` result
+    pub async fn emit_wallet_event(
+        &mut self,
+        wallet_name: &str,
+        account_processing: Option<WalletAccount>,
+        sender: WalletEventSender,
+    ) {
+        match self.connected_wallet() {
+            Ok(wallet) => {
+                let event_outcome = match account_processing {
+                    Some(connected_account) => {
+                        if self.account.is_none()
+                            && self.wallet.is_none()
+                            && self.previous_accounts.is_empty()
+                        {
+                            self.set_account(connected_account.clone());
+
+                            WalletEvent::Connected(connected_account)
+                        } else if self.account.is_none()
+                            && self.wallet.is_some()
+                            && self
+                                .previous_accounts
+                                .iter()
+                                .find(|wallet_account| {
+                                    wallet_account.public_key == connected_account.public_key
+                                })
+                                .is_none()
+                        {
+                            self.push_previous_account();
+                            self.set_account(connected_account.clone());
+
+                            WalletEvent::Connected(connected_account)
+                        } else if wallet.name().as_bytes() == wallet_name.as_bytes()
+                            && self.account.is_none()
+                            && self
+                                .previous_accounts
+                                .iter()
+                                .find(|wallet_account| {
+                                    wallet_account.public_key == connected_account.public_key
+                                })
+                                .is_some()
+                        {
+                            self.push_previous_account();
+                            self.set_account(connected_account.clone());
+
+                            WalletEvent::Reconnected(connected_account)
+                        } else if wallet.name().as_bytes() == wallet_name.as_bytes()
+                            && self.account.is_some()
+                        {
+                            self.push_previous_account();
+                            self.set_account(connected_account.clone());
+
+                            WalletEvent::AccountChanged(connected_account)
+                        } else {
+                            WalletEvent::Skip
+                        }
+                    }
+                    None => {
+                        if wallet.name().as_bytes() == wallet_name.as_bytes() {
+                            self.push_previous_account();
+                            WalletEvent::Disconnected
+                        } else {
+                            WalletEvent::Skip
+                        }
+                    }
+                };
+
+                send_wallet_event(event_outcome, sender).await
+            }
+            Err(error) => {
+                web_sys::console::log_2(
+                    &"ON EVENT EMITTED BUT NO CONNECTED WALLET FOUND: ".into(),
+                    &format!("{error:?}").into(),
+                );
+            }
+        }
+    }
+
+    fn push_previous_account(&mut self) {
+        let take_connected_account = self.account.take();
+
+        if let Some(connected_account_inner) = take_connected_account {
+            self.previous_accounts.push(connected_account_inner);
+        }
+
+        self.previous_accounts.dedup();
+    }
 }
 
 pub(crate) type ConnectionInfoInner = Rc<RefCell<ConnectionInfo>>;
@@ -111,6 +192,8 @@ pub struct WalletAdapter {
     storage: WalletStorage,
     connection_info: ConnectionInfoInner,
     wallet_events: WalletEventReceiver,
+    wallet_events_sender: WalletEventSender,
+    signal_receiver: Receiver<()>,
 }
 
 impl WalletAdapter {
@@ -140,6 +223,7 @@ impl WalletAdapter {
         };
 
         let (sender, receiver) = bounded::<WalletEvent>(capacity);
+        let (_, signal_receiver) = bounded::<()>(capacity);
 
         let mut new_self = Self {
             window: window.clone(),
@@ -147,9 +231,11 @@ impl WalletAdapter {
             storage,
             connection_info: Rc::new(RefCell::new(ConnectionInfo::default())),
             wallet_events: receiver,
+            wallet_events_sender: sender,
+            signal_receiver,
         };
 
-        InitEvents::new(&window).init(&mut new_self, sender)?;
+        InitEvents::new(&window).init(&mut new_self)?;
 
         Ok(new_self)
     }
@@ -162,21 +248,54 @@ impl WalletAdapter {
     }
 
     /// Send a connect request to the browser wallet
-    pub async fn connect(&mut self, wallet: Wallet) -> WalletResult<ConnectionInfo> {
-        ConnectionInfo::connect(wallet).await
+    pub async fn connect(&mut self, wallet: Wallet) -> WalletResult<WalletAccount> {
+        let wallet_name = wallet.name().to_string();
+        let sender = self.wallet_events_sender.clone();
+        let signal_receiver = self.signal_receiver.clone();
+
+        if self.connection_info().connected_wallet().is_ok() {
+            let capacity = signal_receiver.capacity().unwrap_or(5);
+            let (_, signal_receiver) = bounded::<()>(capacity);
+            self.signal_receiver = signal_receiver;
+        }
+
+        let wallet_account = self
+            .connection_info
+            .borrow_mut()
+            .set_wallet(wallet)
+            .connect(sender.clone())
+            .await?;
+
+        self.connection_info()
+            .connected_wallet()?
+            .call_on_event(
+                self.connection_info.clone(),
+                wallet_name,
+                sender,
+                signal_receiver,
+            )
+            .await?;
+
+        Ok(wallet_account)
     }
 
     /// Lookup a wallet entry by name from the registered wallets
     /// and then send a connect request to the browser extension wallet
-    pub async fn connect_by_name(&mut self, wallet_name: &str) -> WalletResult<ConnectionInfo> {
+    pub async fn connect_by_name(&mut self, wallet_name: &str) -> WalletResult<WalletAccount> {
         let wallet = self.get_wallet(wallet_name)?;
 
-        ConnectionInfo::connect(wallet).await
+        self.connect(wallet).await
     }
 
     /// Send a disconnect request to the browser wallet
-    pub async fn disconnect(&mut self) -> WalletResult<()> {
-        self.connection_info.borrow_mut().disconnect().await
+    pub async fn disconnect(&mut self) {
+        let sender = self.wallet_events_sender.clone();
+
+        self.connection_info
+            .borrow_mut()
+            .set_disconnected(sender)
+            .await;
+        self.signal_receiver.close();
     }
 
     /// Send a sign in request to the browser wallet to Sign In With Solana
@@ -251,10 +370,6 @@ impl WalletAdapter {
     /// [account](WalletAccount) and [wallet](Wallet)
     pub fn connection_info(&self) -> Ref<'_, ConnectionInfo> {
         self.connection_info.as_ref().borrow()
-    }
-
-    pub(crate) fn connection_info_inner(&self) -> ConnectionInfoInner {
-        self.connection_info.clone()
     }
 
     /// Get an entry in the `Window` object
