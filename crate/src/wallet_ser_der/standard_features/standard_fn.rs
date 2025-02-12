@@ -1,7 +1,6 @@
 use core::hash::Hash;
 
 use js_sys::Function;
-use wasm_bindgen::{JsCast, JsValue};
 
 use crate::{Reflection, SemverVersion, WalletError, WalletResult};
 
@@ -18,20 +17,22 @@ impl StandardFunction {
     /// Parse the [semver version](SemverVersion) and the [callback function](js_sys::Function)
     /// given a [JsValue], a [key](str) and a [namespace](str) . The namespace is either
     /// `standard:` or `solana:` as defined by the wallet standard
-    pub fn new(
-        value: JsValue,
+    pub(crate) fn new(
+        reflection: &Reflection,
         version: SemverVersion,
         key: &str,
         namespace: &str,
     ) -> WalletResult<Self> {
-        let fn_value = Reflection::new(value)?
+        let incase_of_error = Err(WalletError::InternalError(format!(
+            "Namespace[`{namespace}: {key} -> {key}]: Reflect `{key}` in JsValue `{:?}` did not yield a JS Function", reflection.get_inner()
+        )));
+
+        let fn_value = reflection
             .reflect_inner(key)
             .or(Err(WalletError::MissingConnectFunction))?;
-        let get_fn = fn_value
-            .dyn_into::<Function>()
-            .or(Err(WalletError::JsValueNotFunction(
-                String::from("Namespace[`") + namespace + ":" + key + "-> " + key + "`]",
-            )))?;
+        let get_fn = Reflection::new(fn_value)?
+            .as_function_owned()
+            .or(incase_of_error)?;
 
         Ok(Self {
             version,
@@ -53,7 +54,7 @@ impl Ord for StandardFunction {
 }
 
 impl Hash for StandardFunction {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.version.hash(state);
     }
 }

@@ -1,6 +1,6 @@
 use wasm_bindgen::JsValue;
 
-use crate::{SemverVersion, StandardFunction, WalletError, WalletResult};
+use crate::{Reflection, SemverVersion, StandardFunction, WalletError, WalletResult};
 
 /// `standard:disconnect` struct containing the `version` and `callback`
 /// in the field [StandardFunction]
@@ -9,9 +9,9 @@ pub struct Disconnect(StandardFunction);
 
 impl Disconnect {
     /// Parse the `standard:disconnect` callback from the [JsValue]
-    pub fn new(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
+    pub(crate) fn new(reflection: &Reflection, version: SemverVersion) -> WalletResult<Self> {
         Ok(Self(StandardFunction::new(
-            value,
+            reflection,
             version,
             "disconnect",
             "standard",

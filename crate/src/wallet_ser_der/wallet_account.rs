@@ -3,8 +3,9 @@ use std::borrow::Cow;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    Reflection, WalletError, WalletIcon, WalletResult, SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER,
-    SOLANA_SIGN_IN_IDENTIFIER, SOLANA_SIGN_MESSAGE_IDENTIFIER, SOLANA_SIGN_TRANSACTION_IDENTIFIER,
+    Reflection, Utils, WalletError, WalletIcon, WalletResult,
+    SOLANA_SIGN_AND_SEND_TRANSACTION_IDENTIFIER, SOLANA_SIGN_IN_IDENTIFIER,
+    SOLANA_SIGN_MESSAGE_IDENTIFIER, SOLANA_SIGN_TRANSACTION_IDENTIFIER,
     STANDARD_CONNECT_IDENTIFIER, STANDARD_DISCONNECT_IDENTIFIER, STANDARD_EVENTS_IDENTIFIER,
 };
 
@@ -59,28 +60,14 @@ impl WalletAccount {
     /// separated by ellipsis eg `FXdl...RGd4` .
     /// If the address is less than 8 characters, an error is thrown
     pub fn shorten_address(&self) -> WalletResult<Cow<str>> {
-        if self.address.len() < 8 {
-            return Err(WalletError::InvalidBase58Address);
-        }
-
-        let first_part = &self.address[..4];
-        let last_part = &self.address[self.address.len() - 4..];
-
-        Ok(Cow::Borrowed(first_part) + "..." + last_part)
+        Utils::shorten_base58(&self.address)
     }
 
     /// Same as [Self::shorten_address] but with a custom range
     /// instead of taking the first 4 character and the last 4 characters
     /// it uses a custom range.
     pub fn custom_shorten_address(&self, take: usize) -> WalletResult<Cow<str>> {
-        if self.address.len() < take + take {
-            return Err(WalletError::InvalidBase58Address);
-        }
-
-        let first_part = &self.address[..take];
-        let last_part = &self.address[self.address.len() - take..];
-
-        Ok(Cow::Borrowed(first_part) + "..." + last_part)
+        Utils::custom_shorten_base58(&self.address, take)
     }
 
     /// Same as [Self::shorten_address] but with a custom range
@@ -150,13 +137,12 @@ impl WalletAccount {
 
         let label = match reflection.string("label") {
             Ok(value) => Some(value),
-            Err(error) => {
-                if error == WalletError::JsValueNotString {
-                    Option::None
-                } else {
+            Err(error) => match error {
+                WalletError::InternalError(_) => Option::None,
+                _ => {
                     return Err(error);
                 }
-            }
+            },
         };
 
         Ok(Self {

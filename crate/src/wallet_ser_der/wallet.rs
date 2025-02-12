@@ -1,10 +1,10 @@
+use async_channel::Receiver;
 use ed25519_dalek::Signature;
-use wasm_bindgen::{JsCast, JsValue};
-use web_sys::js_sys::Reflect;
+use wasm_bindgen::JsValue;
 
 use crate::{
-    Cluster, Features, Reflection, SemverVersion, WalletAccount, WalletError, WalletIcon,
-    WalletResult,
+    Cluster, ConnectionInfoInner, Features, Reflection, SemverVersion, WalletAccount, WalletError,
+    WalletEventSender, WalletIcon, WalletResult,
 };
 
 use super::{
@@ -12,7 +12,7 @@ use super::{
 };
 
 /// A wallet implementing wallet standard
-#[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Default, PartialEq, Eq)]
 pub struct Wallet {
     name: String,
     version: SemverVersion,
@@ -91,13 +91,17 @@ impl Wallet {
             .await
     }
 
-    /// Call the standard events feature
-    pub async fn events(&self) -> WalletResult<()> {
+    /// Get the standard events [Function] `[standard:events].on`
+    pub async fn call_on_event(
+        &self,
+        connection_info: ConnectionInfoInner,
+        wallet_name: String,
+        sender: WalletEventSender,
+        signal_receiver: Receiver<()>,
+    ) -> WalletResult<()> {
         self.features
             .events
-            .as_ref()
-            .ok_or(WalletError::MissingStandardEventsFunction)?
-            .call_standard_event()
+            .call_on_event(connection_info, wallet_name, sender, signal_receiver)
             .await
     }
 
@@ -147,16 +151,9 @@ impl Wallet {
     }
 
     fn get_accounts(reflection: &Reflection, key: &str) -> WalletResult<Vec<WalletAccount>> {
-        let accounts_raw = Reflect::get(reflection.get_inner(), &key.into())?;
-        Reflection::check_is_undefined(&accounts_raw)?;
+        let accounts_raw = reflection.reflect_inner(key)?;
 
-        if !accounts_raw.is_array() {
-            return Err(WalletError::ExpectedArray(
-                "Reflection for `accounts` key".to_string(),
-            ));
-        }
-
-        let accounts_array: js_sys::Array = accounts_raw.unchecked_into();
+        let accounts_array = Reflection::new(accounts_raw)?.as_array()?;
 
         accounts_array
             .iter()
@@ -266,5 +263,27 @@ impl core::fmt::Debug for Wallet {
             .field("chains", &chains)
             .field("features", &self.features)
             .finish()
+    }
+}
+
+impl PartialOrd for Wallet {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Wallet {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.name
+            .as_bytes()
+            .cmp(&other.name.as_bytes())
+            .then(self.version.cmp(&other.version))
+    }
+}
+
+impl core::hash::Hash for Wallet {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.name.as_bytes().hash(state);
+        self.version.hash(state);
     }
 }

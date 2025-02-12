@@ -13,6 +13,7 @@ readme.workspace = true
 ed25519-dalek = { version = "2.1.1", default-features = false, features = [
     "signature",
 ] }
+async-channel.workspace = true
 web-sys.workspace = true
 js-sys.workspace = true
 wasm-bindgen.workspace = true
@@ -24,7 +25,11 @@ rand_chacha = "0.3.1"
 getrandom = { version = "0.2.15", features = ["js"] }
 bs58.workspace = true
 blake3 = { version = "1.5.1", default-features = false }
+log = { workspace = true, optional = true }
 
+[features]
+default = ["logging"]
+logging = ["dep:log"]
 
 [dev-dependencies]
 solana-sdk = "2.1.2"

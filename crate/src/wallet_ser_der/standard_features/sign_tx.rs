@@ -1,6 +1,6 @@
 use ed25519_dalek::Signature;
 use js_sys::Function;
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsValue;
 
 use core::hash::Hash;
 
@@ -25,17 +25,15 @@ pub struct SignTransaction {
 }
 
 impl SignTransaction {
-    fn new(value: JsValue, version: SemverVersion, key: &str) -> WalletResult<Self> {
-        let reflection = Reflection::new(value)?;
+    fn new(reflection: &Reflection, version: SemverVersion, key: &str) -> WalletResult<Self> {
         let inner_value = reflection
             .reflect_inner(key)
             .or(Err(WalletError::MissingSignTransactionFunction))?;
-        let callback =
-            inner_value
-                .dyn_into::<Function>()
-                .or(Err(WalletError::JsValueNotFunction(
-                    String::from("Namespace[`solana:") + key + "->" + key + "`]",
-                )))?;
+        let callback = Reflection::new(inner_value)?
+            .as_function_owned()
+            .map_err(|error| {
+                WalletError::InternalError(format!("Namespace[`solana:{key}`]: {error}"))
+            })?;
 
         let (legacy, version_zero) = Self::get_tx_version_support(&reflection)?;
 
@@ -48,13 +46,19 @@ impl SignTransaction {
     }
 
     /// Parse a `solana:signTransaction` callback from the [JsValue]
-    pub fn new_sign_tx(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
-        Self::new(value, version, "signTransaction")
+    pub(crate) fn new_sign_tx(
+        reflection: &Reflection,
+        version: SemverVersion,
+    ) -> WalletResult<Self> {
+        Self::new(reflection, version, "signTransaction")
     }
 
     /// Parse a `solana:signAndSendTransaction` callback from the [JsValue]
-    pub fn new_sign_and_send_tx(value: JsValue, version: SemverVersion) -> WalletResult<Self> {
-        Self::new(value, version, "signAndSendTransaction")
+    pub(crate) fn new_sign_and_send_tx(
+        reflection: &Reflection,
+        version: SemverVersion,
+    ) -> WalletResult<Self> {
+        Self::new(reflection, version, "signAndSendTransaction")
     }
 
     fn get_tx_version_support(inner_value: &Reflection) -> WalletResult<(bool, bool)> {
@@ -63,11 +67,7 @@ impl SignTransaction {
             .or(Err(WalletError::ExpectedValueNotFound(
                 "supportedTransactionVersions".to_string(),
             )))?;
-        let tx_version_support = tx_version_support_jsvalue
-            .dyn_ref::<js_sys::Array>()
-            .ok_or(WalletError::ExpectedArray(
-                "supportedTransactionVersions".to_string(),
-            ))?;
+        let tx_version_support = Reflection::new(tx_version_support_jsvalue)?.as_array()?;
 
         let mut legacy = false;
         let mut version_zero = false;

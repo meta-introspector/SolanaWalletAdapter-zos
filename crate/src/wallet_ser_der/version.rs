@@ -1,9 +1,6 @@
 use std::borrow::Cow;
 
-use wasm_bindgen::JsValue;
-use web_sys::js_sys::Reflect;
-
-use crate::{WalletError, WalletResult};
+use crate::{Reflection, WalletError, WalletResult};
 
 /// Semver Versioning struct
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -30,13 +27,12 @@ impl SemverVersion {
     }
 
     /// Parse the version from a [JsValue]
-    pub fn from_jsvalue(value: &JsValue) -> WalletResult<Self> {
-        let reflect_value =
-            Reflect::get(value, &"version".into()).or(Err(WalletError::VersionNotFound))?;
-
-        let version = reflect_value
+    pub(crate) fn from_jsvalue(reflection: &Reflection) -> WalletResult<Self> {
+        let version = reflection
+            .reflect_inner("version")
+            .or(Err(WalletError::VersionNotFound))?
             .as_string()
-            .ok_or(WalletError::ExpectedString(
+            .ok_or(WalletError::InternalError(
                 "Expected `version` JsValue to be a String".to_string(),
             ))?;
 

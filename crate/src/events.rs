@@ -1,13 +1,20 @@
 use std::rc::Rc;
 
-use js_sys::{Function, Object, Reflect};
-use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
+use async_channel::{Receiver, Sender};
+use js_sys::{Object, Reflect};
+use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CustomEvent, CustomEventInit, Window};
 
 use crate::{
-    StorageType, Utils, Wallet, WalletError, WalletResult, WalletStorage,
-    WINDOW_APP_READY_EVENT_TYPE,
+    Reflection, StorageType, Utils, Wallet, WalletAccount, WalletAdapter, WalletError,
+    WalletResult, WINDOW_APP_READY_EVENT_TYPE,
 };
+
+/// The `Sender` part of an [async_channel::bounded] channel
+pub type WalletEventSender = Sender<WalletEvent>;
+
+/// The `Receiver` part of an [async_channel::bounded] channel
+pub type WalletEventReceiver = Receiver<WalletEvent>;
 
 /// Used to initialize the `Register` and `AppReady` events to the browser window
 #[derive(Debug, PartialEq, Eq)]
@@ -23,7 +30,8 @@ impl<'a> InitEvents<'a> {
 
     /// Register events by providing a [WalletStorage] that is used to store
     /// all registered wallets
-    pub fn init(&self, storage: &'a mut WalletStorage) -> WalletResult<()> {
+    pub fn init(&self, adapter: &mut WalletAdapter) -> WalletResult<()> {
+        let storage = adapter.storage();
         self.register_wallet_event(storage.clone_inner())?;
         self.dispatch_app_event(storage.clone_inner());
 
@@ -50,14 +58,9 @@ impl<'a> InitEvents<'a> {
         let inner_storage = Rc::clone(&storage);
 
         let listener_closure = Closure::wrap(Box::new(move |custom_event: CustomEvent| {
-            let detail = custom_event
-                .detail()
-                .dyn_into::<Function>()
-                .map_err(|error| {
-                    let outcome: WalletError = error.into();
-                    outcome
-                })
-                .unwrap();
+            let detail = Reflection::new(custom_event
+                .detail()).unwrap().as_function_owned()
+                .expect("Unable to get the `detail` function from the `Event` object. This is a fatal error as the register handler won't execute.");
 
             Utils::jsvalue_to_error(detail.call1(
                 &JsValue::null(),
@@ -66,17 +69,15 @@ impl<'a> InitEvents<'a> {
             .unwrap()
         }) as Box<dyn Fn(_)>);
 
-        let listener_fn = listener_closure
-            .as_ref()
-            .dyn_ref::<Function>()
-            .ok_or(WalletError::CastClosureToFunction)?;
+        let listener_fn = Reflection::new(listener_closure.into_js_value())
+            .unwrap()
+            .as_function_owned()
+            .unwrap();
 
         self.window.add_event_listener_with_callback(
             crate::WINDOW_REGISTER_WALLET_EVENT_TYPE,
-            listener_fn,
+            &listener_fn,
         )?;
-
-        listener_closure.forget();
 
         Ok(())
     }
@@ -95,10 +96,14 @@ impl<'a> InitEvents<'a> {
                         );
                     }
                     Err(error) => {
-                        web_sys::console::error_2(
-                            &"REGISTER EVENT ERROR".into(),
-                            &error.to_string().into(),
-                        );
+                        let error = error.to_string();
+                        if error.contains("is not supported") {
+                        } else {
+                            web_sys::console::error_2(
+                                &"REGISTER EVENT ERROR".into(),
+                                &error.into(),
+                            );
+                        }
                     }
                 }) as Box<dyn Fn(_)>,
             );
@@ -115,5 +120,45 @@ impl<'a> InitEvents<'a> {
         }
 
         register_object
+    }
+}
+
+/// Events emitted by connected browser extensions
+/// when an account is connected, disconnected or changed.
+/// Wallets implementing the wallet standard emit these events
+/// from the `standard:events` events namespace specifically,
+/// `wallet.features[standard:events].on`
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone)]
+pub enum WalletEvent {
+    /// An account has been connected and an event `change` emitted.
+    Connected(WalletAccount),
+    /// An account has been reconnected and an event `change` emitted.
+    Reconnected(WalletAccount),
+    /// An account has been disconnected and an event `change` emitted.
+    Disconnected,
+    /// An account has been connected and an event `change` emitted.
+    /// The wallet adapter then updates the connected [WalletAccount].
+    AccountChanged(WalletAccount),
+    /// An error occured when a background task was executed.
+    /// This type of event is encountered mostly from the
+    /// `on` method from the `[standard:events]` namespace
+    /// (when an account is connected, changed or disconnected)
+    BackgroundTaskError(WalletError),
+    /// An event was emitted by a wallet that is not connected.
+    #[default]
+    Skip,
+}
+
+impl core::fmt::Display for WalletEvent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let as_str = match self {
+            Self::Connected(_) => "Connected",
+            Self::Reconnected(_) => "Reconnected",
+            Self::Disconnected => "Disconnected",
+            Self::AccountChanged(_) => "Account Changed",
+            Self::BackgroundTaskError(error) => &format!("Task error: {error:?}"),
+            Self::Skip => "Skipped",
+        };
+        write!(f, "{}", as_str)
     }
 }
