@@ -24,6 +24,7 @@ getrandom = { version = "0.2.15", features = ["js"] }
 bs58.workspace = true
 blake3 = { version = "1.5.1", default-features = false }
 log = { workspace = true, optional = true }
+async-lock = "3.4.0"
 
 [features]
 default = ["logging"]

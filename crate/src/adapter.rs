@@ -1,10 +1,7 @@
-use std::{
-    borrow::Borrow,
-    cell::{Ref, RefCell},
-    rc::Rc,
-};
+use std::{borrow::Borrow, sync::Arc};
 
 use async_channel::{bounded, Receiver};
+use async_lock::RwLock;
 use ed25519_dalek::Signature;
 use web_sys::{js_sys::Object, Document, Window};
 
@@ -111,13 +108,9 @@ impl ConnectionInfo {
                             WalletEvent::Connected(connected_account)
                         } else if self.account.is_none()
                             && self.wallet.is_some()
-                            && self
-                                .previous_accounts
-                                .iter()
-                                .find(|wallet_account| {
-                                    wallet_account.public_key == connected_account.public_key
-                                })
-                                .is_none()
+                            && self.previous_accounts.iter().any(|wallet_account| {
+                                wallet_account.public_key == connected_account.public_key
+                            })
                         {
                             self.push_previous_account();
                             self.set_account(connected_account.clone());
@@ -125,13 +118,9 @@ impl ConnectionInfo {
                             WalletEvent::Connected(connected_account)
                         } else if wallet.name().as_bytes() == wallet_name.as_bytes()
                             && self.account.is_none()
-                            && self
-                                .previous_accounts
-                                .iter()
-                                .find(|wallet_account| {
-                                    wallet_account.public_key == connected_account.public_key
-                                })
-                                .is_some()
+                            && self.previous_accounts.iter().any(|wallet_account| {
+                                wallet_account.public_key == connected_account.public_key
+                            })
                         {
                             self.push_previous_account();
                             self.set_account(connected_account.clone());
@@ -180,7 +169,7 @@ impl ConnectionInfo {
     }
 }
 
-pub(crate) type ConnectionInfoInner = Rc<RefCell<ConnectionInfo>>;
+pub(crate) type ConnectionInfoInner = Arc<RwLock<ConnectionInfo>>;
 
 /// Operations on a browser window.
 /// `Window` and `Document` object must be present otherwise
@@ -207,6 +196,7 @@ impl WalletAdapter {
 
     /// Same as [WalletAdapter::init] but a `capacity` value
     /// can be passed to create an channel with a desired capacity
+    #[allow(clippy::arc_with_non_send_sync)]
     pub fn init_with_channel_capacity(capacity: usize) -> WalletResult<Self> {
         let storage = WalletStorage::default();
 
@@ -229,7 +219,7 @@ impl WalletAdapter {
             window: window.clone(),
             document,
             storage,
-            connection_info: Rc::new(RefCell::new(ConnectionInfo::default())),
+            connection_info: Arc::new(RwLock::new(ConnectionInfo::default())),
             wallet_events: receiver,
             wallet_events_sender: sender,
             signal_receiver,
@@ -253,7 +243,7 @@ impl WalletAdapter {
         let sender = self.wallet_events_sender.clone();
         let signal_receiver = self.signal_receiver.clone();
 
-        if self.connection_info().connected_wallet().is_ok() {
+        if self.connection_info().await.connected_wallet().is_ok() {
             let capacity = signal_receiver.capacity().unwrap_or(5);
             let (_, signal_receiver) = bounded::<()>(capacity);
             self.signal_receiver = signal_receiver;
@@ -261,12 +251,14 @@ impl WalletAdapter {
 
         let wallet_account = self
             .connection_info
-            .borrow_mut()
+            .write()
+            .await
             .set_wallet(wallet)
             .connect(sender.clone())
             .await?;
 
         self.connection_info()
+            .await
             .connected_wallet()?
             .call_on_event(
                 self.connection_info.clone(),
@@ -292,7 +284,8 @@ impl WalletAdapter {
         let sender = self.wallet_events_sender.clone();
 
         self.connection_info
-            .borrow_mut()
+            .write()
+            .await
             .set_disconnected(sender)
             .await;
         self.signal_receiver.close();
@@ -305,6 +298,7 @@ impl WalletAdapter {
         public_key: [u8; 32],
     ) -> WalletResult<SignInOutput> {
         self.connection_info()
+            .await
             .connected_wallet()?
             .sign_in(signin_input, public_key)
             .await
@@ -320,12 +314,13 @@ impl WalletAdapter {
         let connection_info = self.connection_info();
 
         connection_info
+            .await
             .connected_wallet()?
             .sign_and_send_transaction(
                 transaction_bytes,
                 cluster,
                 options,
-                connection_info.connected_account()?,
+                self.connection_info().await.connected_account()?,
             )
             .await
     }
@@ -339,11 +334,12 @@ impl WalletAdapter {
         let connection_info = self.connection_info();
 
         connection_info
+            .await
             .connected_wallet()?
             .sign_transaction(
                 transaction_bytes,
                 cluster,
-                connection_info.connected_account()?,
+                self.connection_info().await.connected_account()?,
             )
             .await
     }
@@ -355,21 +351,27 @@ impl WalletAdapter {
     ) -> WalletResult<SignedMessageOutput<'a>> {
         let connection_info = self.connection_info();
 
-        connection_info
+        self.connection_info()
+            .await
             .connected_wallet()?
-            .sign_message(message, connection_info.connected_account()?)
+            .sign_message(message, connection_info.await.connected_account()?)
             .await
     }
 
     /// Check if an [account](WalletAccount) is connected
-    pub fn is_connected(&self) -> bool {
-        self.connection_info.as_ref().borrow().account.is_some()
+    pub async fn is_connected(&self) -> bool {
+        self.connection_info
+            .as_ref()
+            .write()
+            .await
+            .account
+            .is_some()
     }
 
     /// Get the connected [ConnectionInfo] containing the
     /// [account](WalletAccount) and [wallet](Wallet)
-    pub fn connection_info(&self) -> Ref<'_, ConnectionInfo> {
-        self.connection_info.as_ref().borrow()
+    pub async fn connection_info(&self) -> async_lock::RwLockReadGuard<'_, ConnectionInfo> {
+        self.connection_info.as_ref().read().await
     }
 
     /// Get an entry in the `Window` object
@@ -393,19 +395,19 @@ impl WalletAdapter {
     }
 
     /// Get the clusters supported by the connected wallet
-    pub fn clusters(&self) -> WalletResult<Vec<Cluster>> {
+    pub async fn clusters(&self) -> WalletResult<Vec<Cluster>> {
         let mut clusters = Vec::<Cluster>::default();
 
-        if self.mainnet()? {
+        if self.mainnet().await? {
             clusters.push(Cluster::MainNet);
         }
-        if self.devnet()? {
+        if self.devnet().await? {
             clusters.push(Cluster::DevNet);
         }
-        if self.localnet()? {
+        if self.localnet().await? {
             clusters.push(Cluster::LocalNet);
         }
-        if self.testnet()? {
+        if self.testnet().await? {
             clusters.push(Cluster::TestNet);
         }
 
@@ -425,71 +427,84 @@ impl WalletAdapter {
     }
 
     /// Check if the connected wallet supports mainnet cluster
-    pub fn mainnet(&self) -> WalletResult<bool> {
-        Ok(self.connection_info().connected_wallet()?.mainnet())
+    pub async fn mainnet(&self) -> WalletResult<bool> {
+        Ok(self.connection_info().await.connected_wallet()?.mainnet())
     }
 
     /// Check if the connected wallet supports devnet cluster
-    pub fn devnet(&self) -> WalletResult<bool> {
-        Ok(self.connection_info().connected_wallet()?.devnet())
+    pub async fn devnet(&self) -> WalletResult<bool> {
+        Ok(self.connection_info().await.connected_wallet()?.devnet())
     }
 
     /// Check if the connected wallet supports testnet cluster
-    pub fn testnet(&self) -> WalletResult<bool> {
-        Ok(self.connection_info().connected_wallet()?.testnet())
+    pub async fn testnet(&self) -> WalletResult<bool> {
+        Ok(self.connection_info().await.connected_wallet()?.testnet())
     }
 
     /// Check if the connected wallet supports localnet cluster
-    pub fn localnet(&self) -> WalletResult<bool> {
-        Ok(self.connection_info().connected_wallet()?.localnet())
+    pub async fn localnet(&self) -> WalletResult<bool> {
+        Ok(self.connection_info().await.connected_wallet()?.localnet())
     }
 
     /// Check if the connected wallet supports `standard:connect` feature
-    pub fn standard_connect(&self) -> WalletResult<bool> {
+    pub async fn standard_connect(&self) -> WalletResult<bool> {
         Ok(self
             .connection_info()
+            .await
             .connected_wallet()?
             .standard_connect())
     }
 
     /// Check if the connected wallet supports `standard:disconnect` feature
-    pub fn standard_disconnect(&self) -> WalletResult<bool> {
+    pub async fn standard_disconnect(&self) -> WalletResult<bool> {
         Ok(self
             .connection_info()
+            .await
             .connected_wallet()?
             .standard_disconnect())
     }
 
     /// Check if the connected wallet supports `standard:events` feature
-    pub fn standard_events(&self) -> WalletResult<bool> {
-        Ok(self.connection_info().connected_wallet()?.standard_events())
+    pub async fn standard_events(&self) -> WalletResult<bool> {
+        Ok(self
+            .connection_info()
+            .await
+            .connected_wallet()?
+            .standard_events())
     }
 
     /// Check if the connected wallet supports `solana:signIn` feature
-    pub fn solana_signin(&self) -> WalletResult<bool> {
-        Ok(self.connection_info().connected_wallet()?.solana_signin())
+    pub async fn solana_signin(&self) -> WalletResult<bool> {
+        Ok(self
+            .connection_info()
+            .await
+            .connected_wallet()?
+            .solana_signin())
     }
 
     /// Check if the connected wallet supports `solana:signMessage` feature
-    pub fn solana_sign_message(&self) -> WalletResult<bool> {
+    pub async fn solana_sign_message(&self) -> WalletResult<bool> {
         Ok(self
             .connection_info()
+            .await
             .connected_wallet()?
             .solana_sign_message())
     }
 
     /// Check if the connected wallet supports `solana:signAndSendTransaction` feature
-    pub fn solana_sign_and_send_transaction(&self) -> WalletResult<bool> {
+    pub async fn solana_sign_and_send_transaction(&self) -> WalletResult<bool> {
         Ok(self
             .connection_info()
+            .await
             .connected_wallet()?
             .solana_sign_and_send_transaction())
     }
 
     /// Check if the connected wallet supports `solana:signTransaction` feature
-    pub fn solana_sign_transaction(&self) -> WalletResult<bool> {
+    pub async fn solana_sign_transaction(&self) -> WalletResult<bool> {
         Ok(self
             .connection_info()
+            .await
             .connected_wallet()?
             .solana_sign_transaction())
     }

@@ -32,12 +32,12 @@ impl SignTransaction {
             .reflect_inner(key)
             .or(Err(WalletError::MissingSignTransactionFunction))?;
         let callback = Reflection::new(inner_value)?
-            .as_function_owned()
+            .into_function()
             .map_err(|error| {
                 WalletError::InternalError(format!("Namespace[`solana:{key}`]: {error}"))
             })?;
 
-        let (legacy, version_zero) = Self::get_tx_version_support(&reflection)?;
+        let (legacy, version_zero) = Self::get_tx_version_support(reflection)?;
 
         Ok(Self {
             version,
@@ -69,7 +69,7 @@ impl SignTransaction {
             .or(Err(WalletError::ExpectedValueNotFound(
                 "supportedTransactionVersions".to_string(),
             )))?;
-        let tx_version_support = Reflection::new(tx_version_support_jsvalue)?.as_array()?;
+        let tx_version_support = Reflection::new(tx_version_support_jsvalue)?.into_array()?;
 
         let mut legacy = false;
         let mut version_zero = false;

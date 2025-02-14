@@ -153,7 +153,7 @@ impl Wallet {
     fn get_accounts(reflection: &Reflection, key: &str) -> WalletResult<Vec<WalletAccount>> {
         let accounts_raw = reflection.reflect_inner(key)?;
 
-        let accounts_array = Reflection::new(accounts_raw)?.as_array()?;
+        let accounts_array = Reflection::new(accounts_raw)?.into_array()?;
 
         accounts_array
             .iter()
@@ -276,7 +276,7 @@ impl Ord for Wallet {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.name
             .as_bytes()
-            .cmp(&other.name.as_bytes())
+            .cmp(other.name.as_bytes())
             .then(self.version.cmp(&other.version))
     }
 }

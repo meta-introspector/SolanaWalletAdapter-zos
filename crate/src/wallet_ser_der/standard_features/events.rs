@@ -82,19 +82,20 @@ impl StandardEvents {
                 };
 
                 connection_info_inner
-                    .borrow_mut()
+                    .write()
+                    .await
                     .emit_wallet_event(&wallet_name, processed_wallet_account, sender_inner.clone())
                     .await
             });
         }) as Box<dyn Fn(_)>);
 
         let on_account_change_fn =
-            Reflection::new(on_account_change.into_js_value())?.as_function_owned()?;
+            Reflection::new(on_account_change.into_js_value())?.into_function()?;
 
         let on_event_fn = self.0.callback.clone();
 
         wasm_bindgen_futures::spawn_local(async move {
-            while let Ok(_) = stop_signal.recv().await {
+            while (stop_signal.recv().await).is_ok() {
                 let invoke_outcome = on_event_fn
                     .call2(
                         &JsValue::null(),
@@ -126,8 +127,10 @@ pub(crate) async fn send_wallet_event(wallet_event: WalletEvent, sender: WalletE
     }
 }
 
+type SendWalletEventErrorOutput<T> = Pin<Box<dyn Future<Output = Result<T, ()>>>>;
+
 pub(crate) fn send_wallet_event_error<T>(
-) -> impl Fn(WalletResult<T>, WalletEventSender) -> Pin<Box<dyn Future<Output = Result<T, ()>>>> + 'static
+) -> impl Fn(WalletResult<T>, WalletEventSender) -> SendWalletEventErrorOutput<T> + 'static
 where
     T: core::fmt::Debug + 'static,
 {

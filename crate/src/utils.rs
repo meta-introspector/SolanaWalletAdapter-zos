@@ -144,7 +144,7 @@ impl Utils {
 #[derive(Debug)]
 pub(crate) struct Reflection(JsValue);
 
-impl<'wa> Reflection {
+impl Reflection {
     pub(crate) fn new(value: JsValue) -> WalletResult<Self> {
         Reflection::check_is_undefined(&value)?;
 
@@ -224,7 +224,7 @@ impl<'wa> Reflection {
             .collect::<WalletResult<Vec<Vec<u8>>>>()
     }
 
-    pub(crate) fn as_bytes(self) -> WalletResult<Vec<u8>> {
+    pub(crate) fn into_bytes(self) -> WalletResult<Vec<u8>> {
         let js_typeof = Self::js_typeof(&self.0);
 
         Ok(self
@@ -283,7 +283,7 @@ impl<'wa> Reflection {
     pub(crate) fn reflect_js_array(&self, key: &str) -> WalletResult<Array> {
         let js_value = self.reflect_inner(key)?;
 
-        Self::new(js_value)?.as_array()
+        Self::new(js_value)?.into_array()
     }
 
     pub(crate) fn vec_string_and_filter(
@@ -293,7 +293,7 @@ impl<'wa> Reflection {
     ) -> WalletResult<Vec<String>> {
         let js_value = self.reflect_inner(key)?;
 
-        let to_js_array = Reflection::new(js_value)?.as_array()?;
+        let to_js_array = Reflection::new(js_value)?.into_array()?;
 
         to_js_array
             .iter()
@@ -361,7 +361,7 @@ impl<'wa> Reflection {
         value.js_typeof().as_string().unwrap()
     }
 
-    pub(crate) fn as_function_owned(self) -> WalletResult<Function> {
+    pub(crate) fn into_function(self) -> WalletResult<Function> {
         let js_typeof = Self::js_typeof(&self.0);
 
         self.0
@@ -369,7 +369,7 @@ impl<'wa> Reflection {
             .or(Err(Self::concat_error("Function", &js_typeof)))
     }
 
-    pub(crate) fn as_array(self) -> WalletResult<Array> {
+    pub(crate) fn into_array(self) -> WalletResult<Array> {
         let js_typeof = Self::js_typeof(&self.0);
 
         self.0

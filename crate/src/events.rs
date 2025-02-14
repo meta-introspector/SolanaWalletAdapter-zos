@@ -61,7 +61,7 @@ impl<'a> InitEvents<'a> {
 
         let listener_closure = Closure::wrap(Box::new(move |custom_event: CustomEvent| {
             let detail = Reflection::new(custom_event
-                .detail()).unwrap().as_function_owned()
+                .detail()).unwrap().into_function()
                 .expect("Unable to get the `detail` function from the `Event` object. This is a fatal error as the register handler won't execute.");
 
             Utils::jsvalue_to_error(detail.call1(
@@ -73,7 +73,7 @@ impl<'a> InitEvents<'a> {
 
         let listener_fn = Reflection::new(listener_closure.into_js_value())
             .unwrap()
-            .as_function_owned()
+            .into_function()
             .unwrap();
 
         self.window.add_event_listener_with_callback(
