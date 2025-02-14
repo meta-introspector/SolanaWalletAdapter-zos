@@ -1,5 +1,5 @@
 [workspace]
-members = ["crate", "examples/*", "examples/dioxus-adapter"]
+members = ["crate", "templates/*", "templates/dioxus-adapter"]
 
 resolver = "2"
 
@@ -20,9 +20,7 @@ wallet-adapter = { path = "./crate" }
 async-channel = "2.3.1"
 log = "0.4.22"
 bs58 = { version = "0.5.1" }
-wasm-bindgen = "0.2.99"
 wasm-bindgen-futures = "0.4.7"
-js-sys = "0.3.76"
 web-sys = { version = "0.3.76", features = [
     "Window",
     "Document",
@@ -42,6 +40,8 @@ web-sys = { version = "0.3.76", features = [
     "Clipboard",
     "Navigator",
     "console",
+    "HtmlLabelElement",
+    "CssStyleDeclaration",
 ] }
 
 [profile.release]

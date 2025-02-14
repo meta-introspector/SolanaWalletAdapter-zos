@@ -48,7 +48,7 @@ impl SignMessage {
         )));
 
         let signed_message_result = Reflection::new(signed_message_result)?
-            .as_array()
+            .into_array()
             .or(incase_of_error)?
             .to_vec();
 
@@ -62,7 +62,7 @@ impl SignMessage {
             )));
 
             let signed_message = Reflection::new(signed_message)?
-                .as_bytes()
+                .into_bytes()
                 .or(incase_of_error)?
                 .to_vec();
 

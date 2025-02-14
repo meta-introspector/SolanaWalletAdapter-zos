@@ -19,19 +19,19 @@ use super::{ChainSupport, Cluster, FeatureSupport};
 #[derive(Clone, Default, PartialEq)]
 pub struct WalletAccount {
     /// Address of the account, corresponding with a public key.
-    pub address: String,
+    pub(crate) address: String,
     /// Public key of the account, corresponding with a secret key to use.
-    pub public_key: [u8; 32],
+    pub(crate) public_key: [u8; 32],
     /// Chains supported by the account.
     /// This must be a subset of the {@link Wallet.chains | chains} of the Wallet.
-    pub chains: Vec<String>,
+    pub(crate) chains: Vec<String>,
     /// Feature names supported by the account.
     /// This must be a subset of the names of {@link Wallet.features | features} of the Wallet.
-    pub features: Vec<String>,
+    pub(crate) features: Vec<String>,
     /// Optional user-friendly descriptive label or name for the account. This may be displayed by the app.
-    pub label: Option<String>,
+    pub(crate) label: Option<String>,
     /// Optional user-friendly icon for the account. This may be displayed by the app. */
-    pub icon: Option<WalletIcon>,
+    pub(crate) icon: Option<WalletIcon>,
     /// The Javascript Value Representation of a wallet,
     /// this mostly used internally in the wallet adapter
     pub(crate) js_value: JsValue,
@@ -41,20 +41,39 @@ pub struct WalletAccount {
     supported_chains: ChainSupport,
 }
 
-impl core::fmt::Debug for WalletAccount {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("WalletAccount")
-            .field("address", &self.address)
-            .field("public_key", &self.public_key)
-            .field("chains", &self.chains)
-            .field("features", &self.features)
-            .field("label", &self.label)
-            .field("icon", &self.icon)
-            .finish()
-    }
-}
-
 impl WalletAccount {
+    /// Address of the account, corresponding with a public key.
+    pub fn address(&self) -> &str {
+        self.address.as_str()
+    }
+
+    /// Public key of the account, corresponding with a secret key to use.
+    pub fn public_key(&self) -> [u8; 32] {
+        self.public_key
+    }
+
+    /// Chains supported by the account.
+    /// This must be a subset of the {@link Wallet.chains | chains} of the Wallet.
+    pub fn chains(&self) -> &[String] {
+        self.chains.as_slice()
+    }
+
+    /// Feature names supported by the account.
+    /// This must be a subset of the names of {@link Wallet.features | features} of the Wallet.
+    pub fn features(&self) -> &[String] {
+        self.features.as_slice()
+    }
+
+    /// Optional user-friendly descriptive label or name for the account. This may be displayed by the app.
+    pub fn label(&self) -> Option<&String> {
+        self.label.as_ref()
+    }
+
+    /// An optional [WalletIcon]
+    pub fn icon(&self) -> Option<&WalletIcon> {
+        self.icon.as_ref()
+    }
+
     /// Get the shortened address of the `Base58 address` .
     /// It displays the first 4 characters and the last for characters
     /// separated by ellipsis eg `FXdl...RGd4` .
@@ -178,11 +197,6 @@ impl WalletAccount {
         self.supported_chains.localnet
     }
 
-    /// An optional [WalletIcon]
-    pub fn icon(&self) -> Option<&WalletIcon> {
-        self.icon.as_ref()
-    }
-
     /// Checks if `standard:connect` is supported
     pub fn standard_connect(&self) -> bool {
         self.supported_features.connect
@@ -216,6 +230,19 @@ impl WalletAccount {
     /// Checks if `solana:signTransaction` is supported
     pub fn solana_sign_transaction(&self) -> bool {
         self.supported_features.sign_tx
+    }
+}
+
+impl core::fmt::Debug for WalletAccount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WalletAccount")
+            .field("address", &self.address)
+            .field("public_key", &self.public_key)
+            .field("chains", &self.chains)
+            .field("features", &self.features)
+            .field("label", &self.label)
+            .field("icon", &self.icon)
+            .finish()
     }
 }
 

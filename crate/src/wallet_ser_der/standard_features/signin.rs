@@ -38,7 +38,7 @@ impl SignIn {
         let account = WalletAccount::parse(Reflection::new(account)?)?;
 
         let message_value = first_index.reflect_inner("signedMessage")?;
-        let message_bytes = Reflection::new(message_value)?.as_bytes()?;
+        let message_bytes = Reflection::new(message_value)?.into_bytes()?;
         let message =
             core::str::from_utf8(&message_bytes).map_err(|error| WalletError::JsError {
                 name: "Invalid UTF-8 Message".to_string(),
@@ -50,7 +50,7 @@ impl SignIn {
 
         let signature_value = first_index.reflect_inner("signature")?;
         let signature_bytes: [u8; 64] = Reflection::new(signature_value)?
-            .as_bytes()?
+            .into_bytes()?
             .try_into()
             .or(Err(WalletError::InvalidEd25519SignatureBytes))?;
 

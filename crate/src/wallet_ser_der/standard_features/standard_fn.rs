@@ -31,7 +31,7 @@ impl StandardFunction {
             .reflect_inner(key)
             .or(Err(WalletError::MissingConnectFunction))?;
         let get_fn = Reflection::new(fn_value)?
-            .as_function_owned()
+            .into_function()
             .or(incase_of_error)?;
 
         Ok(Self {
