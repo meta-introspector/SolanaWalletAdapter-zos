@@ -67,7 +67,7 @@ pub fn address_qrcode(address: &str) -> WalletResult<Element> {
     let errcorlvl: QrCodeEcc = QrCodeEcc::High; // Error correction level
 
     // Make and print the QR Code symbol
-    let qr: QrCode = QrCode::encode_text(&address, errcorlvl).unwrap();
+    let qr: QrCode = QrCode::encode_text(address, errcorlvl).unwrap();
     Ok(qr_to_svg(&qr, 4))
 }
 

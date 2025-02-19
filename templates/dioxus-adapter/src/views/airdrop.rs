@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use solana_sdk::native_token::LAMPORTS_PER_SOL;
 
 use crate::{
     fetch_parser::request_airdrop, AirdropSvg, Loader, NotificationInfo, ACTIVE_CONNECTION,
@@ -48,8 +49,8 @@ pub fn Airdrop(show_airdrop_modal: Signal<bool>) -> Element {
                                 div { class: "shrink-0 select-none text-base text-gray-500 sm:text-sm/6","SOL" }
                                 input {
                                     oninput: move |event| {
-                                        let data = event.data.value().as_str().parse::<u64>().unwrap();
-                                        lamports.set(data);
+                                        let data = event.data.value().as_str().parse::<u64>().unwrap_or(1);
+                                        lamports.set(data * LAMPORTS_PER_SOL);
                                     },
                                     class: "focus:outline-none bg-transparent border-b-2 border-white block min-w-0 grow ml-2 text-black dark:text-white placeholder:text-gray-400 sm:text-sm/6",
                                     id: "airdrop",
@@ -68,9 +69,9 @@ pub fn Airdrop(show_airdrop_modal: Signal<bool>) -> Element {
                                     spawn(async move {
                                         loading.set(true);
 
-                                        if let Err(error) = request_airdrop(*lamports.read(), &address).await {
+                                        if request_airdrop(*lamports.read(), &address).await.is_err() {
                                             GLOBAL_MESSAGE.write().push_back(
-                                                NotificationInfo::error(format!("REQUEST AIRDROP ERROR: {:?}", error))
+                                                NotificationInfo::error("REQUEST AIRDROP ERROR: You might have reached your daily limit.")
                                             );
                                         }else {
                                             GLOBAL_MESSAGE.write().push_back(
