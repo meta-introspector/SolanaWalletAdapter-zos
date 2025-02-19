@@ -61,12 +61,6 @@ pub fn Accounts() -> Element {
         public_key_bytes = wallet_account.public_key();
     }
 
-    // use_effect(move || {
-    //     spawn(async move {
-    //         fetch_account_state(None, None, address).await;
-    //     });
-    // });
-
     if ACTIVE_CONNECTION.read().connected_account().is_ok() {
         if *CLUSTER_NET_STATE.read() == ClusterNetState::Success {
             rsx! {
