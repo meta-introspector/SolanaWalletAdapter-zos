@@ -84,7 +84,8 @@ impl<'a> InitEvents<'a> {
         Ok(())
     }
 
-    pub(crate) fn register_object(storage: StorageType) -> Object {
+    /// Sets the object to be passed to the register function
+    pub fn register_object(storage: StorageType) -> Object {
         // The `register` function that logs and returns a closure like in your JS code
         let register =
             Closure::wrap(
