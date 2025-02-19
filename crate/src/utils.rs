@@ -41,7 +41,8 @@ impl Utils {
         buffer
     }
 
-    pub(crate) fn jsvalue_to_error<T: core::fmt::Debug>(
+    /// Convert a [JsValue] error to a [WalletError]
+    pub fn jsvalue_to_error<T: core::fmt::Debug>(
         value: Result<T, JsValue>,
     ) -> Result<(), WalletError> {
         if let Err(error) = value {
@@ -141,35 +142,43 @@ impl Utils {
     }
 }
 
+/// Perform reflection on a [JsValue]
 #[derive(Debug)]
-pub(crate) struct Reflection(JsValue);
+pub struct Reflection(JsValue);
 
 impl Reflection {
-    pub(crate) fn new(value: JsValue) -> WalletResult<Self> {
+    /// Initialize [Reflection] and check if the value is null or undefined
+    pub fn new(value: JsValue) -> WalletResult<Self> {
         Reflection::check_is_undefined(&value)?;
 
         Ok(Self(value))
     }
 
-    pub(crate) fn new_from_str(value: &JsValue, key: &str) -> WalletResult<Self> {
+    /// Initialize [Reflection] from the reflection ([js_sys::Reflect]) of a value
+    /// by getting the value described by `key` argument
+    pub fn new_from_str(value: &JsValue, key: &str) -> WalletResult<Self> {
         let inner = Reflect::get(value, &key.into())?;
 
         Reflection::new(inner)
     }
 
-    pub(crate) fn new_object() -> Self {
+    /// Initialize [Reflection] from a [js_sys::Object]
+    pub fn new_object() -> Self {
         Self(Object::new().into())
     }
 
-    pub(crate) fn take(self) -> JsValue {
+    /// Consumes [Self](Reflection) and returns a [JsValue]
+    pub fn take(self) -> JsValue {
         self.0
     }
 
-    pub(crate) fn set_object_str(&mut self, key: &str, value: &str) -> WalletResult<&Self> {
+    /// Adds the `key` `value` arguments to the object within [Self](Reflection)
+    pub fn set_object_str(&mut self, key: &str, value: &str) -> WalletResult<&Self> {
         self.set_object(&key.into(), &value.into())
     }
 
-    pub(crate) fn set_object_string_optional(
+    /// Adds the `key` `value` arguments to the object within [Self](Reflection)
+    pub fn set_object_string_optional(
         &mut self,
         key: &str,
         value: Option<&String>,
@@ -181,7 +190,8 @@ impl Reflection {
         }
     }
 
-    pub(crate) fn set_object(&mut self, key: &JsValue, value: &JsValue) -> WalletResult<&Self> {
+    /// Adds the `key` `value` arguments to the object within [Self](Reflection)
+    pub fn set_object(&mut self, key: &JsValue, value: &JsValue) -> WalletResult<&Self> {
         if !self.0.is_object() {
             return Err(WalletError::InternalError(format!(
                 "Attempted to set the key `{key:?} in type `{value:?} which is not a JS object"
@@ -197,7 +207,9 @@ impl Reflection {
         Ok(self)
     }
 
-    pub(crate) fn reflect_inner(&self, key: &str) -> WalletResult<JsValue> {
+    /// Reflect the `key` from the value of [Self](Reflection) and return the
+    /// reflected value
+    pub fn reflect_inner(&self, key: &str) -> WalletResult<JsValue> {
         let inner = Reflect::get(&self.0, &key.into())?;
 
         Reflection::check_is_undefined(&inner)?;
@@ -205,7 +217,9 @@ impl Reflection {
         Ok(inner)
     }
 
-    pub(crate) fn string(&self, key: &str) -> WalletResult<String> {
+    /// Reflect the `key` from the value of [Self](Reflection) and return the
+    /// reflected value as a [String]
+    pub fn string(&self, key: &str) -> WalletResult<String> {
         let name = Reflect::get(&self.0, &key.into())?;
 
         let parsed = name.as_string().ok_or(WalletError::InternalError(format!(
@@ -215,7 +229,9 @@ impl Reflection {
         Ok(parsed)
     }
 
-    pub(crate) fn get_bytes_from_vec(&self, key: &str) -> WalletResult<Vec<Vec<u8>>> {
+    /// Reflect the `key` from the value of [Self](Reflection) and return the
+    /// reflected value as a [Vec of Vec of bytes](Vec<Vec<u8>>)
+    pub fn get_bytes_from_vec(&self, key: &str) -> WalletResult<Vec<Vec<u8>>> {
         let js_array = self.get_array()?;
 
         js_array
@@ -224,7 +240,9 @@ impl Reflection {
             .collect::<WalletResult<Vec<Vec<u8>>>>()
     }
 
-    pub(crate) fn into_bytes(self) -> WalletResult<Vec<u8>> {
+    /// Consume from the value of [Self](Reflection) and return it
+    /// as a [Vec of bytes](Vec<u8>)
+    pub fn into_bytes(self) -> WalletResult<Vec<u8>> {
         let js_typeof = Self::js_typeof(&self.0);
 
         Ok(self
@@ -234,7 +252,9 @@ impl Reflection {
             .to_vec())
     }
 
-    pub(crate) fn reflect_bytes(&self, key: &str) -> WalletResult<Vec<u8>> {
+    /// Reflect the `key` from the value of [Self](Reflection) and return the
+    /// reflected value as a [Vec of bytes](Vec<Vec<u8>>)
+    pub fn reflect_bytes(&self, key: &str) -> WalletResult<Vec<u8>> {
         let js_value = Reflect::get(&self.0, &key.into())?;
 
         let incase_of_error = Err(WalletError::InternalError(format!(
@@ -248,7 +268,9 @@ impl Reflection {
         Ok(to_uint8array.to_vec())
     }
 
-    pub(crate) fn byte32array(&self, key: &str) -> WalletResult<[u8; 32]> {
+    /// Reflect the `key` from the value of [Self](Reflection) and return the
+    /// reflected value as a 32 byte array
+    pub fn byte32array(&self, key: &str) -> WalletResult<[u8; 32]> {
         let js_value = Reflect::get(&self.0, &key.into())?;
 
         let to_js_array: js_sys::Uint8Array = js_value.unchecked_into();
@@ -261,17 +283,22 @@ impl Reflection {
         Ok(byte32array)
     }
 
-    pub(crate) fn get_array(&self) -> WalletResult<Array> {
+    /// Return the value of [Self](Reflection) as a [js_sys::Array]
+    /// without consuming `Self`
+    pub fn get_array(&self) -> WalletResult<Array> {
         Ok(self.0.clone().dyn_into::<js_sys::Array>()?)
     }
 
-    pub(crate) fn get_string(value: &JsValue) -> WalletResult<String> {
+    /// Return a [JsValue] as a [String]
+    pub fn get_string(value: &JsValue) -> WalletResult<String> {
         value.as_string().ok_or(WalletError::InternalError(format!(
             "{value:?} is not a JsString"
         )))
     }
 
-    pub(crate) fn vec_string(&self, key: &str) -> WalletResult<Vec<String>> {
+    /// Reflect the `key` from the value of [Self](Reflection) and return the
+    /// reflected value as a [Vec of String](Vec<String>)
+    pub fn vec_string(&self, key: &str) -> WalletResult<Vec<String>> {
         let to_js_array = self.reflect_js_array(key)?;
 
         to_js_array
@@ -280,7 +307,9 @@ impl Reflection {
             .collect::<WalletResult<Vec<String>>>()
     }
 
-    pub(crate) fn reflect_js_array(&self, key: &str) -> WalletResult<Array> {
+    /// Reflect the `key` from the value of [Self](Reflection) and return the
+    /// reflected value as a [Array]
+    pub fn reflect_js_array(&self, key: &str) -> WalletResult<Array> {
         let js_value = self.reflect_inner(key)?;
 
         Self::new(js_value)?.into_array()
@@ -333,7 +362,8 @@ impl Reflection {
             .collect::<WalletResult<Vec<String>>>()
     }
 
-    pub(crate) fn check_is_undefined(value: &JsValue) -> WalletResult<()> {
+    /// Check if [Self](Reflection) is null or undefined
+    pub fn check_is_undefined(value: &JsValue) -> WalletResult<()> {
         if value.is_undefined() || value.is_null() {
             Err(WalletError::ValueNotFound)
         } else {
@@ -341,7 +371,8 @@ impl Reflection {
         }
     }
 
-    pub(crate) fn get_function(&self, key: &str) -> WalletResult<Function> {
+    /// Reflect a `key` from value of [Self](Reflection) into a [Function]
+    pub fn get_function(&self, key: &str) -> WalletResult<Function> {
         let js_value = Reflect::get(&self.0, &key.into())?;
 
         let incase_of_error = Err(WalletError::InternalError(format!(
@@ -351,17 +382,20 @@ impl Reflection {
         js_value.dyn_into::<Function>().or(incase_of_error)
     }
 
-    pub(crate) fn get_inner(&self) -> &JsValue {
+    /// Get the value of [Self](Reflection) without consuming Self
+    pub fn get_inner(&self) -> &JsValue {
         &self.0
     }
 
-    pub(crate) fn js_typeof(value: &JsValue) -> String {
+    /// Check the `JS typeof` from a [JsValue]
+    pub fn js_typeof(value: &JsValue) -> String {
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof
         // The `typeof` in Js should always be a string hence unwrapping
         value.js_typeof().as_string().unwrap()
     }
 
-    pub(crate) fn into_function(self) -> WalletResult<Function> {
+    /// Consume [Self](Reflection) and return it's value as a [Function]
+    pub fn into_function(self) -> WalletResult<Function> {
         let js_typeof = Self::js_typeof(&self.0);
 
         self.0
@@ -369,7 +403,8 @@ impl Reflection {
             .or(Err(Self::concat_error("Function", &js_typeof)))
     }
 
-    pub(crate) fn into_array(self) -> WalletResult<Array> {
+    /// Consume [Self](Reflection) and return it's value as an [Array]
+    pub fn into_array(self) -> WalletResult<Array> {
         let js_typeof = Self::js_typeof(&self.0);
 
         self.0

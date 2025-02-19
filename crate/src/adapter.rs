@@ -191,15 +191,6 @@ impl WalletAdapter {
     /// and creates a bounded channel with capacity default of 10 messages before capcity is filled.
     /// Use [WalletAdapter::init_with_channel_capacity] to initialize with a desired channel capacity.
     pub fn init() -> WalletResult<Self> {
-        Self::init_with_channel_capacity(5)
-    }
-
-    /// Same as [WalletAdapter::init] but a `capacity` value
-    /// can be passed to create an channel with a desired capacity
-    #[allow(clippy::arc_with_non_send_sync)]
-    pub fn init_with_channel_capacity(capacity: usize) -> WalletResult<Self> {
-        let storage = WalletStorage::default();
-
         let window = if let Some(window) = web_sys::window() {
             window
         } else {
@@ -211,6 +202,19 @@ impl WalletAdapter {
         } else {
             return Err(WalletError::MissingAccessToBrowserDocument);
         };
+
+        Self::init_with_channel_capacity(5, window, document)
+    }
+
+    /// Same as [WalletAdapter::init] but a `capacity` value
+    /// can be passed to create an channel with a desired capacity
+    #[allow(clippy::arc_with_non_send_sync)]
+    pub fn init_with_channel_capacity(
+        capacity: usize,
+        window: Window,
+        document: Document,
+    ) -> WalletResult<Self> {
+        let storage = WalletStorage::default();
 
         let (sender, receiver) = bounded::<WalletEvent>(capacity);
         let (_, signal_receiver) = bounded::<()>(capacity);
@@ -228,6 +232,13 @@ impl WalletAdapter {
         InitEvents::new(&window).init(&mut new_self)?;
 
         Ok(new_self)
+    }
+
+    /// Initializes with a [web_sys::Window] and [web_sys::Document] that have been
+    /// initialized elsewhere. For example some Rust frontend frameworks already
+    /// expose the window and document objects, you could pass them here.
+    pub fn init_custom(window: Window, document: Document) -> WalletResult<Self> {
+        Self::init_with_channel_capacity(5, window, document)
     }
 
     /// Listen for [WalletEvent] to be notified when a wallet
