@@ -1,5 +1,5 @@
 [package]
-name = "sycamore_adapter"
+name = "sycamore-adapter"
 edition.workspace = true
 version = "0.2.0"
 license = "MIT OR Apache-2.0"

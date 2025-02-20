@@ -515,6 +515,23 @@ Apache-2.0 OR MIT
 
 
 
+### Template Features
+This template contains the following features:
+- Dashboard with all important links to resources
+- Wallet selection
+- Viewing and adding clusters
+- Handling errors by showing user a 15 seconds(configurable) notification error. 
+- Notifications contain a unique random generated key to allow dioxus to perform comparisons for removal after timeout expires
+- Viewing account balance, token accounts and transactions
+- Mobile friendly header and responsive UI which can be used in in-browser wallets on mobile devices
+- Request airdrop (excluding mainnet)
+- Send SOL (if account balance is not zero)
+- Receive SOL, showing account with `Copy to Clipboard` support and QR Code for easy scanning
+- Refresh Accounts button since RPCs mostly don't update balances immediately
+- Custom error for unreachable cluster endpoints
+- SIWS, Sign Message, Sign Transaction and Sign and Send Transaction (Send SOL component)
+
+
 ### Requirements
 1. Install `wasm32-unknown-unknown` toolchain to compile against for the browser
     ```sh
