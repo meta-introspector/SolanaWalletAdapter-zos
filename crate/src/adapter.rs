@@ -520,3 +520,12 @@ impl WalletAdapter {
             .solana_sign_transaction())
     }
 }
+
+impl PartialEq for WalletAdapter {
+    fn eq(&self, other: &Self) -> bool {
+        self.window.eq(&other.window)
+            && self.document.eq(&other.document)
+            && self.storage.eq(&other.storage)
+    }
+}
+impl Eq for WalletAdapter {}
