@@ -8,7 +8,7 @@
 
 ### Maintenance 
 
-Expect a release of new templates when each frontend framework is released.
+New releases will be for bug fixes or to support a new release based on a new version of the supported frameworks.
 
 ### Template Features
 
