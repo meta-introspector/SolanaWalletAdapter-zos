@@ -14,7 +14,7 @@ Trunk is a build and bundler tool for Rust frontend code.
 ### Tailwind CSS
 This template uses tailwind CSS to render stylesheets. Trunk already supports this by bundling the tailwind CLI so no need to install the Tailwind CLI or node modules while using Trunk build tool [https://trunkrs.dev/assets/#tailwind](https://trunkrs.dev/assets/#tailwind)
 
-***NOTE*** that Sycamore can be cumbersome to build complex UIs for a beginner, so if you find any bugs while customizing this template, open a pull request or use Yew or Dioxus templates instead.
+***NOTE*** that Sycamore can be cumbersome to build complex UIs for a beginner, so if you find any bugs while customizing this template, open a pull request.
 
 ### Building the template
 Switch to your template directory and run

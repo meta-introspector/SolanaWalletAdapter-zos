@@ -13,7 +13,7 @@ pub fn SignMessage() -> Element {
     }
 
     rsx! {
-        div { class:"flex dark:bg-[#160231] bg-white flex-col w-[300px] p-5 rounded-lg dark:shadow-2xl shadow-sm border dark:border-none",
+        div { class:"flex dark:bg-[#160231] bg-white flex-col w-[300px] p-5 justify-around rounded-lg dark:shadow-2xl shadow-sm border dark:border-none",
             div {class:"w-full flex flex-col items-center text-center text-true-blue justify-center mb-10",
                 div{class:"w-[80px] flex flex-col", {SignMessageSvg()}}
                 div{class:"w-full text-sm", "Sign Message"}
