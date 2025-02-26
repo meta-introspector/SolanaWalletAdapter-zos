@@ -7,8 +7,10 @@ use solana_sdk::{
     transaction::Transaction,
 };
 use solana_transaction_error::TransactionError;
-use wallet_adapter::{SendOptions, WalletError, WalletResult};
-use web_sys::{js_sys::Date, wasm_bindgen::JsValue};
+use wallet_adapter::{
+    web_sys::{js_sys::Date, wasm_bindgen::JsValue},
+    SendOptions, WalletError, WalletResult,
+};
 
 use crate::{views::AccountState, FetchReq, ACCOUNT_STATE, CLUSTER_STORAGE, WALLET_ADAPTER};
 

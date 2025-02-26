@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
-use wallet_adapter::{WalletError, WalletResult};
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{wasm_bindgen::JsCast, Headers, Request, RequestInit, Response};
+use wallet_adapter::{
+    wasm_bindgen_futures::JsFuture,
+    web_sys::{wasm_bindgen::JsCast, Headers, Request, RequestInit, Response},
+    WalletError, WalletResult,
+};
 
 use crate::{
     views::ClusterNetState, CLUSTER_NET_STATE, CLUSTER_STORAGE, GLOBAL_MESSAGE, WALLET_ADAPTER,

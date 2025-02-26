@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-use wallet_adapter::Cluster;
-use web_sys::Window;
+use wallet_adapter::{
+    web_sys::{self, Window},
+    Cluster,
+};
 
 pub(crate) static WINDOW: GlobalSignal<Window> =
     Signal::global(|| web_sys::window().expect("Unable to find Window"));
