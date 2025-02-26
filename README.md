@@ -4,6 +4,10 @@
 
 A lightweight Rust Solana Wallet that can be used in Rust based frontends and WebAssembly.
 
+### Maintenance
+This crate is feature complete, implementing all standardized requirements of the wallet-adapter standard. Therefore, the crate is passively maintained. 
+New features will be added if the wallet-adapter standard adds new features. Minor releases are expected for bug fixes.
+
 ### Documentation Links
 - [Usage](#usage) - How to add this library and required features for `web-sys` crate
 - [Initializing](#initializing-register-and-appready) - How `AppReady` and `Register` wallet events are initialized
