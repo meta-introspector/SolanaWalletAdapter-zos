@@ -142,7 +142,7 @@ pub enum WalletEvent {
     /// An account has been connected and an event `change` emitted.
     /// The wallet adapter then updates the connected [WalletAccount].
     AccountChanged(WalletAccount),
-    /// An error occured when a background task was executed.
+    /// An error occurred when a background task was executed.
     /// This type of event is encountered mostly from the
     /// `on` method from the `[standard:events]` namespace
     /// (when an account is connected, changed or disconnected)

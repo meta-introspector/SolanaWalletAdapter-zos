@@ -209,7 +209,7 @@ impl WalletAdapter {
     /// Get the `Window` and `Document` object in the current browser window,
     /// initialize the `AppReady` and `Register` events of the wallet standard
     /// and creates a bounded channel with user-specified capacity.
-    pub fn init_with_channel_capacity() -> WalletResult<Self> {
+    pub fn init_with_channel_capacity(capacity: usize) -> WalletResult<Self> {
         let window = if let Some(window) = web_sys::window() {
             window
         } else {
@@ -222,7 +222,7 @@ impl WalletAdapter {
             return Err(WalletError::MissingAccessToBrowserDocument);
         };
 
-        Self::init_with_channel_capacity_window_and_document(5, window, document)
+        Self::init_with_channel_capacity_window_and_document(capacity, window, document)
     }
 
     /// Same as [WalletAdapter::init] but a `capacity` value

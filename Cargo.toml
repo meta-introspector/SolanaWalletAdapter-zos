@@ -1,13 +1,14 @@
 [workspace]
-members = ["crate", "templates/*", "templates/dioxus-adapter"]
+members = ["crate"]
 
 resolver = "2"
 
 [workspace.package]
 authors = ["448-OG <superuser@448.africa>"]
-version = "1.0.4-beta"
+version = "1.0.0"
 license = "Apache-2.0 OR MIT"
 edition = "2021"
+rust-version = "1.84"
 description = "Solana Wallet Adapter for Rust clients written in pure Rust"
 homepage = "https://github.com/JamiiDao"
 repository = "https://github.com/JamiiDao/SolanaWalletAdapter"
@@ -18,7 +19,7 @@ categories = ["cryptography::cryptocurrencies"]
 [workspace.dependencies]
 wallet-adapter = { path = "./crate" }
 async-channel = "2.3.1"
-log = "0.4.22"
+log = "0.4.26"
 bs58 = { version = "0.5.1" }
 wasm-bindgen-futures = "0.4.7"
 web-sys = { version = "0.3.76", features = [

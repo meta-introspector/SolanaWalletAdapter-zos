@@ -4,7 +4,7 @@
 1. This template relies on Tailwind CSS to generate the stylesheet. 
 
 Install the standalone Tailwind CLI - [https://tailwindcss.com/docs/installation/tailwind-cli](https://tailwindcss.com/docs/installation/tailwind-cli)
-2. Install Dioxus cli from offical website - [https://dioxuslabs.com/](https://dioxuslabs.com/)
+2. Install Dioxus cli from official website - [https://dioxuslabs.com/](https://dioxuslabs.com/)
 
 
 ### Running the dev server
