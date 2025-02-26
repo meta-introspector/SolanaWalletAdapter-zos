@@ -1,9 +1,9 @@
 use wallet_adapter::{
+    wasm_bindgen_futures::JsFuture,
+    web_sys::Window,
     web_sys::{wasm_bindgen::JsCast, Headers, Request, RequestInit, Response},
     WalletError, WalletResult,
 };
-use wasm_bindgen_futures::JsFuture;
-use web_sys::Window;
 
 use crate::ClusterNetState;
 

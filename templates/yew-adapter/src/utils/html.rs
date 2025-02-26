@@ -1,7 +1,8 @@
 use qrcodegen::{QrCode, QrCodeEcc};
-use wallet_adapter::Cluster;
-use wasm_bindgen::JsCast;
-use web_sys::{HtmlInputElement, HtmlSelectElement};
+use wallet_adapter::{
+    web_sys::{wasm_bindgen::JsCast, HtmlInputElement, HtmlSelectElement},
+    Cluster,
+};
 use yew::prelude::*;
 
 use crate::{DevnetSvg, LocalnetSvg, MainnetSvg, TestnetSvg};

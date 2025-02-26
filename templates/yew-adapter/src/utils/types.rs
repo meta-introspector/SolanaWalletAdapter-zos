@@ -1,8 +1,6 @@
 use std::fmt::Display;
 
-use wallet_adapter::WalletResult;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::Window;
+use wallet_adapter::{wasm_bindgen_futures::JsFuture, web_sys::Window, WalletResult};
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum ClusterNetState {
