@@ -188,7 +188,7 @@ pub struct WalletAdapter {
 impl WalletAdapter {
     /// Get the `Window` and `Document` object in the current browser window,
     /// initialize the `AppReady` and `Register` events of the wallet standard
-    /// and creates a bounded channel with capacity default of 10 messages before capcity is filled.
+    /// and creates a bounded channel with capacity default of 5 messages before capacity is filled.
     /// Use [WalletAdapter::init_with_channel_capacity] to initialize with a desired channel capacity.
     pub fn init() -> WalletResult<Self> {
         let window = if let Some(window) = web_sys::window() {
@@ -203,13 +203,32 @@ impl WalletAdapter {
             return Err(WalletError::MissingAccessToBrowserDocument);
         };
 
-        Self::init_with_channel_capacity(5, window, document)
+        Self::init_with_channel_capacity_window_and_document(5, window, document)
+    }
+
+    /// Get the `Window` and `Document` object in the current browser window,
+    /// initialize the `AppReady` and `Register` events of the wallet standard
+    /// and creates a bounded channel with user-specified capacity.
+    pub fn init_with_channel_capacity() -> WalletResult<Self> {
+        let window = if let Some(window) = web_sys::window() {
+            window
+        } else {
+            return Err(WalletError::MissingAccessToBrowserWindow);
+        };
+
+        let document = if let Some(document) = window.document() {
+            document
+        } else {
+            return Err(WalletError::MissingAccessToBrowserDocument);
+        };
+
+        Self::init_with_channel_capacity_window_and_document(5, window, document)
     }
 
     /// Same as [WalletAdapter::init] but a `capacity` value
     /// can be passed to create an channel with a desired capacity
     #[allow(clippy::arc_with_non_send_sync)]
-    pub fn init_with_channel_capacity(
+    pub fn init_with_channel_capacity_window_and_document(
         capacity: usize,
         window: Window,
         document: Document,
@@ -238,7 +257,7 @@ impl WalletAdapter {
     /// initialized elsewhere. For example some Rust frontend frameworks already
     /// expose the window and document objects, you could pass them here.
     pub fn init_custom(window: Window, document: Document) -> WalletResult<Self> {
-        Self::init_with_channel_capacity(5, window, document)
+        Self::init_with_channel_capacity_window_and_document(5, window, document)
     }
 
     /// Listen for [WalletEvent] to be notified when a wallet
