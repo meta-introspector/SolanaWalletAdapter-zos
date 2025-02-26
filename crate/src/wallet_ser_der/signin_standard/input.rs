@@ -469,7 +469,7 @@ impl SigninInput {
     }
 
     /// Verifies that the signature of the signed message is correct by ensuring the
-    /// [message](str) and [PublicKey](ed25519_dalek::PublicKey) match and that the [PublicKey](ed25519_dalek::PublicKey)
+    /// [message](str) and [PublicKey](ed25519_dalek::VerifyingKey) match and that the [PublicKey](ed25519_dalek::VerifyingKey)
     /// signed a valid [message](str)
     pub fn verify(
         public_key_bytes: [u8; 32],

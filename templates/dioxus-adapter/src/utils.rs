@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use qrcodegen::{QrCode, QrCodeEcc};
-use wallet_adapter::{Cluster, WalletResult};
-use wasm_bindgen_futures::JsFuture;
+use wallet_adapter::{wasm_bindgen_futures::JsFuture, Cluster, WalletResult};
 
 use crate::{DevnetSvg, LocalnetSvg, MainnetSvg, TestnetSvg, CLUSTER_STORAGE, WINDOW};
 

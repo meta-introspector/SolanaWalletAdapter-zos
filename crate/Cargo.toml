@@ -8,6 +8,10 @@ description.workspace = true
 homepage.workspace = true
 repository.workspace = true
 readme.workspace = true
+rust-version.workspace = true
+
+[badges]
+maintenance = { status = "passively-maintained" }
 
 [dependencies]
 ed25519-dalek = { version = "2.1.1", default-features = false, features = [

@@ -25,12 +25,12 @@ pub struct InitEvents<'a> {
 }
 
 impl<'a> InitEvents<'a> {
-    /// Instantiate [Self](self)
+    /// Instantiate [InitEvents]
     pub fn new(window: &'a Window) -> Self {
         Self { window }
     }
 
-    /// Register events by providing a [WalletStorage] that is used to store
+    /// Register events by providing a [crate::WalletStorage] that is used to store
     /// all registered wallets
     pub fn init(&self, adapter: &mut WalletAdapter) -> WalletResult<()> {
         let storage = adapter.storage();

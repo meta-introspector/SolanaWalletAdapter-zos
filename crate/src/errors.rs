@@ -20,7 +20,7 @@ pub enum WalletError {
     /// Unable to send the a [WalletEvent] via the [crate::WalletEventSender]
     #[error("Unable to send the a `WalletEvent` variant via the WalletEventSender channel")]
     ChannelError,
-    /// An JavaScript Error corresponding to a [wasm_bindgen::JsValue] .
+    /// An JavaScript Error corresponding to a [JsValue] .
     /// It contains the error type represented by `name`,
     /// the error message `message`
     /// and the `stack` message which offers a trace of which functions were called.
@@ -34,10 +34,11 @@ pub enum WalletError {
         /// The stack from the JavaScript error message
         stack: String,
     },
-    /// An internal error that occurs when casting a JavaScript types or DOM types to a Rust type using [js_sys::JsCast] trait
+    /// An internal error that occurs when casting a JavaScript types or DOM types to a Rust type using [web_sys::wasm_bindgen::JsCast] trait
     /// and `foo.dyn_ref::<T>()` or `foo.dyn_into::<T>()` where `foo`
-    /// is a variable of type [wasm_bindgen::JsValue]. These error can also occur when trying to parse a browser error from JavaScript value
-    /// into a `WalletError::JsError`. Open an issue describing this error at - https://github.com/JamiiDao/SolanaWalletAdapter/issues
+    /// is a variable of type [JsValue]. These error can also occur when trying to parse a browser error from JavaScript value
+    /// into a `WalletError::JsError`. Open an issue describing this error at -
+    /// [https://github.com/JamiiDao/SolanaWalletAdapter/issues](https://github.com/JamiiDao/SolanaWalletAdapter/issues)
     #[error("Internal Error `{0}` occurred, this is a bug in the library please open an issue at https://github.com/JamiiDao/SolanaWalletAdapter/issues")]
     InternalError(String),
     /// A value of `undefined` or `null` was encountered
