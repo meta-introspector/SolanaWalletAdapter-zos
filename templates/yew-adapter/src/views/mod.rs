@@ -13,8 +13,8 @@ pub use connect_first::*;
 mod send_sol;
 pub use send_sol::*;
 
-mod recieve;
-pub use recieve::*;
+mod receive;
+pub use receive::*;
 
 mod airdrop;
 pub use airdrop::*;
