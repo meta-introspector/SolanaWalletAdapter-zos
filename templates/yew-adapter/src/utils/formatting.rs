@@ -1,5 +1,4 @@
-use wasm_bindgen::JsValue;
-use web_sys::js_sys::Date;
+use wallet_adapter::web_sys::{js_sys::Date, wasm_bindgen::JsValue};
 use yew::prelude::*;
 
 use super::AdapterCluster;

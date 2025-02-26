@@ -1,8 +1,8 @@
 use qrcodegen::{QrCode, QrCodeEcc};
 use sycamore::prelude::*;
-use wallet_adapter::{Cluster, WalletResult};
-use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::JsFuture;
+use wallet_adapter::{
+    wasm_bindgen_futures::JsFuture, web_sys::wasm_bindgen::JsCast, Cluster, WalletResult,
+};
 use web_sys::{HtmlInputElement, HtmlSelectElement};
 
 use crate::{devnet_svg, localnet_svg, mainnet_svg, testnet_svg, AdapterCluster};

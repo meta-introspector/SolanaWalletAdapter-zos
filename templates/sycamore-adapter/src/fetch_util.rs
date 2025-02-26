@@ -1,9 +1,9 @@
 use sycamore::prelude::*;
 use wallet_adapter::{
+    wasm_bindgen_futures::JsFuture,
     web_sys::{wasm_bindgen::JsCast, Headers, Request, RequestInit, Response},
     WalletError, WalletResult,
 };
-use wasm_bindgen_futures::JsFuture;
 
 use crate::types::ClusterNetState;
 
