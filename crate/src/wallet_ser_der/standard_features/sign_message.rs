@@ -99,7 +99,7 @@ pub struct SignedMessageOutput<'a> {
 }
 
 impl SignedMessageOutput<'_> {
-    /// Get the message as a UTF-8 [str]
+    /// Get the message as a [UTF-8 str](core::str)
     pub fn message(&self) -> &str {
         //Should never fail since verified message is always UTF-8 Format hence `.unwrap()` is used.
         // This is verified to be the input message where the input message is always UTF-8 encoded

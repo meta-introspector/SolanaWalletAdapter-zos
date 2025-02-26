@@ -91,7 +91,7 @@ impl Wallet {
             .await
     }
 
-    /// Get the standard events [Function] `[standard:events].on`
+    /// Get the standard events [Function](web_sys::js_sys::Function) `[standard:events].on`
     pub async fn call_on_event(
         &self,
         connection_info: ConnectionInfoInner,

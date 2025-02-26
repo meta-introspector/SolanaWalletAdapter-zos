@@ -5,7 +5,7 @@ use web_sys::js_sys::Function;
 use crate::{Reflection, SemverVersion, WalletError, WalletResult};
 
 /// A struct containing the [semver version](SemverVersion)
-/// and [callback function](js_sys::Function) within the `standard:` namespace as
+/// and [callback function](Function) within the `standard:` namespace as
 /// defined by the wallet standard
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct StandardFunction {
@@ -15,7 +15,7 @@ pub struct StandardFunction {
 
 impl StandardFunction {
     /// Parse the [semver version](SemverVersion) and the [callback function](js_sys::Function)
-    /// given a [JsValue], a [key](str) and a [namespace](str) . The namespace is either
+    /// given a [web_sys::js_sys::JsValue], a [key](str) and a [namespace](str) . The namespace is either
     /// `standard:` or `solana:` as defined by the wallet standard
     pub(crate) fn new(
         reflection: &Reflection,

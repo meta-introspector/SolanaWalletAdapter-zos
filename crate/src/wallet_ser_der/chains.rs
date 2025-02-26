@@ -1,21 +1,21 @@
 use crate::WalletError;
 
-/// Solana Mainnet cluster,  https://api.mainnet-beta.solana.com
+/// Solana Mainnet cluster,  [https://api.mainnet-beta.solana.com](https://api.mainnet-beta.solana.com)
 pub const MAINNET_IDENTIFIER: &str = "solana:mainnet";
-/// Solana Devnet cluster, e.g. https://api.devnet.solana.com
+/// Solana Devnet cluster, e.g. [https://api.devnet.solana.com](https://api.devnet.solana.com)
 pub const DEVNET_IDENTIFIER: &str = "solana:devnet";
-/// Solana Testnet cluster, e.g. https://api.testnet.solana.com
+/// Solana Testnet cluster, e.g. [https://api.testnet.solana.com](https://api.testnet.solana.com)
 pub const TESTNET_IDENTIFIER: &str = "solana:testnet";
-/// Solana Localnet cluster, e.g. http://localhost:8899
+/// Solana Localnet cluster, e.g. [http://localhost:8899](http://localhost:8899)
 pub const LOCALNET_IDENTIFIER: &str = "solana:localnet";
 
-/// Solana Mainnet cluster,  https://api.mainnet-beta.solana.com
+/// Solana Mainnet cluster,  [https://api.mainnet-beta.solana.com](https://api.mainnet-beta.solana.com)
 pub const MAINNET: &str = "mainnet";
-/// Solana Devnet cluster, e.g. https://api.devnet.solana.com
+/// Solana Devnet cluster, e.g. [https://api.devnet.solana.com](https://api.devnet.solana.com)
 pub const DEVNET: &str = "devnet";
-/// Solana Testnet cluster, e.g. https://api.testnet.solana.com
+/// Solana Testnet cluster, e.g. [https://api.testnet.solana.com](https://api.testnet.solana.com)
 pub const TESTNET: &str = "testnet";
-/// Solana Localnet cluster, e.g. http://localhost:8899
+/// Solana Localnet cluster, e.g. [http://localhost:8899](http://localhost:8899)
 pub const LOCALNET: &str = "localnet";
 
 /// Solana Mainnet cluster
@@ -64,14 +64,14 @@ pub struct FeatureSupport {
 /// Solana Clusters
 #[derive(Debug, PartialEq, Eq, Default, PartialOrd, Ord, Clone, Copy, Hash)]
 pub enum Cluster {
-    /// Solana Mainnet cluster,  https://api.mainnet-beta.solana.com
+    /// Solana Mainnet cluster,  [https://api.mainnet-beta.solana.com](https://api.mainnet-beta.solana.com)
     MainNet,
-    /// Solana Devnet cluster, e.g. https://api.devnet.solana.com
+    /// Solana Devnet cluster, e.g. [https://api.devnet.solana.com](https://api.devnet.solana.com)
     #[default]
     DevNet,
-    /// Solana Testnet cluster, e.g. https://api.testnet.solana.com
+    /// Solana Testnet cluster, e.g. [https://api.testnet.solana.com](https://api.testnet.solana.com)
     TestNet,
-    /// Solana Localnet cluster, e.g. http://localhost:8899
+    /// Solana Localnet cluster, e.g. [http://localhost:8899](http://localhost:8899)
     LocalNet,
 }
 

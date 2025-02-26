@@ -52,7 +52,7 @@ impl Utils {
         }
     }
 
-    /// Parse a [PublicKey] from an array of 32 bytes
+    /// Parse a [PublicKey](VerifyingKey) from an array of 32 bytes
     pub fn public_key(public_key_bytes: [u8; 32]) -> WalletResult<VerifyingKey> {
         VerifyingKey::from_bytes(&public_key_bytes)
             .or(Err(WalletError::InvalidEd25519PublicKeyBytes))
@@ -63,7 +63,7 @@ impl Utils {
         Signature::from_bytes(&signature_bytes)
     }
 
-    /// Convert a slice of bytes into a 32 byte array. This is useful especially if a [PublicKey] is
+    /// Convert a slice of bytes into a 32 byte array. This is useful especially if a [PublicKey](VerifyingKey) is
     /// given as a slice instead of 32 byte array
     pub fn to32byte_array(bytes: &[u8]) -> WalletResult<[u8; 32]> {
         bytes.try_into().or(Err(WalletError::Expected32ByteLength))
@@ -75,7 +75,7 @@ impl Utils {
         bytes.try_into().or(Err(WalletError::Expected64ByteLength))
     }
 
-    /// Verify a [message](str) using a [PublicKey] and [Signature]
+    /// Verify a [message](str) using a [PublicKey](VerifyingKey) and [Signature]
     pub fn verify_signature(
         public_key: VerifyingKey,
         message: &[u8],
@@ -102,7 +102,7 @@ impl Utils {
         Ok(Self::signature(signature_bytes))
     }
 
-    /// Generate the Base58 address from a [PublicKey]
+    /// Generate the Base58 address from a [PublicKey](VerifyingKey)
     pub fn address(public_key: VerifyingKey) -> String {
         bs58::encode(public_key.as_ref()).into_string()
     }

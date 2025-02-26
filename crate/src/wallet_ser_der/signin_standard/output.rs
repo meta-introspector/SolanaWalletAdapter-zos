@@ -11,7 +11,7 @@ pub struct SignInOutput {
     /// [Ed25519 Signature](ed25519_dalek::Signature)
     pub signature: [u8; 64],
     /// The public key as a  byte array of 32 bytes in length corresponding to a
-    /// [Ed25519 Public Key](ed25519_dalek::PublicKey)
+    /// [Ed25519 Public Key](ed25519_dalek::VerifyingKey)
     pub public_key: [u8; 32],
 }
 
@@ -21,7 +21,7 @@ impl SignInOutput {
         bs58::encode(&self.signature).into_string()
     }
 
-    /// Base58 encoded [Ed25519 Public Key](ed25519_dalek::PublicKey)
+    /// Base58 encoded [Ed25519 Public Key](ed25519_dalek::VerifyingKey)
     pub fn public_key(&self) -> String {
         bs58::encode(&self.public_key).into_string()
     }
