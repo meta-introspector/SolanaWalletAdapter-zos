@@ -11,13 +11,11 @@ use crate::{
 #[derive(Debug, Clone, Copy, Default)]
 struct AddClusterModalBool(bool);
 
-
 #[component]
 pub fn Clusters() -> View {
     provide_context(create_signal(AddClusterModalBool::default()));
 
     let show_add_cluster_modal = use_context::<Signal<AddClusterModalBool>>();
-
 
     view! {
        div(class="flex w-full flex-col justify-start p-10 items-center"){
@@ -171,7 +169,6 @@ fn AddClusterModal() -> View {
     let add_cluster_state = create_signal(AddCluster::default());
 
     let add_cluster = create_memo(move || add_cluster_state.get_clone());
-   
 
     let should_show_button = move || {
         !add_cluster.get_clone().name.is_empty() && !add_cluster.get_clone().endpoint.is_empty()
@@ -201,13 +198,21 @@ fn AddClusterModal() -> View {
             .add_endpoint(add_cluster.get_clone().endpoint.as_str())
             .add_cluster(add_cluster.get_clone().network);
 
-        cluster_storage.update(|store|
-            if let Err(error) =  store.add_cluster(adapter_cluster) {
-
-            global_message.update(|store| store.push_back(NotificationInfo::new(format!("Error Adding Cluster: `{error}`!"))));
-
-        }else {
-            global_message.update(|store| store.push_back(NotificationInfo::new(format!("Added `{}` cluster!", add_cluster.get_clone().name.as_str()))));
+        cluster_storage.update(|store| {
+            if let Err(error) = store.add_cluster(adapter_cluster) {
+                global_message.update(|store| {
+                    store.push_back(NotificationInfo::new(format!(
+                        "Error Adding Cluster: `{error}`!"
+                    )))
+                });
+            } else {
+                global_message.update(|store| {
+                    store.push_back(NotificationInfo::new(format!(
+                        "Added `{}` cluster!",
+                        add_cluster.get_clone().name.as_str()
+                    )))
+                });
+            }
         });
 
         show_add_cluster_modal.set(AddClusterModalBool(false));
@@ -294,7 +299,7 @@ fn AddClusterModal() -> View {
                                 }
                         }
                         div (class="flex w-full items-center justify-center p-5 mt-5"){
-                            (if should_show_button() {                                
+                            (if should_show_button() {
                                 view!{
                                     button (on:click=move |_| {
                                             add_to_store()

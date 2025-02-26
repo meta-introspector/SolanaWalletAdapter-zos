@@ -8,8 +8,8 @@ pub fn Footer() -> View {
                 "Generated Using "
                 a (href= "https://crates.io/crates/cargo-generate", class= "ml-2 mr-2 underline"){" cargo-generate" }
                 " and "
-                a  (href= "https://github.com/JamiiDao/Solana-Rust-Wallet-Adapter-Templates/", class= "ml-2 underline"){
-                    "Rust Wallet Adapter Dioxus Template"
+                a  (href= "https://github.com/JamiiDao/SolanaWalletAdapter/tree/master/templates/", class= "ml-2 underline"){
+                    "Rust Wallet Adapter Sycamore Template"
                 }
             }}
         }

@@ -1,7 +1,7 @@
 [package]
-name = "dioxus-adapter"
-version = "0.2.0"
-authors = ["448 OG <superuser@448.africa>"]
+name = "{{project-name}}"
+version = "1.0.0"
+authors = ["{{authors}}"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 publish = false
