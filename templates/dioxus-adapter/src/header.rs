@@ -108,6 +108,9 @@ pub fn ConnectWalletModalModal(show_modal: Signal<bool>, show_connecting: Signal
                         div { class: "relative bg-white rounded-lg shadow-lg dark:bg-rich-black items-center justify-start p-2 flex flex-col w-full h-full min-h-[40vh]",
                                 div { class:"flex w-full mr-5",
                                     button {
+                                        onclick:move|_|{
+                                            show_modal.set(false);
+                                        },
                                         class: "text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline- justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white",
                                         "data-modal-hide": "default-modal",
                                         r#type: "button",
