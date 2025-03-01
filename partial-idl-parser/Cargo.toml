@@ -8,10 +8,9 @@ rust-version.workspace = true
 description = "A simple parser for anchor IDL without importing anchor types or causing build panics for WASM targets."
 homepage.workspace = true
 repository.workspace = true
-readme.workspace = true
+readme = "./README.md"
 keywords.workspace = true
 categories.workspace = true
-publish = false
 
 [dependencies]
 serde = { version = "1.0.218", features = ["derive"] }
