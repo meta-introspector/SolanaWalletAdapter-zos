@@ -5,25 +5,26 @@ It only parses the `address` of the program and the `instructions` containing th
 
 
 ### Macro for creating a path to the IDL
-The frontend is in the same workspace as the target directory which contains the anchor IDL directory.
+the `partial-idl-parser` crate is used to read the IDL from the `CARGO_WORKSPACE_DIR/target/temp.json` file using a `.cargo/config.toml` in the root
 
-The directory is in path `../../target/idl/`.
-
-Pass the name of the program from `/programs` so that the file is located successfully.
+```toml
+[env]
+CARGO_WORKSPACE_DIR = { value = "", relative = true }
+```
 
 Get the `AnchorIdlPartialData` data structure containing the IDL of an anchor example called `temp`
 
 ```rust,ignore
 use partial_idl_parser::*;
 
-const IDL: &str = idl_path!("temp");
+const IDL: &str = get_idl!();
 ```
 
 If the directory is different you can use `idl_custom_path` macro:
 ```rust,ignore
 use partial_idl_parser::*;
 
-const IDL: &str = idl_custom_path!("../../target/custom_idl_dir", "temp");
+const IDL: &str = idl_custom_path!("../../target/custom_idl_dir/idl.json");
 ```
 
 ### The `AnchorIdlPartialData`

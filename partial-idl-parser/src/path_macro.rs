@@ -1,15 +1,19 @@
-/// Get the IDL from the default directory `../../target/idl/` given a program name
+/// Get the IDL from the target/idl/temp.json directory within the workspace root
 #[macro_export]
-macro_rules! idl_path {
-    ($program_name:expr) => {
-        include_str!(concat!("../../target/idl/", $program_name, ".json"))
+macro_rules! get_idl {
+    () => {
+        include_str!(concat!(
+            env!("CARGO_WORKSPACE_DIR"),
+            "/target/idl/",
+            "temp.json"
+        ))
     };
 }
 
 /// Get the IDL from the custom directory given a program name.
 #[macro_export]
 macro_rules! idl_custom_path {
-    ($relative_dir_path:expr, $program_name:expr) => {
-        include_str!(concat!($relative_dir_path, $program_name, ".json"))
+    ($custom_path:expr) => {
+        include_str!($custom_path)
     };
 }

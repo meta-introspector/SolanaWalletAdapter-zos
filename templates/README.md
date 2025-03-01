@@ -81,6 +81,14 @@ New releases will be for bug fixes or to support a new release based on a new ve
   - Firefox doesn't update the clusters in the `select` element in the template header if the element changes from within another component in the page. See issue [#3745]
 
     ***Until these issues are fixed, using Yew is not recommended.***
+  
+  Note that for anchor templates, the `partial-idl-parser` crate is used to read the IDL from the `CARGO_WORKSPACE_DIR/target/temp.json` file using a `.cargo/config.toml` in the root
+  ```toml
+  [env]
+  CARGO_WORKSPACE_DIR = { value = "", relative = true }
+  ```
+  
+  This creates a variable cargo environment variable `CARGO_WORKSPACE_DIR` that makes it easy to locate this JSON IDL file. Remember first to run `anchor build` so that anchor can generate the IDL file.
 
 ### To generate the starter code for various templates, first install `cargo generate`
 
@@ -112,6 +120,11 @@ cargo generate --name <project name> https://github.com/JamiiDao/SolanaWalletAda
 ```
 
 ##### NOTE: [trunk](https://dioxuslabs.com/learn/0.6/getting_started/) build tool is a tool used to build and bundle Rust code into web-assembly. It has support for tailwind `v4` without the need to install any node modules or the tailwind cli. It achieves this by bundling all the tools required to build and bundle Rust code and tailwind styles to web-assembly.
+
+- Dioxus frontend with Anchor IDL
+  ```sh
+  cargo generate --name <project name> https://github.com/JamiiDao/SolanaWalletAdapter/ templates/dioxus-adapter-anchor
+  ```
 
 ### Running the templates
 
