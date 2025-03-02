@@ -93,7 +93,9 @@ pub fn ConnectWalletModalModal() -> View {
 
                         spawn_local_scoped(async move {
                             let mut adapter_inner = adapter.get_clone().clone();
-                            adapter_inner.connect(wallet.clone()).await.unwrap();
+                            if let Err(error) = adapter_inner.connect(wallet.clone()).await{
+                                global_message.update(|store| store.push_back(NotificationInfo::error(error)));
+                            }
                             adapter.set(adapter_inner);
 
                             show_modal.set(ShowModal(false));
