@@ -71,6 +71,8 @@ pub fn Header() -> View {
 
 #[component]
 pub fn ConnectWalletModalModal() -> View {
+    let global_message = use_context::<Signal<GlobalMessage>>();
+
     let show_modal = use_context::<Signal<ShowModal>>();
     let show_connecting = use_context::<Signal<ShowConnecting>>();
 
