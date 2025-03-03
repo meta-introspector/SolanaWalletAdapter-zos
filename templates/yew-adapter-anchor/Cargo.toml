@@ -1,0 +1,23 @@
+[profile.release]
+lto = "fat"
+codegen-units = 1
+overflow-checks = true
+
+[profile.release.build-override]
+opt-level = 3
+codegen-units = 1
+incremental = false
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"
+
+[workspace]
+members = ["frontend", "programs/*", "tests"]
+resolver = "2"
