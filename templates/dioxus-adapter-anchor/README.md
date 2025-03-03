@@ -12,15 +12,22 @@ Install the standalone Tailwind CLI - [https://tailwindcss.com/docs/installation
     ```sh
     tailwindcss -i ./tailwind.css -o ./assets/tailwind.css --watch
     ```
-2. Generate the anchor IDL
+2. The default public key is the same across all templates so use `sync` to generate and sync a new anchor program ID
+    ```sh
+    anchor keys sync
+    ```
+
+    
+3. Generate the anchor IDL
+
     ```sh
     anchor build
     ```
-3. Switch to frontend directory
+4. Switch to frontend directory
     ```sh
     cd frontend 
     ```
-4. Start the Dioxus CLI
+5. Start the Dioxus CLI
     ```sh
     dx serve
     ```
