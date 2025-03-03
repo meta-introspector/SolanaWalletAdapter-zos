@@ -1,4 +1,4 @@
-A template for Yew with TailwindCSS
+A template for Yew with Anchor & TailwindCSS
 ========================================
 
 Requirements:
@@ -17,8 +17,21 @@ This template uses tailwind CSS to render stylesheets. Trunk already supports th
 ***NOTE*** the issues facing current version of Yew in the README.md in the previous directory. As a recommendation use `Dioxus` template since it it the easiest to get started with, it's global state management is great and it's build tools are awesome.
 
 ### Building the template
-Switch to your template directory and run
-```sh
-trunk serve -p 9000 --open
-```
-The `9000` is the port so you can customize that.
+1. The default public key is the same across all templates so use `sync` to generate and sync a new anchor program ID
+    ```sh
+    anchor keys sync
+    ```
+2. Generate the anchor IDL
+
+    ```sh
+    anchor build
+    ```
+3. Switch to frontend directory
+    ```sh
+    cd frontend 
+    ```
+4. Build and serve the frontend
+    ```sh
+    trunk serve -p 9000 --open
+    ````
+    The `9000` is the port so you can customize that.

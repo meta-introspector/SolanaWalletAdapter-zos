@@ -1,4 +1,4 @@
-A template for Yew with TailwindCSS
+A template for Sycamore with TailwindCSS
 ========================================
 
 Requirements:

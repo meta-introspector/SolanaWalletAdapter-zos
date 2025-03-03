@@ -1,4 +1,4 @@
-## Dioxus Template with Anchor Tailwind CSS
+## Dioxus Template with Anchor & Tailwind CSS
 
 ### Requirements
 1. This template relies on Tailwind CSS to generate the stylesheet. 
@@ -15,9 +15,7 @@ Install the standalone Tailwind CLI - [https://tailwindcss.com/docs/installation
 2. The default public key is the same across all templates so use `sync` to generate and sync a new anchor program ID
     ```sh
     anchor keys sync
-    ```
-
-    
+    ```  
 3. Generate the anchor IDL
 
     ```sh

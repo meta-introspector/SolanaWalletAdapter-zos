@@ -1,4 +1,4 @@
-A template for Sycamore with TailwindCSS
+A template for Sycamore with Anchor & TailwindCSS
 ========================================
 
 Requirements:
