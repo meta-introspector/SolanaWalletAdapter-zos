@@ -1,4 +1,4 @@
-# Chapter 1 (GOOD DEPLOYMENT)
+# Chapter 1 (MASTER DEPLOYMENT)
 
 ## Section 1
 
