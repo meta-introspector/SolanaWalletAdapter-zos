@@ -11,10 +11,10 @@ use crate::{
     WalletEventSender, WalletResult, WalletStorage,
 };
 
-/// Containsthe connected wallet and account.
-/// Containing them in the same structs allows passing of this type
-/// by containing it in types like [std::rc::Rc] and [std::cell::RefCell] when moving the type
-/// out of it's scope like in background tasks or async functions *`async move`).
+/// Contains the connected wallet and account.
+/// Containing them in the same struct allows passing of this type
+/// by containing it in types like [Arc] and [RwLock] when moving the type
+/// out of it's scope like in background tasks or async functions (`async move`).
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ConnectionInfo {
     wallet: Option<Wallet>,
