@@ -22,9 +22,6 @@ New features will be added if the wallet-adapter standard adds new features. Min
 - [License](#license) - Licensed under Apache-2.0 or MIT
 - [Features](#features) - What features of the wallet standard are supported by this library
 - [Templates](#templates) - Which Rust frontend framework templates have been implemented
-- [Template Examples](#template-examples) - Which Rust frontend framework templates examples have been implemented
-- [Build Requirement](#requirements) - What tools are required to build a working project
-- [Build and Run A Template](#template-usage) - How to build a template or project to WebAssembly and run in the browser
 
 ### Usage
 Building the project requires a web-assembly environment.
@@ -509,7 +506,7 @@ Apache-2.0 OR MIT
 - [x] Dioxus
 
 
-
+### Templates
 All templates can be found at the [templates directory](https://github.com/JamiiDao/SolanaWalletAdapter/tree/master/templates/).
 
 Learn how the templates work from [https://github.com/JamiiDao/SolanaWalletAdapter/blob/master/templates/README.md](https://github.com/JamiiDao/SolanaWalletAdapter/blob/master/templates/README.md)
