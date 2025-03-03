@@ -126,34 +126,16 @@ cargo generate --name <project name> https://github.com/JamiiDao/SolanaWalletAda
   cargo generate --name <project name> https://github.com/JamiiDao/SolanaWalletAdapter/ templates/dioxus-adapter-anchor
   ```
 
+- Sycamore frontend with Anchor IDL
+  ```sh
+  cargo generate --name <project name> https://github.com/JamiiDao/SolanaWalletAdapter/ templates/sycamore-adapter-anchor
+  ```
+
+- Yew frontend with Anchor IDL
+  ```sh
+  cargo generate --name <project name> https://github.com/JamiiDao/SolanaWalletAdapter/ templates/yew-adapter-anchor
+  ```
+
 ### Running the templates
 
-- Dioxus
-  Install dioxus tools from [https://dioxuslabs.com/learn/0.6/getting_started/](https://dioxuslabs.com/learn/0.6/getting_started/)
-  To make modifications to tailwind css follow instructions from [Using tailwind with Dioxus](https://dioxuslabs.com/learn/0.6/cookbook/tailwind/)
-  Then run:
-
-  ```sh
-   npx tailwindcss -i ./input.css -o ./assets/tailwind.css --watch
-  ```
-
-  To run Dioxus cli
-  ```sh
-  dx serve #Automatically run with hot-reload
-  ```
-
-  Lastly, when build is complete, open the URL shown by the output of `dx serve` above (mostly defaults to http://localhost:8080)
-
-- Sycamore & Yew
-  Install Trunk build tool from [https://trunkrs.dev/](https://trunkrs.dev/) 
-
-  Navigate to the template root.
-  Trunk automatically compiles modifications to tailwind css.
-
-  To run Trunk cli
-
-  ```sh
-  trunk serve -p 9000 # You can replace `9000` with port of your choice
-  ```
-
-  Lastly, when build is complete, open the URL shown by the output of `dx serve` above (mostly defaults to http://localhost:8080)
+After generating the template, follow the instructions in the template's `README.md` file in the template root.
