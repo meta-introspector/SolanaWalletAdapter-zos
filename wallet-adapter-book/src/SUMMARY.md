@@ -6,6 +6,5 @@
   - [Connection Info](./wallet-adapter/connection-info.md)
   - [Wallet](./wallet-adapter/wallet.md)
   - [Wallet Account](./wallet-adapter/wallet-account.md)
-  - [Wallet Storage](./wallet-adapter/wallet-storage.md)
   - [Wallet Events](./wallet-adapter/wallet-events.md)
   - [Error Handling](./wallet-adapter/error-handling.md)

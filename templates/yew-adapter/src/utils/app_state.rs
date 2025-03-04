@@ -68,7 +68,12 @@ impl Reducible for GlobalAppInfo {
                         *clone_self.active_connection.borrow_mut() = ConnectionInfo::default();
                     }
                     let connect_result = clone_self.adapter.borrow_mut().connect(wallet).await;
-                    if connect_result.is_ok() {
+                    if let Err(error) = connect_result {
+                        global_state
+                            .messages
+                            .borrow_mut()
+                            .push_back(NotificationInfo::error(error));
+                    }else {
                         let active = clone_self.adapter.borrow().connection_info().await.clone();
 
                         *clone_self.active_connection.borrow_mut() = active;
@@ -76,11 +81,6 @@ impl Reducible for GlobalAppInfo {
                         *clone_self.loading.borrow_mut() = false;
 
                         global_state.dispatch(GlobalAction::LoadingFalse(trigger.clone()));
-                    } else {
-                        global_state
-                            .messages
-                            .borrow_mut()
-                            .push_back(NotificationInfo::error("Connection Rejected!"));
                     }
 
                     global_state.dispatch(GlobalAction::LoadingFalse(trigger.clone()));

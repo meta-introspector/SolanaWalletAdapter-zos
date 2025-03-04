@@ -73,7 +73,7 @@ impl ConnectionInfo {
 
     /// Get the connected [account](WalletAccount)
     pub fn connected_account(&self) -> WalletResult<&WalletAccount> {
-        self.account.as_ref().ok_or(WalletError::WalletNotFound)
+        self.account.as_ref().ok_or(WalletError::AccountNotFound)
     }
 
     /// Get the connected [wallet](Wallet) but return an [Option]
@@ -169,7 +169,8 @@ impl ConnectionInfo {
     }
 }
 
-pub(crate) type ConnectionInfoInner = Arc<RwLock<ConnectionInfo>>;
+/// The [ConnectionInfo] wrapped in an Arc<RwLock<T>>
+pub type ConnectionInfoInner = Arc<RwLock<ConnectionInfo>>;
 
 /// Operations on a browser window.
 /// `Window` and `Document` object must be present otherwise

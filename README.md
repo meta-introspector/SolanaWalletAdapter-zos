@@ -1,6 +1,7 @@
 <img src="https://raw.githubusercontent.com/JamiiDao/SolanaWalletAdapter/refs/heads/master/LOGO.svg" alt="Solana Rust Wallet-Adapter Logo" width="50%">
 
 # Wallet-Adapter
+[![crates.io](https://img.shields.io/crates/v/wallet-adapter.svg)](https://crates.io/crates/wallet-adapter)[![Docs](https://docs.rs/wallet-adapter/badge.svg)](https://docs.rs/wallet-adapter)[![Rust](https://github.com/JamiiDao/SolanaWalletAdapter/actions/workflows/rust.yml/badge.svg?branch=master)](https://github.com/JamiiDao/SolanaWalletAdapter/actions/workflows/rust.yml)![License](https://img.shields.io/crates/l/wallet-adapter)![Passively Maintained](https://img.shields.io/badge/status-passively%20maintained-cyan)
 
 A lightweight Rust Solana Wallet that can be used in Rust based frontends and WebAssembly.
 

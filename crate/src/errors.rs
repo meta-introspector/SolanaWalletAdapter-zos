@@ -25,7 +25,7 @@ pub enum WalletError {
     /// the error message `message`
     /// and the `stack` message which offers a trace of which functions were called.
     /// Learn about this error type from [Error - Mozilla Developer Network](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)
-    #[error("JsError{{ name: {name}, message: {message}, stack: {stack} }}")]
+    #[error("{message}")]
     JsError {
         /// The name of the error from a Javascript error message
         name: String,
@@ -44,8 +44,8 @@ pub enum WalletError {
     /// A value of `undefined` or `null` was encountered
     #[error("A value of `undefined` or `null` was encountered")]
     ValueNotFound,
-    /// A value was expected but it doesn't exist in the `JsValue`
-    #[error("A value of `{0}` was expected but it dosent't exist in the `JsValue`")]
+    /// A value was expected but it does not exist in the `JsValue`
+    #[error("A value of `{0}` was expected but it does not exist in the `JsValue`")]
     ExpectedValueNotFound(String),
     /// Unable to access browser window
     #[error("Unable to access browser window")]
