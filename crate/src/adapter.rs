@@ -73,7 +73,7 @@ impl ConnectionInfo {
 
     /// Get the connected [account](WalletAccount)
     pub fn connected_account(&self) -> WalletResult<&WalletAccount> {
-        self.account.as_ref().ok_or(WalletError::WalletNotFound)
+        self.account.as_ref().ok_or(WalletError::AccountNotFound)
     }
 
     /// Get the connected [wallet](Wallet) but return an [Option]
