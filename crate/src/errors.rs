@@ -25,7 +25,7 @@ pub enum WalletError {
     /// the error message `message`
     /// and the `stack` message which offers a trace of which functions were called.
     /// Learn about this error type from [Error - Mozilla Developer Network](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)
-    #[error("JsError{{ name: {name}, message: {message}, stack: {stack} }}")]
+    #[error("{message}")]
     JsError {
         /// The name of the error from a Javascript error message
         name: String,

@@ -169,7 +169,8 @@ impl ConnectionInfo {
     }
 }
 
-pub(crate) type ConnectionInfoInner = Arc<RwLock<ConnectionInfo>>;
+/// The [ConnectionInfo] wrapped in an Arc<RwLock<T>>
+pub type ConnectionInfoInner = Arc<RwLock<ConnectionInfo>>;
 
 /// Operations on a browser window.
 /// `Window` and `Document` object must be present otherwise
