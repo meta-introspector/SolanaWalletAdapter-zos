@@ -44,8 +44,8 @@ pub enum WalletError {
     /// A value of `undefined` or `null` was encountered
     #[error("A value of `undefined` or `null` was encountered")]
     ValueNotFound,
-    /// A value was expected but it doesn't exist in the `JsValue`
-    #[error("A value of `{0}` was expected but it dosent't exist in the `JsValue`")]
+    /// A value was expected but it does not exist in the `JsValue`
+    #[error("A value of `{0}` was expected but it does not exist in the `JsValue`")]
     ExpectedValueNotFound(String),
     /// Unable to access browser window
     #[error("Unable to access browser window")]

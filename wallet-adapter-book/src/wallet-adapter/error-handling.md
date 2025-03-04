@@ -49,4 +49,3 @@ async fn process() -> Result<(), String> {
     // A background task that may return an error
 }
 ```
-

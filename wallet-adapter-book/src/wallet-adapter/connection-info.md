@@ -43,4 +43,3 @@ connection_info.connected_account()?;
 // However, use `connected_account()` in order to provide feedback of a formatted error 
 connection_info.connected_account_raw()?;
 ```
-
