@@ -155,7 +155,7 @@ impl SigninInput {
         use rand_chacha::ChaCha12Rng;
         use rand_core::{RngCore, SeedableRng};
 
-        let mut rng = ChaCha12Rng::from_entropy();
+        let mut rng = ChaCha12Rng::from_os_rng();
 
         let mut buffer = [0u8; 32];
 

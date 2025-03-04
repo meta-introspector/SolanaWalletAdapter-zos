@@ -1,4 +1,4 @@
-name: Build wallet-adapter
+name: Build IDL Parser
 
 on:
   push:
@@ -42,8 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run cargo clippy and error on warnings
-        run: cargo clippy -p wallet-adapter -- -D warnings
+      - name: Run cargo clippy and error on warnings for partial-idl-parser
+        run: cargo clippy -p partial-idl-parser -- -D warnings
 
   build:
     name: Build
@@ -78,8 +78,8 @@ jobs:
       - name: Install Browser wasm32 target
         run: rustup target add wasm32-unknown-unknown
       - name: Build
-        run: cargo build -p wallet-adapter --all-features
-
+        run: cargo build -p partial-idl-parser --all-features --target wasm32-unknown-unknown
+        
   test:
     name: Test
     strategy:
@@ -105,4 +105,4 @@ jobs:
       - name: Install Browser wasm32 target
         run: rustup target add wasm32-unknown-unknown
       - name: Build
-        run: cargo build -p wallet-adapter --all-features
+        run: cargo build -p partial-idl-parser --all-features --target wasm32-unknown-unknown

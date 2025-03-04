@@ -32,7 +32,7 @@ impl Utils {
         use rand_chacha::ChaCha20Rng;
         use rand_core::{RngCore, SeedableRng};
 
-        let mut rng = ChaCha20Rng::from_entropy();
+        let mut rng = ChaCha20Rng::from_os_rng();
 
         let mut buffer = [0u8; 32];
 
