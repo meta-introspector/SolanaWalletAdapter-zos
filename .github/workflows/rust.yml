@@ -1,4 +1,4 @@
-name: Rust
+name: Build wallet-adapter
 
 on:
   push:
@@ -78,7 +78,7 @@ jobs:
       - name: Install Browser wasm32 target
         run: rustup target add wasm32-unknown-unknown
       - name: Build
-        run: cargo build --all-features --target wasm32-unknown-unknown
+        run: cargo build -p wallet-adapter --all-features
 
   test:
     name: Test
@@ -105,4 +105,4 @@ jobs:
       - name: Install Browser wasm32 target
         run: rustup target add wasm32-unknown-unknown
       - name: Build
-        run: cargo build --all-features --target wasm32-unknown-unknown
+        run: cargo build -p wallet-adapter --all-features
