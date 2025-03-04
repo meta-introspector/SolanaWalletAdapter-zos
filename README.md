@@ -1,13 +1,11 @@
+# Wallet-Adapter
 <img src="https://raw.githubusercontent.com/JamiiDao/SolanaWalletAdapter/refs/heads/master/LOGO.svg" alt="Solana Rust Wallet-Adapter Logo" width="50%">
 
-# Wallet-Adapter
 [![crates.io](https://img.shields.io/crates/v/wallet-adapter.svg)](https://crates.io/crates/wallet-adapter)[![Docs](https://docs.rs/wallet-adapter/badge.svg)](https://docs.rs/wallet-adapter)[![Rust](https://github.com/JamiiDao/SolanaWalletAdapter/actions/workflows/rust.yml/badge.svg?branch=master)](https://github.com/JamiiDao/SolanaWalletAdapter/actions/workflows/rust.yml)![License](https://img.shields.io/crates/l/wallet-adapter)![Passively Maintained](https://img.shields.io/badge/status-passively%20maintained-cyan)
 
 A lightweight Rust Solana Wallet that can be used in Rust based frontends and WebAssembly.
 
-### Maintenance
-This crate is feature complete, implementing all standardized requirements of the wallet-adapter standard. Therefore, the crate is passively maintained. 
-New features will be added if the wallet-adapter standard adds new features. Minor releases are expected for bug fixes.
+Read the book at: [https://jamiidao.github.io/SolanaWalletAdapter/](https://jamiidao.github.io/SolanaWalletAdapter/)
 
 ### Documentation Links
 - [Usage](#usage) - How to add this library and required features for `web-sys` crate
@@ -19,7 +17,6 @@ New features will be added if the wallet-adapter standard adds new features. Min
 - [Sign Message](#sign-message) - Signing a message with a browser wallet
 - [Sign Transaction](#sign-transaction) - Signing a transaction with a browser wallet
 - [Sign and Send Transaction](#sign-and-send-transaction) - Sign and Send Transaction with a browser wallet
-- [Examples](#examples) - Where to find examples
 - [License](#license) - Licensed under Apache-2.0 or MIT
 - [Features](#features) - What features of the wallet standard are supported by this library
 - [Templates](#templates) - Which Rust frontend framework templates have been implemented
@@ -489,22 +486,6 @@ Apache-2.0 OR MIT
 - [x] Sign Transaction
 - [x] Sign and Send Transaction
 - [x] Standard Events like Connect, Disconnect and (Re-connect & Account Changed (for wallets that support this)
-
-### Goals
-
-- [x] Cover the entire wallet-adapter spec for all required implementations
-- [x] Stable library that does not change much ensuring apps that build with this don't break on new changes
-- [x] Great documentation covering the library and all it's internal modules, types and methods
-
-### Templates
-- [x] Sycamore
-- [x] Yew
-- [x] Dioxus 
-
-### Template Examples
-- [x] Sycamore
-- [x] Yew
-- [x] Dioxus
 
 
 ### Templates
