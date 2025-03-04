@@ -28,6 +28,6 @@ editable = true
 [output.html.print]
 enable = false
 
-[output.theme-ace]
-theme-white = "xcode"
-theme-dark = "monokai"
+#[output.theme-ace]
+#theme-white = "xcode"
+#theme-dark = "monokai"
