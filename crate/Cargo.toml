@@ -35,7 +35,6 @@ default = ["logging"]
 logging = ["dep:log"]
 
 [package.metadata.docs.rs]
-features = "std"
 default-target = "x86_64-unknown-linux-gnu"
 
 [dev-dependencies]
