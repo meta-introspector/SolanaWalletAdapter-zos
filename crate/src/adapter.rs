@@ -169,7 +169,7 @@ impl ConnectionInfo {
     }
 }
 
-/// The [ConnectionInfo] wrapped in an Arc<RwLock<T>>
+/// The [ConnectionInfo] wrapped in an `Arc<RwLock<T>>`
 pub type ConnectionInfoInner = Arc<RwLock<ConnectionInfo>>;
 
 /// Operations on a browser window.
