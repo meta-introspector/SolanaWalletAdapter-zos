@@ -34,6 +34,10 @@ async-lock = "3.4.0"
 default = ["logging"]
 logging = ["dep:log"]
 
+[package.metadata.docs.rs]
+features = "std"
+default-target = "x86_64-unknown-linux-gnu"
+
 [dev-dependencies]
 solana-sdk = "2.1.2"
 bincode = "1.3.3"
