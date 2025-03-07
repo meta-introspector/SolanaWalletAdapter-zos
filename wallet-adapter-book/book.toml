@@ -5,6 +5,8 @@ multilingual = false
 src = "src"
 title = "Rust Wallet Adapter Library for Solana Dapps"
 
+[preprocessor.tabs]
+
 [preprocessor.theme]
 pagetoc = false
 pagetoc-width = "15%"
@@ -15,8 +17,8 @@ sidebar-width = "250px"
 [output.html]
 default-theme = "ayu"
 git-repository-url = ""
-additional-css = ["theme/pagetoc.css"]
-additional-js = ["theme/pagetoc.js"]
+additional-css = ["theme/pagetoc.css", "theme/tabs.css"]
+additional-js = ["theme/pagetoc.js", "theme/tabs.js"]
 
 [output.html.fold]
 enable = false
@@ -27,7 +29,3 @@ editable = true
 
 [output.html.print]
 enable = false
-
-#[output.theme-ace]
-#theme-white = "xcode"
-#theme-dark = "monokai"

@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use partial_idl_parser::AnchorIdlPartialData;
 use solana_sdk::{pubkey::Pubkey, instruction::Instruction, transaction::Transaction};
 use wallet_adapter::Utils;
