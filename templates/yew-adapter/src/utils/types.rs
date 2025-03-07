@@ -34,7 +34,7 @@ impl NotificationInfo {
         }
     }
 
-    /// Sets default seconds to 5
+    /// Sets default seconds to 15
     pub fn error(message: impl core::fmt::Display) -> Self {
         Self::new(message).set_secs(15)
     }
