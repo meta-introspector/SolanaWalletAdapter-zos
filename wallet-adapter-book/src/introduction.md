@@ -1,10 +1,17 @@
-<img src="https://raw.githubusercontent.com/JamiiDao/SolanaWalletAdapter/refs/heads/master/LOGO.svg" alt="Rust Wallet-Adapter Logo" style="zoom:5%;" />
-
 # Rust Wallet Adapter for Solana Dapps.
+
+<img src="https://raw.githubusercontent.com/JamiiDao/SolanaWalletAdapter/refs/heads/master/LOGO.svg" alt="Rust Wallet-Adapter Logo" style="zoom:5%;" />
 
 [![crates.io](https://img.shields.io/crates/v/wallet-adapter.svg)](https://crates.io/crates/wallet-adapter)[![Docs](https://docs.rs/wallet-adapter/badge.svg)](https://docs.rs/wallet-adapter)[![Rust](https://github.com/JamiiDao/SolanaWalletAdapter/actions/workflows/rust.yml/badge.svg?branch=master)](https://github.com/JamiiDao/SolanaWalletAdapter/actions/workflows/rust.yml)![License](https://img.shields.io/crates/l/wallet-adapter)![Passively Maintained](https://img.shields.io/badge/status-passively%20maintained-cyan)
 
 The wallet-adapter library is a Rust crate that performs actions between a Rust WebAssembly frontend and browser wallet extensions that implement the [wallet-standard](https://github.com/wallet-standard/wallet-standard).
+
+### Links
+
+1. [Github](https://github.com/JamiiDao/SolanaWalletAdapter)
+2. [Github Templates](https://github.com/JamiiDao/SolanaWalletAdapter/tree/master/templates)
+3. [crates.io](https://crates.io/crates/wallet-adapter)
+4. [docs.rs](https://docs.rs/wallet-adapter/)
 
 ### Features
 It implements the following from [wallet-standard](https://github.com/wallet-standard/wallet-standard):
