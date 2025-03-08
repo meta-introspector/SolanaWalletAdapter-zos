@@ -37,7 +37,13 @@ Wallets register themselves by listening for one or both of these browser custom
 
 The `wallet-adapter` crate uses the browser's cryptographically secure random number generator to generate random values using the `getrandom`,`rand-core` and `rand-chacha` crates.
 
-The `getrandom` crate needs to understand the backend to use as described in their docs [https://docs.rs/getrandom/latest/getrandom/#opt-in-backends](https://docs.rs/getrandom/latest/getrandom/#opt-in-backends) which the `RUSTFLAGS='--cfg getrandom_backend="wasm_js"'` to be specified when running `cargo build --target wasm32-unknown-unknown`. Therefore, if you are not using the template which automatically generates the config file for you, you need to add a `.cargo/config.toml` file in your root directory (the config file needs to be in the workspace root if you are using a cargo workspace).
+The `getrandom` crate needs to understand the [backend]((https://docs.rs/getrandom/latest/getrandom/#opt-in-backends)) to use as described in their docs which require the use of rustc flag `RUSTFLAGS='--cfg getrandom_backend="wasm_js"'` to be specified when running `cargo build --target wasm32-unknown-unknown`. 
+
+```sh
+RUSTFLAGS='--cfg getrandom_backend="wasm_js"' cargo build --target wasm32-unknown-unknown
+```
+
+Therefore, if you are not using the template which automatically generates the [config file](https://github.com/JamiiDao/SolanaWalletAdapter/blob/master/.cargo/config.toml) for you, you need to add a `.cargo/config.toml` file in your root directory (the config file needs to be in the workspace root if you are using a cargo workspace).
 
 See the structure of the `.cargo` [Rust config dir](https://github.com/JamiiDao/SolanaWalletAdapter/tree/master/.cargo).
 
