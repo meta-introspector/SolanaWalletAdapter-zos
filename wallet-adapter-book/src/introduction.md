@@ -30,3 +30,21 @@ Any wallet that implements the [wallet-standard](https://github.com/wallet-stand
 Wallets register themselves by listening for one or both of these browser custom events as defined by the wallet-standard.
 - [x] `wallet-standard:register-wallet` - listens for wallets that emit browser window event as a way to register themselves.
 - [x] `wallet-standard:app-ready` - the library dispatches this event in order to inform browser extension wallets that the frontend application is ready to receive registration events.
+
+
+
+### Building the library without a template
+
+The `wallet-adapter` crate uses the browser's cryptographically secure random number generator to generate random values using the `getrandom`,`rand-core` and `rand-chacha` crates.
+
+The `getrandom` crate needs to understand the backend to use as described in their docs [https://docs.rs/getrandom/latest/getrandom/#opt-in-backends](https://docs.rs/getrandom/latest/getrandom/#opt-in-backends) which the `RUSTFLAGS='--cfg getrandom_backend="wasm_js"'` to be specified when running `cargo build --target wasm32-unknown-unknown`. Therefore, if you are not using the template which automatically generates the config file for you, you need to add a `.cargo/config.toml` file in your root directory (the config file needs to be in the workspace root if you are using a cargo workspace).
+
+See the structure of the `.cargo` [Rust config dir](https://github.com/JamiiDao/SolanaWalletAdapter/tree/master/.cargo).
+
+The `.cargo/config.toml` file should contain this.
+
+```toml
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]
+```
+
