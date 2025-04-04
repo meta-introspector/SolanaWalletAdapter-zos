@@ -19,10 +19,10 @@ categories = ["cryptography::cryptocurrencies"]
 [workspace.dependencies]
 wallet-adapter = { path = "./crate" }
 async-channel = "2.3.1"
-log = "0.4.26"
+log = "0.4.27"
 bs58 = { version = "0.5.1" }
-wasm-bindgen-futures = "0.4.7"
-web-sys = { version = "0.3.76", features = [
+wasm-bindgen-futures = "0.4.50"
+web-sys = { version = "0.3.77", features = [
     "Window",
     "Document",
     "Event",
