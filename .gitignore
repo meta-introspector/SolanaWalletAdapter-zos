@@ -27,3 +27,5 @@ Cargo.lock
 /examples/simple/resources/pkg
 .vscode
 wallet-adapter-book/book
+.tests
+**/node_modules/
