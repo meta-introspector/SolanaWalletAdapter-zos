@@ -4,13 +4,14 @@ use crate::{
     trunk_cluster_name, utils::copied_address, views::ClusterNetState, ChangeWalletSvg, CloseSvg,
     ClustersSvg, CopySvg, DisconnectSvg, FetchReq, GradientWalletIcon, Loader, NotificationInfo,
     Route, WalletSvg, ACTIVE_CONNECTION, CLUSTER_NET_STATE, CLUSTER_STORAGE, GLOBAL_MESSAGE, LOGO,
-    WALLET_ADAPTER,
+    WALLET_ADAPTER,MenuSvg,
 };
 
 #[component]
 pub fn Header() -> Element {
     let show_modal = use_signal(|| false);
     let show_connecting = use_signal(|| false);
+    let mut show_mobile_close_button = use_signal(|| bool::default());
 
     let mut shortened_address = String::default();
 
@@ -23,8 +24,11 @@ pub fn Header() -> Element {
 
     rsx! {
         div { class:"flex flex-col w-full gap-4 justify-between items-center",
-            nav {class:"flex w-full justify-around items-center p-1 dark:shadow-lg shadow-sm border-b-[1px] dark:border-true-blue",
-                div{class:"p-1 w-[15%]", img{src:LOGO, alt:"LOGO"} }
+            nav {class:"flex w-full justify-between items-center p-1 dark:shadow-lg shadow-sm border-b-[1px] dark:border-true-blue",
+                div{class:"p-1 w-[25%] md:w-[15%]", img{src:LOGO, alt:"LOGO"} }
+
+            div{class:"flex w-[75%] items-center justify-center hidden md:inline-flex",
+
                 div{ class:"flex items-center justify-around w-[80%] mx-2",
                     {NavItem(Route::Dashboard, "Home")}
                     {NavItem(Route::Accounts, "Accounts")}
@@ -32,7 +36,41 @@ pub fn Header() -> Element {
                     {NavItem(Route::Extras, "Extras")}
                     {NavClusterItem()}
                 }
-                NavWalletItem{show_modal, show_connecting, shortened_address}
+                NavWalletItem{show_modal, show_connecting, shortened_address:shortened_address.clone(), show_mobile_close_button}
+            }
+
+                if !*show_mobile_close_button.read() {
+                    div { class:"w-[25%] flex ml-2 text-white py-1 px-4 appearance-none items-center justify-center cursor-pointer inline-flex  md:hidden",
+                        div{class:"flex appearance-none text-center cursor-pointer",
+                            span{
+                                onclick:move |_|{show_mobile_close_button.set(true)},
+                                class:"flex w-[15px]", {MenuSvg()} 
+                            }
+                        }
+                    }
+                }else {
+                    div{class:"flex flex-col w-full z-40 absolute bg-black bg-opacity-50 inset-0 h-full p-15 inline-flex md:hidden justify-center items-center",
+                        div{class:"flex flex-col w-[80%] h-auto bg-rich-black m-2 p-2 inline-flex md:hidden justify-center items-center",
+                            div{class:"flex w-[80%] flex-col md:lg:flex-row items-end justify-end",
+                                span{
+                                    onclick:move |_|{show_mobile_close_button.set(false)},
+                                    class:"flex w-[30px]", {CloseSvg()} 
+                                }
+                            }
+                            
+                            div {class:"flex flex-col md:lg:flex-row items-center justify-center w-full",
+                                div{ class:"flex flex-col md:lg:flex-row  items-center justify-center w-full md:w-[80%] mx-2",
+                                    {NavItem(Route::Dashboard, "Home")}
+                                    {NavItem(Route::Accounts, "Accounts")}
+                                    {NavItem(Route::Clusters, "Clusters")}
+                                    {NavItem(Route::Extras, "Extras")}
+                                    {NavClusterItem()}
+                                }
+                                NavWalletItem{show_modal, show_connecting, shortened_address, show_mobile_close_button}
+                            }
+                        }
+                    }
+                }
             }
             PingCluster {  }
         }
@@ -45,7 +83,7 @@ pub fn Header() -> Element {
 }
 
 #[component]
-pub fn ConnectWalletModalModal(show_modal: Signal<bool>, show_connecting: Signal<bool>) -> Element {
+pub fn ConnectWalletModalModal(show_modal: Signal<bool>, show_connecting: Signal<bool>,) -> Element {
     if *show_modal.read() {
         rsx! {
             div{class:"flex flex-col w-full h-full bg-[#1a1a1a88] absolute items-center justify-center z-50",
@@ -137,14 +175,14 @@ pub fn ConnectWalletModalModal(show_modal: Signal<bool>, show_connecting: Signal
 
 fn NavItem(route: fn() -> Route, text: &str) -> Element {
     rsx! {
-        Link {class:"w-[10%] hover:bg-transparent dark:text-blue-yonder dark:hover:text-white text-true-blue hover:text-black rounded-lg text-center p-1", to: route(), {text}}
+        Link {class:"w-full md:w-[10%] hover:bg-transparent dark:text-blue-yonder dark:hover:text-white text-true-blue hover:text-black rounded-lg text-center p-1", to: route(), {text}}
     }
 }
 
 fn NavClusterItem() -> Element {
     rsx! {
         div{
-            class:"flex w-[15%]",
+            class:"flex w-full items-center justify-center md:w-[15%]",
             select{
                 onchange:move |event| {
                     let cluster = CLUSTER_STORAGE.read().get_cluster(&event.data.value()).cloned().unwrap_or_default();
@@ -153,7 +191,7 @@ fn NavClusterItem() -> Element {
 
                     GLOBAL_MESSAGE.write().push_back(NotificationInfo::new(cluster_identifier));
                 },
-                class:"flex text-sm hover:bg-true-yonder bg-true-blue text-white rounded-full py-1 px-4 appearance-none text-center cursor-pointer",
+                class:"flex text-sm hover:bg-true-yonder bg-true-blue text-white rounded-full md:py-1 md:px-4 appearance-none text-center cursor-pointer",
                 for adapter_cluster in CLUSTER_STORAGE.read().get_clusters() {
                     option {
                         key:adapter_cluster.identifier.as_str(),
@@ -170,17 +208,21 @@ fn NavWalletItem(
     show_modal: Signal<bool>,
     show_connecting: Signal<bool>,
     shortened_address: String,
+    show_mobile_close_button: Signal<bool>
 ) -> Element {
     let compute_wallet = || {
         if let Ok(connected_account) = ACTIVE_CONNECTION.read().connected_account() {
             let shortened_address = connected_account.shorten_address().unwrap();
 
-            rsx! { ActiveAccountDropDown{show_modal, shortened_address} }
+            rsx! { ActiveAccountDropDown{show_modal, shortened_address, show_mobile_close_button} }
         } else {
             rsx! {
                 div {class:"flex w-full items-center justify-center",
-                button {class:"text-sm",
-                    onclick:move|_|{show_modal.set(true);},
+                button {class:"flex w-full text-sm",
+                    onclick:move|_|{
+                        show_modal.set(true);
+                        show_mobile_close_button.set(false);
+                    },
                         "Select Wallet"
                     }
                 }
@@ -189,7 +231,7 @@ fn NavWalletItem(
     };
 
     rsx! {
-        div { class:"w-[25%] flex ml-2 text-white py-1 px-4 appearance-none items-center justify-center cursor-pointer",
+        div { class:"w-full md:w-[25%] flex mt-5 md:mt-0 ml-2 text-white py-1 px-4 appearance-none items-center justify-center cursor-pointer",
             if *show_connecting.read() {
                 div {class:"py-1 px-4 flex items-center justify-center hover:bg-true-yonder bg-true-blue rounded-full",
                     span{class:"flex w-[20px] mr-5", {WalletSvg()}}
@@ -205,12 +247,14 @@ fn NavWalletItem(
 }
 
 #[component]
-pub fn ActiveAccountDropDown(show_modal: Signal<bool>, shortened_address: String) -> Element {
+pub fn ActiveAccountDropDown(show_modal: Signal<bool>, shortened_address: String, show_mobile_close_button: Signal<bool>) -> Element {
     let mut show_dropdown = use_signal(|| false);
 
     let disconnect_callback = move || {
         spawn(async move {
             WALLET_ADAPTER.write().disconnect().await;
+            
+            show_mobile_close_button.set(false);
         });
     };
 
@@ -228,11 +272,14 @@ pub fn ActiveAccountDropDown(show_modal: Signal<bool>, shortened_address: String
                     .write()
                     .push_back(NotificationInfo::new("Copied to clipboard"));
             }
+            show_mobile_close_button.set(false);
         });
     };
 
     let change_wallet_callback = move || {
         show_modal.set(true);
+        show_mobile_close_button.set(false);
+
     };
 
     let connected_wallet = ACTIVE_CONNECTION.read().connected_wallet().unwrap().clone();
@@ -253,7 +300,7 @@ pub fn ActiveAccountDropDown(show_modal: Signal<bool>, shortened_address: String
                     if let Some(icon) = connected_wallet.icon() {
                         img{class:"rounded-lg", src:icon.to_string()}
                     }else {
-                        {WalletSvg()}
+                        span{class:"text-sm", {WalletSvg()} }
                     }
                 }
                 {shortened_address}
@@ -304,10 +351,10 @@ fn PingCluster() -> Element {
 
     if *CLUSTER_NET_STATE.read() == ClusterNetState::Failure {
         rsx! {
-            div {class:"flex w-full justify-center h-[40px] bg-red-800 text-center items-center text-2xl justify-center items-center",
+            div {class:"flex w-full justify-center min-h-[40px] bg-red-800 text-center items-center text-2xl justify-center items-center",
                 div{ class:"flex px-4 py-2 justify-center items-center",
-                    div{class:"flex w-full mr-2",
-                        span { class:"flex w-[30px] mr-1 text-white", {ClustersSvg()}}
+                    div{class:"flex flex-col md:flex-row w-full mr-2",
+                        span { class:"flex hidden md:inline-flex w-[30px] mr-1 text-white text-[30px] md:text-md", {ClustersSvg()}}
                         {CLUSTER_STORAGE.read().active_cluster().name()} " cluster is unreachable!"
                     }
                     button {
