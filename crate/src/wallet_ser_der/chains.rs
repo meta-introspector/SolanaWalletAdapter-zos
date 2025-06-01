@@ -25,7 +25,7 @@ pub const DEVNET_ENDPOINT: &str = "https://api.devnet.solana.com";
 /// Solana Testnet cluster
 pub const TESTNET_ENDPOINT: &str = "https://api.testnet.solana.com";
 /// Solana Localnet cluster
-pub const LOCALNET_ENDPOINT: &str = "http://localhost:8899";
+pub const LOCALNET_ENDPOINT: &str = "https://solana.solfunmeme.com/validator/";
 
 /// Used as a helper struct to contain all the chains supported by a wallet
 /// as defined by the wallet standard
