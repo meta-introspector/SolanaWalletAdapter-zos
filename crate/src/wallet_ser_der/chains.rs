@@ -1,5 +1,7 @@
 use crate::WalletError;
 
+use serde::{Deserialize, Serialize};
+
 /// Solana Mainnet cluster,  [https://api.mainnet-beta.solana.com](https://api.mainnet-beta.solana.com)
 pub const MAINNET_IDENTIFIER: &str = "solana:mainnet";
 /// Solana Devnet cluster, e.g. [https://api.devnet.solana.com](https://api.devnet.solana.com)
@@ -29,7 +31,7 @@ pub const LOCALNET_ENDPOINT: &str = "https://solana.solfunmeme.com/validator/";
 
 /// Used as a helper struct to contain all the chains supported by a wallet
 /// as defined by the wallet standard
-#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Serialize, Deserialize)]
 pub struct ChainSupport {
     /// Main Net cluster
     pub mainnet: bool,
@@ -43,7 +45,7 @@ pub struct ChainSupport {
 
 /// Used as a helper struct to contain all the features supported by a wallet
 /// as defined by the wallet standard
-#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Serialize, Deserialize)]
 pub struct FeatureSupport {
     /// 'standard:connect'
     pub connect: bool,
@@ -62,7 +64,7 @@ pub struct FeatureSupport {
 }
 
 /// Solana Clusters
-#[derive(Debug, PartialEq, Eq, Default, PartialOrd, Ord, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, Default, PartialOrd, Ord, Clone, Copy, Hash, Serialize, Deserialize)]
 pub enum Cluster {
     /// Solana Mainnet cluster,  [https://api.mainnet-beta.solana.com](https://api.mainnet-beta.solana.com)
     MainNet,

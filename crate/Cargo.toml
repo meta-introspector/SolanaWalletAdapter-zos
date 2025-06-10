@@ -29,6 +29,7 @@ bs58.workspace = true
 blake3 = { version = "1.8.1", default-features = false }
 log = { workspace = true, optional = true }
 async-lock = "3.4.0"
+serde = "1.0.219"
 
 [features]
 default = ["logging"]
